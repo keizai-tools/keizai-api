@@ -1,0 +1,11 @@
+entity: Book
+items:
+  book0:
+    title: 'Title one'
+    author: '@author0'
+    format: 'digital'
+
+  book1:
+    title: 'Title two'
+    author: '@author1'
+    format: 'digital'
