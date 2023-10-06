@@ -16,8 +16,7 @@ export const BookSchema = new EntitySchema<Book>({
     },
     format: {
       name: 'format',
-      type: process.env.NODE_ENV === 'automated_test' ? 'enum' : 'varchar',
-      enum: Format,
+      type: 'varchar',
       default: Format.DIGITAL,
     },
   },
