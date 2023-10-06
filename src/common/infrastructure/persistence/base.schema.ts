@@ -1,7 +1,7 @@
 import { EntitySchemaColumnOptions } from 'typeorm';
 
 const columnDateType =
-  process.env.NODE_ENV === 'automated_tests' ? 'date' : 'timestamptz';
+  process.env.NODE_ENV === 'automated_tests' ? 'date' : 'timestamp';
 
 export const baseColumnSchemas: { [key: string]: EntitySchemaColumnOptions } = {
   id: {

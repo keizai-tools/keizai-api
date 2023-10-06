@@ -24,9 +24,8 @@ export const AuthorSchema = new EntitySchema<Author>({
     },
     status: {
       name: 'status',
-      type: process.env.NODE_ENV === 'automated_tests' ? 'varchar' : 'enum',
-      enum: Status,
-      default: 'active',
+      type: 'varchar',
+      default: Status.ACTIVE,
     },
   },
   relations: {
