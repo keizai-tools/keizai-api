@@ -11,3 +11,10 @@ services:
       - '${DB_PORT}:3306'
     volumes:
       - ./data/mysql/:/var/lib/mysql
+
+  cognito:
+    image: jagregory/cognito-local:latest
+    ports:
+      - 9229:9229
+    volumes:
+      - ./data/.cognito:/app/.cognito
