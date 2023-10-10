@@ -5,10 +5,15 @@ import {
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
 
-import { AuthRequestDto } from '../../interface/dto/auth-request.to.ts';
+import { AuthRequestDto } from '../../interface/dto/auth-request.to.ts.js';
+
+interface IRegisterResult {
+  externalId: string;
+  username: string;
+}
 
 @Injectable()
-export class AwsCognitoService {
+export class CognitoService {
   private userPool: CognitoUserPool;
 
   constructor() {
@@ -18,21 +23,28 @@ export class AwsCognitoService {
     });
   }
 
-  async registerUser(registerRequestDto: AuthRequestDto) {
+  async registerUser(
+    registerRequestDto: AuthRequestDto,
+  ): Promise<IRegisterResult> {
     const { email, password } = registerRequestDto;
 
     return new Promise((resolve, reject) => {
       this.userPool.signUp(email, password, null, null, (err, result) => {
         if (!result) {
+          console.log(err);
           reject(err);
         } else {
-          resolve(result.user);
+          console.log(result);
+          resolve({
+            externalId: result.userSub,
+            username: result.user.getUsername(),
+          });
         }
       });
     });
   }
 
-  async authenticateUser(authLoginUserDto: AuthRequestDto) {
+  async loginAccount(authLoginUserDto: AuthRequestDto) {
     const { email, password } = authLoginUserDto;
     const userData = {
       Username: email,

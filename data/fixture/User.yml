@@ -1,0 +1,9 @@
+entity: UserEntity
+items:
+  user0:
+    email: 'john@gmial.com'
+    'external_id': '9bef7b9a-dd67'
+
+  user1:
+    email: 'jane@hotmail.com'
+    'external_id': '2c963fb5-a829'

@@ -1,29 +1,22 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 
-import { AwsCognitoService } from '../application/service/aws-cognito.service';
+import { AuthService } from '../application/service/auth.service';
 import { AuthRequestDto } from './dto/auth-request.to.ts';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private awsCognitoService: AwsCognitoService) {}
+  constructor(private authService: AuthService) {}
 
-  @Post('/register')
+  @Post('register')
   async createUser(@Body() authRegisterUserDto: AuthRequestDto) {
-    const newUser = await this.awsCognitoService.registerUser(
-      authRegisterUserDto,
-    );
-    return newUser;
+    console.log('authRegisterUserDto', '\n', authRegisterUserDto);
+    const register = await this.authService.register(authRegisterUserDto);
+    console.log('Register', '\n', register);
   }
 
-  @Post('/login')
-  @UsePipes(ValidationPipe)
+  @Post('login')
   async login(@Body() authLoginUserDto: AuthRequestDto) {
-    return await this.awsCognitoService.authenticateUser(authLoginUserDto);
+    const login = await this.authService.login(authLoginUserDto);
+    console.log('Login', '\n', login);
   }
 }
