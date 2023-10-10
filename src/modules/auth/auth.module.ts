@@ -11,6 +11,7 @@ import { CognitoService } from './infrastructure/cognito/aws.cognito.service';
 import { UserSchema } from './infrastructure/persistence/user.schema';
 import { UserRepository } from './infrastructure/persistence/user.typeorm.repository';
 import { AuthController } from './interface/auth.controller';
+import { AuthMapper } from './interface/mapper/user.mapper';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuthController } from './interface/auth.controller';
       provide: USER_REPOSITORY,
       useClass: UserRepository,
     },
+    AuthMapper,
   ],
 })
 export class AuthModule {}

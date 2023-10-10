@@ -2,11 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import { AuthRequestDto } from '@/modules/auth/interface/dto/auth-request.to.ts';
 
-// import { mapRequestToEntity } from '../../interface/mapper/user.mapper';
+import { AuthMapper } from '../../interface/mapper/user.mapper';
 import { ErrorMessage } from '../enum';
 import {
   COGNITO_SERVICE,
   ICognitoService,
+  IRegisterResult,
 } from '../repository/cognito.interface.service';
 import {
   IUserRepository,
@@ -18,28 +19,37 @@ export class AuthService {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(COGNITO_SERVICE) private readonly cognitoService: ICognitoService,
+    @Inject(AuthMapper) private readonly authMapper: AuthMapper,
   ) {}
 
   async login(authLoginUserDto: AuthRequestDto) {
+    const { username, password } = authLoginUserDto;
     try {
-      return await this.cognitoService.loginAccount(authLoginUserDto);
+      return await this.cognitoService.loginAccount(username, password);
     } catch (error) {
       throw new Error(ErrorMessage.FAILED_LOGIN);
     }
   }
 
-  async register(authRegisterUserDto: AuthRequestDto) {
+  async registerAccount(registerData: AuthRequestDto) {
+    const { username, password } = registerData;
+    let registeredUser: IRegisterResult;
     try {
-      const userCognito = await this.cognitoService.registerUser(
-        authRegisterUserDto,
+      registeredUser = await this.cognitoService.registerAccount(
+        username,
+        password,
       );
-      // return this.userRepository.save(mapRequestToEntity(userCognito));
-      console.log('userCognito', '\n', userCognito);
-      return userCognito;
     } catch (error) {
-      // throw new Error(ErrorMessage.FAILED_REGISTER);
       console.log(error);
     }
+    const newUser = {
+      ...registeredUser,
+    };
+    const registeredUserDomain = this.authMapper.fromDtoToEntity(newUser);
+
+    await this.userRepository.save(registeredUserDomain);
+
+    return registeredUser;
   }
 
   async getOneByExternalId(id: number) {

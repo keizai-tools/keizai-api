@@ -5,47 +5,45 @@ import {
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
 
-import { AuthRequestDto } from '../../interface/dto/auth-request.to.ts.js';
+import {
+  ICognitoService,
+  ILoginResult,
+} from '../../application/repository/cognito.interface.service.js';
 
 interface IRegisterResult {
   externalId: string;
   username: string;
+  userConfirmed: boolean;
 }
 
 @Injectable()
-export class CognitoService {
+export class CognitoService implements ICognitoService {
   private userPool: CognitoUserPool;
 
   constructor() {
     this.userPool = new CognitoUserPool({
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
       ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      endpoint: process.env.AWS_COGNITO_ENDPOINT,
     });
   }
-
-  async registerUser(
-    registerRequestDto: AuthRequestDto,
-  ): Promise<IRegisterResult> {
-    const { email, password } = registerRequestDto;
-
+  registerAccount(email: string, password: string): Promise<IRegisterResult> {
     return new Promise((resolve, reject) => {
-      this.userPool.signUp(email, password, null, null, (err, result) => {
+      this.userPool.signUp(email, password, null, null, (error, result) => {
         if (!result) {
-          console.log(err);
-          reject(err);
+          reject(error);
         } else {
-          console.log(result);
           resolve({
             externalId: result.userSub,
             username: result.user.getUsername(),
+            userConfirmed: result.userConfirmed,
           });
         }
       });
     });
   }
 
-  async loginAccount(authLoginUserDto: AuthRequestDto) {
-    const { email, password } = authLoginUserDto;
+  loginAccount(email: string, password: string): Promise<ILoginResult> {
     const userData = {
       Username: email,
       Pool: this.userPool,
@@ -56,18 +54,21 @@ export class CognitoService {
       Password: password,
     });
 
-    const userCognito = new CognitoUser(userData);
+    const cognitoUser = new CognitoUser(userData);
+
+    const authenticationFlowType = 'USER_PASSWORD_AUTH';
 
     return new Promise((resolve, reject) => {
-      userCognito.authenticateUser(authenticationDetails, {
+      cognitoUser.setAuthenticationFlowType(authenticationFlowType);
+      cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
           resolve({
             accessToken: result.getAccessToken().getJwtToken(),
             refreshToken: result.getRefreshToken().getToken(),
           });
         },
-        onFailure: (err) => {
-          reject(err);
+        onFailure: (error) => {
+          reject(error);
         },
       });
     });

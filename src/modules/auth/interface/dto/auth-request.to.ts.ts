@@ -1,15 +1,11 @@
-import { IsEmail, Matches, MaxLength } from 'class-validator';
-
-import { ErrorMessage } from '../../application/enum';
+import { IsEmail, Matches } from 'class-validator';
 
 export class AuthRequestDto {
-  @MaxLength(320)
   @IsEmail()
-  email: string;
+  username: string;
 
   @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$&+,:;=?@#|'<>.^*()%!-])[A-Za-z\d@$&+,:;=?@#|'<>.^*()%!-]{8,}$/m,
-    { message: ErrorMessage.INVALID_PASSWORD },
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$&+,:;=?@#|'<>.^*()%!-])[A-Za-z\d@$&+,:;=?@#|'<>.^*()%!-]{8,255}$/,
   )
   password: string;
 }

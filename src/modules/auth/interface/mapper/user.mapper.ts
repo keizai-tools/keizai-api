@@ -1,11 +1,9 @@
-import { ISignUpResult } from 'amazon-cognito-identity-js';
-
+import { CreateUserDto } from '../../application/dto/create-user.dto.js';
 import { User } from '../../domain/user.entity.js';
 
-export function fromDtoToEntity(req: ISignUpResult): User {
-  const user = new User();
-  user.email = req.user.getUsername();
-  user.externalId = req.userSub;
-
-  return user;
+export class AuthMapper {
+  fromDtoToEntity(userData: CreateUserDto) {
+    const { externalId, username } = userData;
+    return new User(username, externalId);
+  }
 }
