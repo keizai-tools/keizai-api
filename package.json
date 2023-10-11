@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prebuild": "npm run install && rimraf dist",
+    "prebuild": "npm install && rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"data/**/*.ts\"",
     "start": "npm run migration:run && nest start",
