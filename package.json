@@ -44,18 +44,22 @@
     "@nestjs/config": "^2.3.1",
     "@nestjs/core": "^9.0.0",
     "@nestjs/mapped-types": "*",
+    "@nestjs/passport": "^10.0.2",
     "@nestjs/platform-express": "^9.0.0",
-    "@nestjs/typeorm": "^9.0.1",
+    "@nestjs/typeorm": "^10.0.0",
+    "amazon-cognito-identity-js": "^6.3.6",
     "better-sqlite3": "^7.6.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "joi": "^17.8.3",
+    "jwks-rsa": "^3.1.0",
     "mysql2": "^3.6.1",
+    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.10",
+    "typeorm": "^0.3.17",
     "typeorm-naming-strategies": "^4.1.0"
   },
   "devDependencies": {
@@ -86,7 +90,7 @@
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
     "tsconfig-paths": "4.1.0",
-    "typeorm-fixtures-cli": "^3.0.2",
+    "typeorm-fixtures-cli": "^4.0.0",
     "typescript": "^4.7.4"
   },
   "jest": {

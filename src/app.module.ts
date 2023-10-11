@@ -12,6 +12,8 @@ import { CommonModule } from '@common/common.module';
 import { AuthorModule } from '@/modules/author/author.module';
 import { BookModule } from '@/modules/book/book.module';
 
+import { AuthModule } from './modules/auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +31,7 @@ import { BookModule } from '@/modules/book/book.module';
       },
     }),
     CommonModule,
+    AuthModule,
     AuthorModule,
     BookModule,
   ],

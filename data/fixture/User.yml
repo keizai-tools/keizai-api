@@ -1,0 +1,5 @@
+entity: User
+items:
+  user0:
+    externalId: '123-123-123-123-123'
+    username: 'fakeemail@email.com'
