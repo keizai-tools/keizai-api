@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
+import * as dotenv from 'dotenv';
 
 import {
   ICognitoService,
@@ -15,15 +17,17 @@ interface IRegisterResult {
   username: string;
 }
 
+dotenv.config();
+
 @Injectable()
 export class CognitoService implements ICognitoService {
   private userPool: CognitoUserPool;
 
-  constructor() {
+  constructor(configService: ConfigService) {
     this.userPool = new CognitoUserPool({
-      UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
-      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
-      endpoint: process.env.AWS_COGNITO_ENDPOINT,
+      UserPoolId: configService.get('AWS_COGNITO_USER_POOL_ID'),
+      ClientId: configService.get('AWS_COGNITO_CLIENT_ID'),
+      endpoint: configService.get('AWS_COGNITO_ENDPOINT'),
     });
   }
   registerAccount(email: string, password: string): Promise<IRegisterResult> {
