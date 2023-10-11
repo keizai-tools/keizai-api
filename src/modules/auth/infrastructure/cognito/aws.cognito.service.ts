@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   AuthenticationDetails,
@@ -24,11 +24,6 @@ export class CognitoService implements ICognitoService {
   private userPool: CognitoUserPool;
 
   constructor(configService: ConfigService) {
-    console.log(
-      configService.get('AWS_COGNITO_USER_POOL_ID'),
-      configService.get('AWS_COGNITO_CLIENT_ID'),
-    );
-
     this.userPool = new CognitoUserPool({
       UserPoolId: configService.get('AWS_COGNITO_USER_POOL_ID'),
       ClientId: configService.get('AWS_COGNITO_CLIENT_ID'),
