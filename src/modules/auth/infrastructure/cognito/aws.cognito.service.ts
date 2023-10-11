@@ -24,9 +24,14 @@ export class CognitoService implements ICognitoService {
   private userPool: CognitoUserPool;
 
   constructor(configService: ConfigService) {
+    console.log(
+      configService.get('AWS_COGNITO_USER_POOL_ID'),
+      configService.get('AWS_COGNITO_CLIENT_ID'),
+    );
+
     this.userPool = new CognitoUserPool({
-      UserPoolId: 'us-west-1_aryGmgscc',
-      ClientId: '2vmejln4pgli5st2r0bumindqd',
+      UserPoolId: configService.get('AWS_COGNITO_USER_POOL_ID'),
+      ClientId: configService.get('AWS_COGNITO_CLIENT_ID'),
       endpoint: configService.get('AWS_COGNITO_ENDPOINT'),
     });
   }
