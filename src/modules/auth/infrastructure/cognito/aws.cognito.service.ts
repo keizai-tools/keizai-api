@@ -25,8 +25,8 @@ export class CognitoService implements ICognitoService {
 
   constructor(configService: ConfigService) {
     this.userPool = new CognitoUserPool({
-      UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
-      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      UserPoolId: 'us-west-1_aryGmgscc',
+      ClientId: '2vmejln4pgli5st2r0bumindqd',
       endpoint: configService.get('AWS_COGNITO_ENDPOINT'),
     });
   }
