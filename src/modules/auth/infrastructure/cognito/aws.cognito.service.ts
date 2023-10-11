@@ -13,7 +13,6 @@ import {
 interface IRegisterResult {
   externalId: string;
   username: string;
-  userConfirmed: boolean;
 }
 
 @Injectable()
@@ -36,7 +35,6 @@ export class CognitoService implements ICognitoService {
           resolve({
             externalId: result.userSub,
             username: result.user.getUsername(),
-            userConfirmed: result.userConfirmed,
           });
         }
       });

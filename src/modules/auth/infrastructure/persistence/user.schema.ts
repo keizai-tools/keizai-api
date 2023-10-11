@@ -2,7 +2,7 @@ import { EntitySchema } from 'typeorm';
 
 import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
 
-import { User } from '../../domain/user.entity';
+import { User } from '../../domain/user.domain';
 
 export const UserSchema = new EntitySchema<User>({
   name: 'User',

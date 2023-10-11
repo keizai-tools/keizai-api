@@ -1,13 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { AuthRequestDto } from '@/modules/auth/interface/dto/auth-request.to.ts';
-
-import { AuthMapper } from '../../interface/mapper/user.mapper';
-import { ErrorMessage } from '../enum';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { LoginUserDto } from '../dto/login-user.dto';
+import { COGNITO_RESPONSE } from '../enum/cognito.enum';
+import { AuthMapper } from '../mapper/user.mapper';
 import {
   COGNITO_SERVICE,
   ICognitoService,
-  IRegisterResult,
 } from '../repository/cognito.interface.service';
 import {
   IUserRepository,
@@ -22,37 +21,39 @@ export class AuthService {
     @Inject(AuthMapper) private readonly authMapper: AuthMapper,
   ) {}
 
-  async login(authLoginUserDto: AuthRequestDto) {
+  async login(authLoginUserDto: LoginUserDto) {
     const { username, password } = authLoginUserDto;
     try {
       return await this.cognitoService.loginAccount(username, password);
     } catch (error) {
-      throw new Error(ErrorMessage.FAILED_LOGIN);
+      throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
     }
   }
 
-  async registerAccount(registerData: AuthRequestDto) {
+  async registerAccount(registerData: CreateUserDto) {
     const { username, password } = registerData;
-    let registeredUser: IRegisterResult;
     try {
-      registeredUser = await this.cognitoService.registerAccount(
+      const registeredUser = await this.cognitoService.registerAccount(
         username,
         password,
       );
+
+      const userMapped = this.authMapper.fromDtoToEntity(registeredUser);
+
+      await this.userRepository.save(userMapped);
+
+      return registeredUser;
     } catch (error) {
       console.log(error);
     }
-    const newUser = {
-      ...registeredUser,
-    };
-    const registeredUserDomain = this.authMapper.fromDtoToEntity(newUser);
-
-    await this.userRepository.save(registeredUserDomain);
-
-    return registeredUser;
   }
 
   async getOneByExternalId(id: number) {
-    return await this.userRepository.findOne(id);
+    const userResponse = await this.userRepository.findOne(id);
+    if (!userResponse) {
+      throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
+    }
+
+    return userResponse;
   }
 }

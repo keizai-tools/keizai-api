@@ -1,6 +1,6 @@
 import { IBaseRepository } from '@/common/application/base.repository';
 
-import { User } from '../../domain/user.entity';
+import { User } from '../../domain/user.domain';
 
 export const USER_REPOSITORY = 'USER_REPOSITORY';
 
