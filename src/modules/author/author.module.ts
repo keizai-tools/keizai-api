@@ -18,6 +18,7 @@ import { AuthorController } from './interface/author.controller';
   providers: [
     AuthorService,
     AuthorMapper,
+
     {
       provide: AUTHOR_REPOSITORY,
       useClass: AuthorMysqlRepository,
