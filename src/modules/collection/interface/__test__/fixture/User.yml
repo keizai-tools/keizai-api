@@ -1,0 +1,9 @@
+entity: User
+items:
+  user0:
+    email: 'user0'
+    externalId: '1234'
+
+  user1:
+    email: 'test'
+    externalId: '1234'

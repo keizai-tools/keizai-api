@@ -18,4 +18,13 @@ export const UserSchema = new EntitySchema<User>({
       name: 'external_id',
     },
   },
+  relations: {
+    collections: {
+      target: 'Collection',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'user_id',
+      },
+    },
+  },
 });

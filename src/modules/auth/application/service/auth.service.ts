@@ -37,7 +37,6 @@ export class AuthService {
         username,
         password,
       );
-
       const userMapped = this.authMapper.fromDtoToEntity(registeredUser);
 
       await this.userRepository.save(userMapped);
@@ -48,8 +47,8 @@ export class AuthService {
     }
   }
 
-  async getOneByExternalId(id: number) {
-    const userResponse = await this.userRepository.findOne(id);
+  async findOneByExternalId(id: string) {
+    const userResponse = await this.userRepository.findOneByExternalId(id);
     if (!userResponse) {
       throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
     }

@@ -24,4 +24,12 @@ export class UserRepository implements IUserRepository {
       },
     });
   }
+
+  async findOneByExternalId(id: string): Promise<User> {
+    return await this.repository.findOne({
+      where: {
+        externalId: id,
+      },
+    });
+  }
 }
