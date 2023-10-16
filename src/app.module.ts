@@ -13,6 +13,7 @@ import { AuthorModule } from '@/modules/author/author.module';
 import { BookModule } from '@/modules/book/book.module';
 
 import { AuthModule } from './modules/auth/auth.module';
+import { CollectionModule } from './modules/collection/collection.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AuthModule,
     AuthorModule,
     BookModule,
+    CollectionModule,
   ],
   controllers: [],
   providers: [],

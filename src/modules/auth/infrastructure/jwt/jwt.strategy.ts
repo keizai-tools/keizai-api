@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import { COGNITO_RESPONSE } from '../../application/enum/cognito.enum';
+import { AuthService } from '../../application/service/auth.service';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -22,6 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { idUser: payload.sub, email: payload.email };
+    const user = await this.authService.findOneByExternalId(payload.sub);
+    if (!user) {
+      throw new NotFoundException(COGNITO_RESPONSE.FAILED_LOGIN);
+    }
+    return user;
   }
 }

@@ -2,9 +2,6 @@ import { IsString, Matches } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
-  externalId: string;
-
-  @IsString()
   username: string;
 
   @Matches(

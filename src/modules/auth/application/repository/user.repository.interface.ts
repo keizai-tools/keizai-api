@@ -4,4 +4,6 @@ import { User } from '../../domain/user.domain';
 
 export const USER_REPOSITORY = 'USER_REPOSITORY';
 
-export type IUserRepository = IBaseRepository<User>;
+export interface IUserRepository extends IBaseRepository<User> {
+  findOneByExternalId(id: string): Promise<User>;
+}

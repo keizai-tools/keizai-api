@@ -10,6 +10,7 @@ import { COGNITO_SERVICE } from './application/repository/cognito.interface.serv
 import { USER_REPOSITORY } from './application/repository/user.repository.interface';
 import { AuthService } from './application/service/auth.service';
 import { CognitoService } from './infrastructure/cognito/aws.cognito.service';
+import { JwtStrategy } from './infrastructure/jwt/jwt.strategy';
 import { UserSchema } from './infrastructure/persistence/user.schema';
 import { UserRepository } from './infrastructure/persistence/user.typeorm.repository';
 import { AuthController } from './interface/auth.controller';
@@ -32,6 +33,7 @@ import { AuthController } from './interface/auth.controller';
       useClass: UserRepository,
     },
     AuthMapper,
+    JwtStrategy,
   ],
 })
 export class AuthModule {}
