@@ -1,3 +1,7 @@
+import { Inject } from '@nestjs/common';
+
+import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
+
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
 import {
@@ -6,6 +10,10 @@ import {
 } from '../service/collection.service';
 
 export class CollectionMapper {
+  constructor(
+    @Inject(FolderMapper)
+    private readonly folderMapper: FolderMapper,
+  ) {}
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
     const { name, userId } = collectionData;
     return new Collection(name, userId);
@@ -15,7 +23,10 @@ export class CollectionMapper {
     return new Collection(name, userId, id);
   }
   fromEntityToDto(collection: Collection): CollectionResponseDto {
-    const { name, id } = collection;
-    return new CollectionResponseDto(id, name);
+    const { name, id, folders } = collection;
+    const foldersMapped = folders?.map((folder) => {
+      return this.folderMapper.fromEntityToDto(folder);
+    });
+    return new CollectionResponseDto(id, name, foldersMapped);
   }
 }

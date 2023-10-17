@@ -19,6 +19,7 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOne(id: number): Promise<Collection> {
     return await this.repository.findOne({
+      relations: { user: true },
       where: {
         id,
       },
@@ -27,6 +28,7 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOneByIds(id: number, userId: number): Promise<Collection> {
     return await this.repository.findOne({
+      relations: { folders: true },
       where: {
         id,
         userId,
@@ -36,6 +38,7 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findAllByUser(userId: number): Promise<Collection[]> {
     return await this.repository.find({
+      relations: { folders: true },
       where: {
         user: {
           id: userId,

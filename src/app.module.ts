@@ -14,6 +14,7 @@ import { BookModule } from '@/modules/book/book.module';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
+import { FolderModule } from './modules/folder/folder.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CollectionModule } from './modules/collection/collection.module';
     AuthorModule,
     BookModule,
     CollectionModule,
+    FolderModule,
   ],
   controllers: [],
   providers: [],

@@ -57,7 +57,6 @@ export class CognitoService implements ICognitoService {
     });
 
     const cognitoUser = new CognitoUser(userData);
-
     const authenticationFlowType = 'USER_PASSWORD_AUTH';
 
     return new Promise((resolve, reject) => {

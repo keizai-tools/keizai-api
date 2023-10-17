@@ -2,21 +2,32 @@ import { EntitySchema } from 'typeorm';
 
 import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
 
-import { Collection } from '../../domain/collection.domain';
+import { Folder } from '../../domain/folder.domain';
 
-export const CollectionSchema = new EntitySchema<Collection>({
-  name: 'Collection',
-  target: Collection,
+export const FolderSchema = new EntitySchema<Folder>({
+  name: 'Folder',
+  target: Folder,
   columns: {
     ...baseColumnSchemas,
     name: {
       type: 'varchar',
+    },
+    collectionId: {
+      type: Number,
     },
     userId: {
       type: Number,
     },
   },
   relations: {
+    collection: {
+      target: 'Collection',
+      type: 'many-to-one',
+      joinColumn: {
+        name: 'collection_id',
+      },
+      onDelete: 'CASCADE',
+    },
     user: {
       target: 'User',
       type: 'many-to-one',
@@ -24,14 +35,6 @@ export const CollectionSchema = new EntitySchema<Collection>({
         name: 'user_id',
       },
       onDelete: 'CASCADE',
-    },
-    folders: {
-      target: 'Folder',
-      type: 'one-to-many',
-      joinColumn: {
-        name: 'collection_id',
-      },
-      inverseSide: 'collection',
     },
   },
 });
