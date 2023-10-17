@@ -26,5 +26,12 @@ export const UserSchema = new EntitySchema<User>({
         name: 'user_id',
       },
     },
+    folders: {
+      target: 'Folder',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'user_id',
+      },
+    },
   },
 });

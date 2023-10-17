@@ -1,16 +1,18 @@
+import { Collection } from 'typeorm';
+
 import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
-import { Folder } from '@/modules/folder/domain/folder.domain';
 
-export class Collection extends Base {
+export class Folder extends Base {
   name: string;
+  collectionId: number;
   userId: number;
-  id?: number;
+  collection?: Collection;
   user?: User;
-  folders?: Folder[];
-  constructor(name: string, userId: number, id?: number) {
+  constructor(name: string, collectionId: number, userId: number, id?: number) {
     super();
     this.name = name;
+    this.collectionId = collectionId;
     this.userId = userId;
     this.id = id;
   }

@@ -10,7 +10,7 @@ import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.i
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
 
-import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
+import { FOLDER_RESPONSE } from '../../application/exceptions/folder-response.enum';
 
 const mockedCognitoService = {
   registerAccount: jest.fn(),
@@ -31,7 +31,7 @@ const mockedGuard = {
   },
 };
 
-describe('Collection - [/collection]', () => {
+describe('Folder - [/folder]', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -63,12 +63,13 @@ describe('Collection - [/collection]', () => {
     await app.init();
   });
 
-  describe('Create one  - [POST /collection]', () => {
-    it('It should create a new collection', async () => {
+  describe('Create one  - [POST /folder]', () => {
+    it('It should create a new folder', async () => {
       const response = await request(app.getHttpServer())
-        .post('/collection')
+        .post('/folder')
         .send({
           name: 'test',
+          collectionId: 1,
         })
         .expect(HttpStatus.CREATED);
 
@@ -76,86 +77,84 @@ describe('Collection - [/collection]', () => {
     });
   });
 
-  describe('Get all  - [GET /collection]', () => {
-    it('should get all collections associated with a user', async () => {
+  describe('Get all  - [GET /folder]', () => {
+    it('should get all folders associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
         expect.objectContaining({ id: 1 }),
         expect.objectContaining({ id: 3 }),
       ]);
       const response = await request(app.getHttpServer())
-        .get('/collection')
+        .get('/folder')
         .expect(HttpStatus.OK);
 
       expect(response.body).toHaveLength(2);
       expect(response.body).toEqual(responseExpected);
     });
-    it('should only get collections associated with a user', async () => {
+    it('should only get folders associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/collection')
+        .get('/folder')
         .expect(HttpStatus.OK);
 
       expect(response.body).toHaveLength(2);
     });
   });
 
-  describe('Get one  - [GET /collection/:id]', () => {
-    it('should get one collection associated with a user', async () => {
+  describe('Get one  - [GET /folder/:id]', () => {
+    it('should get one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/collection/1')
+        .get('/folder/1')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          id: 1,
-          name: 'collection1',
-        }),
-      );
+      expect(response.body).toEqual({
+        id: 1,
+        name: 'folder1',
+      });
     });
 
-    it('should throw error when try to get one collection not associated with a user', async () => {
+    it('should throw error when try to get one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/collection/2')
+        .get('/folder/2')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
       );
     });
   });
 
-  describe('Update one  - [PUT /collection/:id]', () => {
-    it('should update one collection associated with a user', async () => {
+  describe('Update one  - [PUT /folder/:id]', () => {
+    it('should update one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/collection')
+        .patch('/folder')
         .send({
-          name: 'collection updated',
+          name: 'folder updated',
           id: 1,
         })
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
         id: 1,
-        name: 'collection updated',
+        name: 'folder updated',
       });
     });
   });
 
-  describe('Delete one  - [DELETE /collection/:id]', () => {
-    it('should delete one collection associated with a user', async () => {
+  describe('Delete one  - [DELETE /folder/:id]', () => {
+    it('should delete one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/collection/3')
+        .delete('/folder/3')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
     });
 
-    it('should throw error when try to delete one collection not associated with a user', async () => {
+    it('should throw error when try to delete one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/collection/2')
+        .delete('/folder/2')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
       );
     });
   });
