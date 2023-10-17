@@ -50,7 +50,6 @@ const automatedTests: DataSourceOptions = {
   database: `./data/tests.${Math.random()}.db`,
   synchronize: true,
   dropSchema: false,
-  verbose: console.log,
   namingStrategy: new SnakeNamingStrategy(),
 };
 

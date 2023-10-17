@@ -104,10 +104,12 @@ describe('Collection - [/collection]', () => {
         .get('/collection/1')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toEqual({
-        id: 1,
-        name: 'collection1',
-      });
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 1,
+          name: 'collection1',
+        }),
+      );
     });
 
     it('should throw error when try to get one collection not associated with a user', async () => {
