@@ -28,6 +28,7 @@ export class FolderRepository implements IFolderRepository {
 
   async findOne(id: number): Promise<Folder> {
     return await this.repository.findOne({
+      relations: { user: true },
       where: {
         id,
       },

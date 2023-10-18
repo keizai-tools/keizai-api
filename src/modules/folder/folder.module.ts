@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from '@/common/common.module';
 
 import { CollectionModule } from '../collection/collection.module';
+import { InvocationModule } from '../invocation/invocation.module';
 import { FolderMapper } from './application/mapper/folder.mapper';
 import { FOLDER_REPOSITORY } from './application/repository/folder.repository';
 import { FolderService } from './application/service/folder.service';
@@ -16,6 +17,7 @@ import { FolderController } from './interface/folder.controller';
     TypeOrmModule.forFeature([FolderSchema]),
     CommonModule,
     forwardRef(() => CollectionModule),
+    forwardRef(() => InvocationModule),
   ],
   controllers: [FolderController],
   providers: [
@@ -26,6 +28,12 @@ import { FolderController } from './interface/folder.controller';
       useClass: FolderRepository,
     },
   ],
-  exports: [FolderMapper],
+  exports: [
+    FolderMapper,
+    {
+      provide: FOLDER_REPOSITORY,
+      useClass: FolderRepository,
+    },
+  ],
 })
 export class FolderModule {}
