@@ -2,17 +2,23 @@ import { EntitySchema } from 'typeorm';
 
 import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
 
-import { Folder } from '../../domain/folder.domain';
+import { Invocation } from '../../domain/invocation.domain';
 
-export const FolderSchema = new EntitySchema<Folder>({
-  name: 'Folder',
-  target: Folder,
+export const InvocationSchema = new EntitySchema<Invocation>({
+  name: 'Invocation',
+  target: Invocation,
   columns: {
     ...baseColumnSchemas,
     name: {
       type: 'varchar',
     },
-    collectionId: {
+    method: {
+      type: 'varchar',
+    },
+    contractId: {
+      type: 'varchar',
+    },
+    folderId: {
       type: Number,
     },
     userId: {
@@ -20,11 +26,11 @@ export const FolderSchema = new EntitySchema<Folder>({
     },
   },
   relations: {
-    collection: {
-      target: 'Collection',
+    folder: {
+      target: 'Folder',
       type: 'many-to-one',
       joinColumn: {
-        name: 'collection_id',
+        name: 'folder_id',
       },
       onDelete: 'CASCADE',
     },
@@ -35,14 +41,6 @@ export const FolderSchema = new EntitySchema<Folder>({
         name: 'user_id',
       },
       onDelete: 'CASCADE',
-    },
-    invocations: {
-      target: 'Invocation',
-      type: 'one-to-many',
-      joinColumn: {
-        name: 'folder_id',
-      },
-      inverseSide: 'folder',
     },
   },
 });
