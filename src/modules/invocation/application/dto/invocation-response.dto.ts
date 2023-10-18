@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 import { Base } from '@/common/domain/base.domain';
+import { ParamResponseDto } from '@/modules/parameter/application/dto/param-response.dto';
 
 export class InvocationResponseDto extends Base {
   @IsNotEmpty()
@@ -15,11 +16,22 @@ export class InvocationResponseDto extends Base {
   @IsString()
   contractId: string;
 
-  constructor(name: string, method: string, contractId: string, id?: number) {
+  @IsNotEmpty()
+  @IsString()
+  params: ParamResponseDto[];
+
+  constructor(
+    name: string,
+    method: string,
+    contractId: string,
+    params: ParamResponseDto[],
+    id?: number,
+  ) {
     super();
     this.name = name;
     this.method = method;
     this.contractId = contractId;
     this.id = id;
+    this.params = params;
   }
 }
