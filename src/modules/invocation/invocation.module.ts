@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from '@/common/common.module';
 
 import { FolderModule } from '../folder/folder.module';
+import { ParamModule } from '../parameter/param.module';
 import { InvocationMapper } from './application/mapper/invocation.mapper';
 import { INVOCATION_REPOSITORY } from './application/repository/invocation.repository';
 import { InvocationService } from './application/service/invocation.service';
@@ -16,6 +17,7 @@ import { InvocationController } from './interface/invocation.controller';
     TypeOrmModule.forFeature([InvocationSchema]),
     CommonModule,
     forwardRef(() => FolderModule),
+    forwardRef(() => ParamModule),
   ],
   controllers: [InvocationController],
   providers: [
@@ -26,6 +28,12 @@ import { InvocationController } from './interface/invocation.controller';
       useClass: InvocationRepository,
     },
   ],
-  exports: [InvocationMapper],
+  exports: [
+    InvocationMapper,
+    {
+      provide: INVOCATION_REPOSITORY,
+      useClass: InvocationRepository,
+    },
+  ],
 })
 export class InvocationModule {}
