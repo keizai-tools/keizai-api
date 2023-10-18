@@ -1,6 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import {
+  IInvocationRepository,
+  INVOCATION_REPOSITORY,
+} from '@/modules/invocation/application/repository/invocation.repository';
 
 import { CreateParamDto } from '../dto/create-param.dto';
 import { ParamResponseDto } from '../dto/param-response.dto';
@@ -27,7 +31,7 @@ export class ParamService {
     private readonly paramMapper: ParamMapper,
     @Inject(PARAM_REPOSITORY)
     private readonly paramRepository: IParamRepository,
-    @Injectable(INVOCATION_REPOSITORY)
+    @Inject(INVOCATION_REPOSITORY)
     private readonly invocationRepository: IInvocationRepository,
   ) {}
 

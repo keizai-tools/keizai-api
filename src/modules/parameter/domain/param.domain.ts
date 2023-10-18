@@ -1,5 +1,6 @@
 import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 export class Param extends Base {
   name: string;

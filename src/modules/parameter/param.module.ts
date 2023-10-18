@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@/common/common.module';
 
+import { InvocationModule } from '../invocation/invocation.module';
 import { ParamMapper } from './application/mapper/param.mapper';
 import { PARAM_REPOSITORY } from './application/repository/param.repository';
 import { ParamService } from './application/service/param.service';
