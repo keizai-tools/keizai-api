@@ -14,7 +14,7 @@ export class InvocationMapper {
   }
 
   fromUpdateDtoToEntity(updateFolderDto: IInvocationValues): Invocation {
-    const { name, method, contractId, folderId, id } = updateFolderDto;
-    return new Invocation(name, method, contractId, folderId, id);
+    const { name, method, contractId, folderId, id, userId } = updateFolderDto;
+    return new Invocation(name, method, contractId, folderId, userId, id);
   }
 }

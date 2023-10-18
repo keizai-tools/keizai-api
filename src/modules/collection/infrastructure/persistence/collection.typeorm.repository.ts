@@ -38,7 +38,7 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findAllByUser(userId: number): Promise<Collection[]> {
     return await this.repository.find({
-      relations: { folders: true },
+      relations: { folders: { invocations: true } },
       where: {
         user: {
           id: userId,

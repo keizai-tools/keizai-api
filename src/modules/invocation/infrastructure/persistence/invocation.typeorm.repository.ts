@@ -48,8 +48,8 @@ export class InvocationRepository implements IInvocationRepository {
   }
 
   async delete(id: number): Promise<boolean> {
-    const folder = await this.findOne(id);
-    if (folder) {
+    const invocation = await this.findOne(id);
+    if (invocation) {
       await this.repository.delete(id);
       return true;
     }

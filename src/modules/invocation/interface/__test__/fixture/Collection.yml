@@ -1,0 +1,9 @@
+entity: Collection
+items:
+  collection0:
+    name: 'collection1'
+    user: '@user0'
+
+  collection1:
+    name: 'collection2'
+    user: '@user1'

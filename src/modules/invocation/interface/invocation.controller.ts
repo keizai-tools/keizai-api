@@ -29,12 +29,14 @@ export class InvocationController {
     @Body() createFolderDto: CreateInvocationDto,
     @AuthUser() user: IUserResponse,
   ) {
+    console.log(createFolderDto);
     return this.invocationService.create(createFolderDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('')
   findAll(@AuthUser() user: IUserResponse) {
+    console.log(user.id);
     return this.invocationService.findAll(user);
   }
 
@@ -56,6 +58,7 @@ export class InvocationController {
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: number) {
+    console.log(user.id);
     return this.invocationService.delete(user, id);
   }
 }

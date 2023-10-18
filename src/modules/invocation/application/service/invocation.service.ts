@@ -43,8 +43,13 @@ export class InvocationService {
     const folder = await this.folderRepository.findOne(
       createFolderDto.folderId,
     );
+    if (!folder) {
+      throw new NotFoundException(
+        INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
+      );
+    }
 
-    if (!(folder?.user.id === user.id)) {
+    if (folder?.userId !== user?.id) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
@@ -122,6 +127,7 @@ export class InvocationService {
     };
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
+    console.log(invocationMapped);
     const invocationUpdated = await this.invocationRepository.update(
       invocationMapped,
     );
@@ -139,6 +145,6 @@ export class InvocationService {
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
     }
-    return this.folderRepository.delete(id);
+    return this.invocationRepository.delete(id);
   }
 }
