@@ -30,7 +30,6 @@ export class CollectionController {
     @Body() collectionDto: CreateCollectionDto,
     @AuthUser() user: IUserResponse,
   ): Promise<CollectionResponseDto> {
-    console.log(user.id);
     return this.collectionService.create(collectionDto, user);
   }
 

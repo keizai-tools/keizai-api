@@ -127,7 +127,6 @@ export class InvocationService {
     };
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
-    console.log(invocationMapped);
     const invocationUpdated = await this.invocationRepository.update(
       invocationMapped,
     );

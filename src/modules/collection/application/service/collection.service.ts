@@ -69,10 +69,8 @@ export class CollectionService {
       userId: user.id,
     };
     const collection = this.collectionMapper.fromDtoToEntity(collectionData);
-    console.log({ collection });
     try {
       const collectionSaved = await this.collectionRepository.save(collection);
-      console.log({ collectionSaved });
       return this.collectionMapper.fromEntityToDto(collectionSaved);
     } catch (e) {
       console.log({ e });
