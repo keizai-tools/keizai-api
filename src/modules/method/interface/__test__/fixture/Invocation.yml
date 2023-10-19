@@ -6,8 +6,8 @@ items:
     secretKey: 'test'
     publicKey: 'test'
     contractId: 'contract test'
-    user: '@user0'
     folder: '@folder0'
+    user: '@user0'
 
   invocation1:
     id: 'invocation1'
@@ -15,5 +15,5 @@ items:
     secretKey: 'method1'
     publicKey: 'method1'
     contractId: 'contract test'
+    folder: '@folder0'
     user: '@user1'
-    folder: '@folder1'

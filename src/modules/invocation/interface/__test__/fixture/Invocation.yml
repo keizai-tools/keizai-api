@@ -3,7 +3,8 @@ items:
   invocation0:
     id: 'invocation0'
     name: 'invocation0'
-    method: 'method0'
+    secretKey: 'secret'
+    publicKey: 'public'
     contractId: 'contract test'
     user: '@user0'
     folder: '@folder0'
@@ -11,7 +12,8 @@ items:
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
-    method: 'method1'
+    secretKey: 'secret'
+    publicKey: 'public'
     contractId: 'contract test'
     user: '@user1'
     folder: '@folder1'

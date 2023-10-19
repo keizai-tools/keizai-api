@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateInvocationDto {
   @IsNotEmpty()
@@ -7,7 +7,11 @@ export class CreateInvocationDto {
 
   @IsNotEmpty()
   @IsString()
-  method: string;
+  publicKey: string;
+
+  @IsNotEmpty()
+  @IsString()
+  secretKey: string;
 
   @IsNotEmpty()
   @IsString()
@@ -16,4 +20,8 @@ export class CreateInvocationDto {
   @IsNotEmpty()
   @IsString()
   folderId: string;
+
+  @IsOptional()
+  @IsString()
+  selectedMethodId?: string;
 }

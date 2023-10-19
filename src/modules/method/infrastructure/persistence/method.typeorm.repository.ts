@@ -2,22 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IParamRepository } from '../../application/repository/param.repository';
-import { Param } from '../../domain/param.domain';
-import { ParamSchema } from './param.schema';
+import { IMethodRepository } from '../../application/repository/method.interface.repository';
+import { Method } from '../../domain/method.domain';
+import { MethodSchema } from './method.schema';
 
 @Injectable()
-export class ParamRepository implements IParamRepository {
+export class MethodRepository implements IMethodRepository {
   constructor(
-    @InjectRepository(ParamSchema)
-    private readonly repository: Repository<Param>,
+    @InjectRepository(MethodSchema)
+    private readonly repository: Repository<Method>,
   ) {}
 
-  async save(param: Param): Promise<Param> {
+  async save(param: Method): Promise<Method> {
     return this.repository.save(param);
   }
 
-  async findAll(userId: string): Promise<Param[]> {
+  async findAll(userId: string): Promise<Method[]> {
     return await this.repository.find({
       relations: { invocation: true },
       where: {
@@ -26,7 +26,7 @@ export class ParamRepository implements IParamRepository {
     });
   }
 
-  async findOne(id: string): Promise<Param> {
+  async findOne(id: string): Promise<Method> {
     return await this.repository.findOne({
       where: {
         id,
@@ -34,7 +34,7 @@ export class ParamRepository implements IParamRepository {
     });
   }
 
-  async findOneByIds(id: string, userId: string): Promise<Param> {
+  async findOneByIds(id: string, userId: string): Promise<Method> {
     return await this.repository.findOne({
       where: {
         id,
@@ -43,13 +43,13 @@ export class ParamRepository implements IParamRepository {
     });
   }
 
-  async update(param: Param): Promise<Param> {
+  async update(param: Method): Promise<Method> {
     return await this.repository.preload(param);
   }
 
   async delete(id: string): Promise<boolean> {
-    const param = await this.findOne(id);
-    if (param) {
+    const method = await this.findOne(id);
+    if (method) {
       await this.repository.delete(id);
       return true;
     }

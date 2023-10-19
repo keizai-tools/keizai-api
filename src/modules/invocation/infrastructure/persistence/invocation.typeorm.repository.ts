@@ -19,7 +19,12 @@ export class InvocationRepository implements IInvocationRepository {
 
   async findAll(userId: string): Promise<Invocation[]> {
     return await this.repository.find({
-      relations: { folder: true },
+      relations: {
+        folder: true,
+        selectedMethod: true,
+        methods: true,
+        params: true,
+      },
       where: {
         userId,
       },

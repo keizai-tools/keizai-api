@@ -1,0 +1,11 @@
+entity: User
+items:
+  user0:
+    id: 'user0'
+    email: 'user1'
+    externalId: '123-123-123'
+
+  user1:
+    id: 'user1'
+    email: 'user2'
+    externalId: '123-123-123'

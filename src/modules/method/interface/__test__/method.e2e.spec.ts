@@ -10,7 +10,7 @@ import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.i
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
 
-import { INVOCATION_RESPONSE } from '../../application/exceptions/invocation-response.enum.dto';
+import { METHOD_RESPONSE } from '../../application/exceptions/method-response.enum';
 
 const mockedCognitoService = {
   registerAccount: jest.fn(),
@@ -31,13 +31,11 @@ const mockedGuard = {
   },
 };
 
-describe('Invocation - [/invocation]', () => {
+describe('Parameter - [/param]', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    })
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(JwtStrategy)
       .useValue(mockedJwtStrategy)
       .overrideProvider(COGNITO_SERVICE)
@@ -63,91 +61,78 @@ describe('Invocation - [/invocation]', () => {
     await app.init();
   });
 
-  describe('Create one  - [POST /invocation]', () => {
-    it('It should create a new invocation', async () => {
+  describe('Create one - [POST /method]', () => {
+    it('Should create a new method', async () => {
       const responseExpected = expect.objectContaining({
         id: expect.any(String),
         name: expect.any(String),
-        secretKey: expect.any(String),
-        publicKey: expect.any(String),
-        contractId: expect.any(String),
       });
       const response = await request(app.getHttpServer())
-        .post('/invocation')
+        .post('/method')
         .send({
           name: 'test',
-          folderId: 'folder0',
-          secretKey: 'test',
-          publicKey: 'test',
-          contractId: 'test contract',
+          invocationId: 'invocation0',
         })
         .expect(HttpStatus.CREATED);
 
       expect(response.body).toEqual(responseExpected);
     });
   });
-
-  describe('Get all  - [GET /invocation]', () => {
-    it('should get all invocations associated with a user', async () => {
+  describe('Get all - [GET /method]', () => {
+    it('Should get all parameters associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 'invocation0' }),
         expect.objectContaining({ id: expect.any(String) }),
+        expect.objectContaining({ id: 'method0' }),
       ]);
       const response = await request(app.getHttpServer())
-        .get('/invocation')
+        .get('/method')
         .expect(HttpStatus.OK);
 
       expect(response.body).toHaveLength(2);
       expect(response.body).toEqual(responseExpected);
     });
-    it('should only get invocations associated with a user', async () => {
+    it('Should only get parameters associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation')
+        .get('/method')
         .expect(HttpStatus.OK);
 
       expect(response.body).toHaveLength(2);
     });
   });
-
-  describe('Get one  - [GET /invocation/:id]', () => {
-    it('should get one invocation associated with a user', async () => {
+  describe('Get one - [GET /method/:id]', () => {
+    it('Should get one method associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 'invocation0',
+        id: 'method0',
         name: expect.any(String),
-        secretKey: expect.any(String),
-        publicKey: expect.any(String),
-        contractId: expect.any(String),
       });
 
       const response = await request(app.getHttpServer())
-        .get('/invocation/invocation0')
+        .get('/method/method0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
     });
-
-    it('should throw error when try to get one invocation not associated with a user', async () => {
+    it('Should throw error when try to get one parameter not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation/invocation1')
+        .get('/method/method1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
       );
     });
   });
-
-  describe('Update one  - [PUT /invocation/:id]', () => {
-    it('should update one invocation associated with a user', async () => {
+  describe('Update one  - [PUT /method/:id]', () => {
+    it('Should update one method associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 'invocation0',
-        name: 'invocation updated',
+        id: 'method0',
+        name: 'method updated',
       });
       const response = await request(app.getHttpServer())
-        .patch('/invocation')
+        .patch('/method')
         .send({
-          name: 'invocation updated',
-          id: 'invocation0',
+          name: 'method updated',
+          id: 'method0',
         })
         .expect(HttpStatus.OK);
 
@@ -155,22 +140,22 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Delete one  - [DELETE /invocation/:id]', () => {
-    it('should delete one invocation associated with a user', async () => {
+  describe('Delete one  - [DELETE /method/:id]', () => {
+    it('Should delete one method associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/invocation/invocation0')
+        .delete('/method/method0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
     });
 
-    it('should throw error when try to delete one invocation not associated with a user', async () => {
+    it('Should throw error when try to delete one param not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/invocation/invocation1')
+        .delete('/method/method1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
       );
     });
   });

@@ -17,11 +17,13 @@ import {
 } from '../repository/invocation.repository';
 
 export interface IInvocationValues {
-  name: string;
-  method: string;
-  contractId: string;
-  folderId: string;
-  userId: string;
+  name?: string;
+  secretKey?: string;
+  publicKey?: string;
+  contractId?: string;
+  folderId?: string;
+  userId?: string;
+  selectedMethodId?: string;
   id?: string;
 }
 
@@ -57,7 +59,8 @@ export class InvocationService {
 
     const invocationValues: IInvocationValues = {
       name: createFolderDto.name,
-      method: createFolderDto.method,
+      secretKey: createFolderDto.secretKey,
+      publicKey: createFolderDto.publicKey,
       contractId: createFolderDto.contractId,
       folderId: createFolderDto.folderId,
       userId: user.id,
@@ -77,9 +80,10 @@ export class InvocationService {
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_ID,
       );
     }
-    return invocations.map((invocation) =>
-      this.invocationMapper.fromEntityToDto(invocation),
-    );
+
+    return invocations.map((invocation) => {
+      return this.invocationMapper.fromEntityToDto(invocation);
+    });
   }
 
   async findOneByIds(
@@ -119,7 +123,8 @@ export class InvocationService {
 
     const invocationValues: IInvocationValues = {
       name: updateInvocationDto.name,
-      method: updateInvocationDto.method,
+      secretKey: updateInvocationDto.publicKey,
+      publicKey: updateInvocationDto.publicKey,
       contractId: updateInvocationDto.contractId,
       folderId: updateInvocationDto.folderId,
       userId: user.id,
