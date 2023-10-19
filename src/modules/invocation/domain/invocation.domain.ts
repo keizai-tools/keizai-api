@@ -7,8 +7,8 @@ export class Invocation extends Base {
   name: string;
   method: string;
   contractId: string;
-  folderId: number;
-  userId: number;
+  folderId: string;
+  userId: string;
   folder?: Folder;
   user?: User;
   params: Param[];
@@ -16,9 +16,9 @@ export class Invocation extends Base {
     name: string,
     method: string,
     contractId: string,
-    folderId: number,
-    userId: number,
-    id?: number,
+    folderId: string,
+    userId: string,
+    id?: string,
   ) {
     super();
     this.name = name;

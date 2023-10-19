@@ -13,10 +13,10 @@ export const FolderSchema = new EntitySchema<Folder>({
       type: 'varchar',
     },
     collectionId: {
-      type: Number,
+      type: String,
     },
     userId: {
-      type: Number,
+      type: String,
     },
   },
   relations: {

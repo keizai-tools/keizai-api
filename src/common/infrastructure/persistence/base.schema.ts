@@ -6,9 +6,9 @@ const columnDateType =
 export const baseColumnSchemas: { [key: string]: EntitySchemaColumnOptions } = {
   id: {
     name: 'id',
-    type: 'integer',
+    type: 'uuid',
     primary: true,
-    generated: true,
+    generated: 'uuid',
   },
   createdAt: {
     name: 'created_at',

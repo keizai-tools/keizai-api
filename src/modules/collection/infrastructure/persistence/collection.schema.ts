@@ -13,7 +13,7 @@ export const CollectionSchema = new EntitySchema<Collection>({
       type: 'varchar',
     },
     userId: {
-      type: Number,
+      type: String,
     },
   },
   relations: {

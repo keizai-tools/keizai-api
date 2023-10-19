@@ -22,6 +22,6 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Get('account/:externalId')
   async getUserData(@Param('externalId') id: string) {
-    return await this.authService.findOneByExternalId(id);
+    return await this.authService.findOneByexternalId(id);
   }
 }

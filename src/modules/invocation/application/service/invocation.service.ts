@@ -20,9 +20,9 @@ export interface IInvocationValues {
   name: string;
   method: string;
   contractId: string;
-  folderId: number;
-  userId: number;
-  id?: number;
+  folderId: string;
+  userId: string;
+  id?: string;
 }
 
 @Injectable()
@@ -84,7 +84,7 @@ export class InvocationService {
 
   async findOneByIds(
     user: IUserResponse,
-    id: number,
+    id: string,
   ): Promise<InvocationResponseDto> {
     const invocation = await this.invocationRepository.findOneByIds(
       id,
@@ -127,7 +127,6 @@ export class InvocationService {
     };
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
-    console.log(invocationMapped);
     const invocationUpdated = await this.invocationRepository.update(
       invocationMapped,
     );
@@ -138,8 +137,11 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
 
-  async delete(user: IUserResponse, id: number): Promise<boolean> {
-    const invocation = await this.folderRepository.findOneByIds(id, user.id);
+  async delete(user: IUserResponse, id: string): Promise<boolean> {
+    const invocation = await this.invocationRepository.findOneByIds(
+      id,
+      user.id,
+    );
     if (!invocation) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,

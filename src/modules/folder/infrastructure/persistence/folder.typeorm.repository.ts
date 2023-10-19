@@ -17,7 +17,7 @@ export class FolderRepository implements IFolderRepository {
     return this.repository.save(folder);
   }
 
-  async findAll(userId: number): Promise<Folder[]> {
+  async findAll(userId: string): Promise<Folder[]> {
     return await this.repository.find({
       relations: { collection: true },
       where: {
@@ -26,7 +26,7 @@ export class FolderRepository implements IFolderRepository {
     });
   }
 
-  async findOne(id: number): Promise<Folder> {
+  async findOne(id: string): Promise<Folder> {
     return await this.repository.findOne({
       relations: { user: true },
       where: {
@@ -35,7 +35,7 @@ export class FolderRepository implements IFolderRepository {
     });
   }
 
-  async findOneByIds(id: number, userId: number): Promise<Folder> {
+  async findOneByIds(id: string, userId: string): Promise<Folder> {
     return await this.repository.findOne({
       where: {
         id,
@@ -48,7 +48,7 @@ export class FolderRepository implements IFolderRepository {
     return await this.repository.preload(folder);
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const folder = await this.findOne(id);
     if (folder) {
       await this.repository.delete(id);

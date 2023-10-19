@@ -12,7 +12,7 @@ export class FolderResponseDto extends Base {
   @IsString()
   invocations: InvocationResponseDto[];
 
-  constructor(name: string, id: number, invocations: InvocationResponseDto[]) {
+  constructor(name: string, id: string, invocations: InvocationResponseDto[]) {
     super();
     this.name = name;
     this.id = id;

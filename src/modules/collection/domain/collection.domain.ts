@@ -4,11 +4,11 @@ import { Folder } from '@/modules/folder/domain/folder.domain';
 
 export class Collection extends Base {
   name: string;
-  userId: number;
-  id?: number;
+  userId: string;
+  id?: string;
   user?: User;
   folders?: Folder[];
-  constructor(name: string, userId: number, id?: number) {
+  constructor(name: string, userId: string, id?: string) {
     super();
     this.name = name;
     this.userId = userId;

@@ -1,14 +1,16 @@
 entity: Invocation
 items:
   invocation0:
-    name: 'invocation1'
-    method: 'method1'
+    id: 'invocation0'
+    name: 'invocation0'
+    method: 'method0'
     contractId: 'contract test'
     user: '@user0'
     folder: '@folder0'
 
   invocation1:
-    name: 'invocation2'
+    id: 'invocation1'
+    name: 'invocation1'
     method: 'method1'
     contractId: 'contract test'
     user: '@user1'

@@ -11,7 +11,7 @@ export class ParamResponseDto extends Base {
   @IsString()
   value: string;
 
-  constructor(name: string, value: string, id: number) {
+  constructor(name: string, value: string, id: string) {
     super();
     this.name = name;
     this.value = value;

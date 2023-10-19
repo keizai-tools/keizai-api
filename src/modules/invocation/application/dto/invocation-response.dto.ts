@@ -25,7 +25,7 @@ export class InvocationResponseDto extends Base {
     method: string,
     contractId: string,
     params: ParamResponseDto[],
-    id?: number,
+    id?: string,
   ) {
     super();
     this.name = name;
