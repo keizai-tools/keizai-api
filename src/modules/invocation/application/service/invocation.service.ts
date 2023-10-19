@@ -17,14 +17,17 @@ import {
 } from '../repository/invocation.repository';
 
 export interface IInvocationValues {
-  name?: string;
-  secretKey?: string;
-  publicKey?: string;
-  contractId?: string;
-  folderId?: string;
-  userId?: string;
+  name: string;
+  secretKey: string;
+  publicKey: string;
+  contractId: string;
+  folderId: string;
+  userId: string;
+}
+
+export interface IUpdateInvocationValues extends Partial<IInvocationValues> {
+  id: string;
   selectedMethodId?: string;
-  id?: string;
 }
 
 @Injectable()
@@ -121,7 +124,7 @@ export class InvocationService {
       );
     }
 
-    const invocationValues: IInvocationValues = {
+    const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
       secretKey: updateInvocationDto.publicKey,
       publicKey: updateInvocationDto.publicKey,

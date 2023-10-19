@@ -6,7 +6,7 @@ import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
 } from '@/modules/invocation/application/repository/invocation.repository';
-import { IInvocationValues } from '@/modules/invocation/application/service/invocation.service';
+import { IUpdateInvocationValues } from '@/modules/invocation/application/service/invocation.service';
 
 import { CreateMethodDto } from '../dto/create-method.dto';
 import { MethodResponseDto } from '../dto/method-response.dto';
@@ -61,7 +61,7 @@ export class MethodService {
     const method = this.methodMapper.fromDtoToEntity(methodValues);
     const methodSaved = await this.methodRepository.save(method);
 
-    const invocationValues: IInvocationValues = {
+    const invocationValues: IUpdateInvocationValues = {
       id: invocation.id,
       selectedMethodId: methodSaved.id,
     };

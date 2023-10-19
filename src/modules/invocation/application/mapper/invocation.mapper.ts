@@ -5,7 +5,10 @@ import { ParamMapper } from '@/modules/parameter/application/mapper/param.mapper
 
 import { Invocation } from '../../domain/invocation.domain';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
-import { IInvocationValues } from '../service/invocation.service';
+import {
+  IInvocationValues,
+  IUpdateInvocationValues,
+} from '../service/invocation.service';
 
 export class InvocationMapper {
   constructor(
@@ -63,7 +66,7 @@ export class InvocationMapper {
     );
   }
 
-  fromUpdateDtoToEntity(updateFolderDto: IInvocationValues): Invocation {
+  fromUpdateDtoToEntity(updateFolderDto: IUpdateInvocationValues): Invocation {
     const {
       name,
       secretKey,
