@@ -2,7 +2,7 @@ entity: Invocation
 items:
   invocation0:
     id: 'invocation0'
-    name: 'invocation1'
+    name: 'invocation0'
     secretKey: 'test'
     publicKey: 'test'
     contractId: 'contract test'
@@ -11,7 +11,7 @@ items:
 
   invocation1:
     id: 'invocation1'
-    name: 'invocation2'
+    name: 'invocation1'
     secretKey: 'method1'
     publicKey: 'method1'
     contractId: 'contract test'
