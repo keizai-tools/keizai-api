@@ -32,7 +32,6 @@ const staging: DataSourceOptions = {
   database: process.env.DB_NAME,
   synchronize: false,
   namingStrategy: new SnakeNamingStrategy(),
-  logging: true,
 };
 
 const development: DataSourceOptions = {
@@ -44,7 +43,6 @@ const development: DataSourceOptions = {
   database: process.env.DB_NAME,
   synchronize: true,
   namingStrategy: new SnakeNamingStrategy(),
-  logging: true,
 };
 
 const automatedTests: DataSourceOptions = {
