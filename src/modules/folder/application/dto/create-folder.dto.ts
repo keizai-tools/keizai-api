@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateFolderDto {
   @IsNotEmpty()
@@ -6,6 +6,6 @@ export class CreateFolderDto {
   name: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  collectionId: number;
+  @IsString()
+  collectionId: string;
 }

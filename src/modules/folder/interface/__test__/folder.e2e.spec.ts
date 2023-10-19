@@ -25,7 +25,7 @@ const mockedGuard = {
   canActivate: (context) => {
     const req = context.switchToHttp().getRequest();
     req.user = {
-      id: 1,
+      id: 'user0',
     };
     return true;
   },
@@ -69,19 +69,19 @@ describe('Folder - [/folder]', () => {
         .post('/folder')
         .send({
           name: 'test',
-          collectionId: 1,
+          collectionId: 'collection0',
         })
         .expect(HttpStatus.CREATED);
 
-      expect(response.body).toEqual({ name: 'test', id: expect.any(Number) });
+      expect(response.body).toEqual({ name: 'test', id: expect.any(String) });
     });
   });
 
   describe('Get all  - [GET /folder]', () => {
     it('should get all folders associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 1 }),
-        expect.objectContaining({ id: 3 }),
+        expect.objectContaining({ id: 'folder0' }),
+        expect.objectContaining({ id: expect.any(String) }),
       ]);
       const response = await request(app.getHttpServer())
         .get('/folder')
@@ -102,18 +102,18 @@ describe('Folder - [/folder]', () => {
   describe('Get one  - [GET /folder/:id]', () => {
     it('should get one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/folder/1')
+        .get('/folder/folder0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
-        id: 1,
-        name: 'folder1',
+        id: 'folder0',
+        name: 'folder0',
       });
     });
 
     it('should throw error when try to get one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/folder/2')
+        .get('/folder/folder1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
@@ -128,12 +128,12 @@ describe('Folder - [/folder]', () => {
         .patch('/folder')
         .send({
           name: 'folder updated',
-          id: 1,
+          id: 'folder0',
         })
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
-        id: 1,
+        id: 'folder0',
         name: 'folder updated',
       });
     });
@@ -142,7 +142,7 @@ describe('Folder - [/folder]', () => {
   describe('Delete one  - [DELETE /folder/:id]', () => {
     it('should delete one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/folder/3')
+        .delete('/folder/folder0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
@@ -150,7 +150,7 @@ describe('Folder - [/folder]', () => {
 
     it('should throw error when try to delete one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/folder/2')
+        .delete('/folder/folder1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(

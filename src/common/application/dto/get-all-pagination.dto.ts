@@ -1,14 +1,14 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class GetAllPaginationDto {
   @IsOptional()
-  @IsNumber()
+  @IsString()
   @Type(() => Number)
   take: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   @Type(() => Number)
   skip: number;
 }

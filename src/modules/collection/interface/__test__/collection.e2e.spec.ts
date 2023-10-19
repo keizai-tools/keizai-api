@@ -25,7 +25,7 @@ const mockedGuard = {
   canActivate: (context) => {
     const req = context.switchToHttp().getRequest();
     req.user = {
-      id: 1,
+      id: 'user0',
     };
     return true;
   },
@@ -72,15 +72,15 @@ describe('Collection - [/collection]', () => {
         })
         .expect(HttpStatus.CREATED);
 
-      expect(response.body).toEqual({ name: 'test', id: expect.any(Number) });
+      expect(response.body).toEqual({ name: 'test', id: expect.any(String) });
     });
   });
 
   describe('Get all  - [GET /collection]', () => {
     it('should get all collections associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 1 }),
-        expect.objectContaining({ id: 3 }),
+        expect.objectContaining({ id: 'collection0' }),
+        expect.objectContaining({ id: expect.any(String) }),
       ]);
       const response = await request(app.getHttpServer())
         .get('/collection')
@@ -101,13 +101,13 @@ describe('Collection - [/collection]', () => {
   describe('Get one  - [GET /collection/:id]', () => {
     it('should get one collection associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/collection/1')
+        .get('/collection/collection0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(
         expect.objectContaining({
-          id: 1,
-          name: 'collection1',
+          id: 'collection0',
+          name: 'collection0',
         }),
       );
     });
@@ -129,12 +129,12 @@ describe('Collection - [/collection]', () => {
         .patch('/collection')
         .send({
           name: 'collection updated',
-          id: 1,
+          id: 'collection0',
         })
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
-        id: 1,
+        id: 'collection0',
         name: 'collection updated',
       });
     });
@@ -143,7 +143,7 @@ describe('Collection - [/collection]', () => {
   describe('Delete one  - [DELETE /collection/:id]', () => {
     it('should delete one collection associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/collection/3')
+        .delete('/collection/collection0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});

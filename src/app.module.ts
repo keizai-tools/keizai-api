@@ -9,9 +9,6 @@ import { datasourceOptions } from '@configuration/orm.configuration';
 
 import { CommonModule } from '@common/common.module';
 
-import { AuthorModule } from '@/modules/author/author.module';
-import { BookModule } from '@/modules/book/book.module';
-
 import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { FolderModule } from './modules/folder/folder.module';
@@ -35,8 +32,6 @@ import { InvocationModule } from './modules/invocation/invocation.module';
     }),
     CommonModule,
     AuthModule,
-    AuthorModule,
-    BookModule,
     CollectionModule,
     FolderModule,
     InvocationModule,

@@ -42,7 +42,7 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: number) {
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.invocationService.findOneByIds(user, id);
   }
 
@@ -57,7 +57,7 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: number) {
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     console.log(user.id);
     return this.invocationService.delete(user, id);
   }

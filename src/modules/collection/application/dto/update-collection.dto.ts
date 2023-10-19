@@ -1,10 +1,10 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 import { CreateCollectionDto } from './create-collection.dto';
 
 export class UpdateCollectionDto extends PartialType(CreateCollectionDto) {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  id: number;
+  id: string;
 }

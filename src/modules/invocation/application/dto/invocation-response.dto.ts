@@ -15,7 +15,7 @@ export class InvocationResponseDto extends Base {
   @IsString()
   contractId: string;
 
-  constructor(name: string, method: string, contractId: string, id?: number) {
+  constructor(name: string, method: string, contractId: string, id?: string) {
     super();
     this.name = name;
     this.method = method;

@@ -18,9 +18,9 @@ import {
 
 export interface IFolderValues {
   name: string;
-  collectionId: number;
-  userId: number;
-  id?: number;
+  collectionId: string;
+  userId: string;
+  id?: string;
 }
 
 @Injectable()
@@ -69,7 +69,7 @@ export class FolderService {
 
   async findOneByIds(
     user: IUserResponse,
-    id: number,
+    id: string,
   ): Promise<FolderResponseDto> {
     const folder = await this.folderRepository.findOneByIds(id, user.id);
     if (!folder) {
@@ -87,17 +87,26 @@ export class FolderService {
       user.id,
     );
 
-    const collection = await this.collectionRepository.findOne(
-      updateFolderDto.collectionId,
-    );
-
-    if (!folder || !collection) {
+    if (!folder) {
       throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID);
+    }
+
+    if (updateFolderDto.collectionId) {
+      const collection = await this.collectionRepository.findOneByIds(
+        updateFolderDto.collectionId,
+        user.id,
+      );
+
+      if (!collection) {
+        throw new NotFoundException(
+          FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND,
+        );
+      }
     }
 
     const folderValues: IFolderValues = {
       name: updateFolderDto.name,
-      collectionId: updateFolderDto.id,
+      collectionId: updateFolderDto.collectionId,
       userId: user.id,
       id: updateFolderDto.id,
     };
@@ -108,7 +117,7 @@ export class FolderService {
     return this.folderMapper.fromEntityToDto(folderSaved);
   }
 
-  async delete(user: IUserResponse, id: number): Promise<boolean> {
+  async delete(user: IUserResponse, id: string): Promise<boolean> {
     const folder = await this.folderRepository.findOneByIds(id, user.id);
     if (!folder) {
       throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID);

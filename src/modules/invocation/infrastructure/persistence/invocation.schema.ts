@@ -19,10 +19,10 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       type: 'varchar',
     },
     folderId: {
-      type: Number,
+      type: String,
     },
     userId: {
-      type: Number,
+      type: String,
     },
   },
   relations: {

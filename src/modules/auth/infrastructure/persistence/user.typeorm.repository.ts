@@ -17,7 +17,7 @@ export class UserRepository implements IUserRepository {
     return await this.repository.save(user);
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: string): Promise<User> {
     return await this.repository.findOne({
       where: {
         id,
@@ -25,7 +25,7 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async findOneByExternalId(id: string): Promise<User> {
+  async findOneByexternalId(id: string): Promise<User> {
     return await this.repository.findOne({
       where: {
         externalId: id,

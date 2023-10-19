@@ -47,8 +47,8 @@ export class AuthService {
     }
   }
 
-  async findOneByExternalId(id: string) {
-    const userResponse = await this.userRepository.findOneByExternalId(id);
+  async findOneByexternalId(id: string) {
+    const userResponse = await this.userRepository.findOneByexternalId(id);
     if (!userResponse) {
       throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
     }

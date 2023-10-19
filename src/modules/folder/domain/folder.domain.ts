@@ -6,12 +6,12 @@ import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 export class Folder extends Base {
   name: string;
-  collectionId: number;
-  userId: number;
+  collectionId: string;
+  userId: string;
   collection?: Collection;
   user?: User;
   invocations?: Invocation[];
-  constructor(name: string, collectionId: number, userId: number, id?: number) {
+  constructor(name: string, collectionId: string, userId: string, id?: string) {
     super();
     this.name = name;
     this.collectionId = collectionId;
