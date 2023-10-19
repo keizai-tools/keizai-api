@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserDto } from '../dto/login-user.dto';
-import { COGNITO_RESPONSE } from '../enum/cognito.enum';
+import { exceptionsCognitoErrors } from '../exceptions/cognito-errors.exceptions';
+import { COGNITO_RESPONSE } from '../exceptions/cognito.enum';
 import { AuthMapper } from '../mapper/user.mapper';
 import {
   COGNITO_SERVICE,
@@ -26,7 +27,7 @@ export class AuthService {
     try {
       return await this.cognitoService.loginAccount(username, password);
     } catch (error) {
-      throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
+      exceptionsCognitoErrors(error, 'login');
     }
   }
 
@@ -43,14 +44,14 @@ export class AuthService {
 
       return registeredUser;
     } catch (error) {
-      console.log(error);
+      exceptionsCognitoErrors(error, 'register');
     }
   }
 
   async findOneByexternalId(id: string) {
     const userResponse = await this.userRepository.findOneByexternalId(id);
     if (!userResponse) {
-      throw new Error(COGNITO_RESPONSE.FAILED_LOGIN);
+      throw new NotFoundException(COGNITO_RESPONSE.USER_NOT_FOUND_OR_EXIST);
     }
 
     return userResponse;
