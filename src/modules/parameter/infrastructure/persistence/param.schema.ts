@@ -2,23 +2,20 @@ import { EntitySchema } from 'typeorm';
 
 import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
 
-import { Invocation } from '../../domain/invocation.domain';
+import { Param } from '../../domain/param.domain';
 
-export const InvocationSchema = new EntitySchema<Invocation>({
-  name: 'Invocation',
-  target: Invocation,
+export const ParamSchema = new EntitySchema<Param>({
+  name: 'Param',
+  target: Param,
   columns: {
     ...baseColumnSchemas,
     name: {
       type: 'varchar',
     },
-    method: {
+    value: {
       type: 'varchar',
     },
-    contractId: {
-      type: 'varchar',
-    },
-    folderId: {
+    invocationId: {
       type: String,
     },
     userId: {
@@ -26,11 +23,11 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     },
   },
   relations: {
-    folder: {
-      target: 'Folder',
+    invocation: {
+      target: 'Invocation',
       type: 'many-to-one',
       joinColumn: {
-        name: 'folder_id',
+        name: 'invocation_id',
       },
       onDelete: 'CASCADE',
     },
@@ -41,14 +38,6 @@ export const InvocationSchema = new EntitySchema<Invocation>({
         name: 'user_id',
       },
       onDelete: 'CASCADE',
-    },
-    params: {
-      target: 'Param',
-      type: 'one-to-many',
-      joinColumn: {
-        name: 'invocation_id',
-      },
-      inverseSide: 'invocation',
     },
   },
 });
