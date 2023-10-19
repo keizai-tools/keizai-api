@@ -12,7 +12,10 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     name: {
       type: 'varchar',
     },
-    method: {
+    secretKey: {
+      type: 'varchar',
+    },
+    publicKey: {
       type: 'varchar',
     },
     contractId: {
@@ -23,6 +26,10 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     },
     userId: {
       type: String,
+    },
+    selectedMethodId: {
+      type: String,
+      nullable: true,
     },
   },
   relations: {
@@ -49,6 +56,22 @@ export const InvocationSchema = new EntitySchema<Invocation>({
         name: 'invocation_id',
       },
       inverseSide: 'invocation',
+    },
+    methods: {
+      target: 'Method',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'invocation_id',
+      },
+      inverseSide: 'invocation',
+    },
+    selectedMethod: {
+      target: 'Method',
+      type: 'many-to-one',
+      joinColumn: {
+        name: 'selected_method_id',
+      },
+      onDelete: 'CASCADE',
     },
   },
 });

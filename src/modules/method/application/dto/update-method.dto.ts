@@ -1,9 +1,9 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-import { CreateParamDto } from './create-param.dto';
+import { CreateMethodDto } from './create-method.dto';
 
-export class UpdateParamDto extends PartialType(CreateParamDto) {
+export class UpdateMethodDto extends PartialType(CreateMethodDto) {
   @IsNotEmpty()
   @IsString()
   id: string;
