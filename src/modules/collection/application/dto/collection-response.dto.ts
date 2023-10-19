@@ -1,11 +1,11 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 export class CollectionResponseDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  id: number;
+  id: string;
 
   @IsString()
   @IsNotEmpty()
@@ -15,7 +15,7 @@ export class CollectionResponseDto {
   @IsArray()
   folders: FolderResponseDto[];
 
-  constructor(id: number, name: string, folders: FolderResponseDto[]) {
+  constructor(id: string, name: string, folders: FolderResponseDto[]) {
     this.id = id;
     this.name = name;
     this.folders = folders;

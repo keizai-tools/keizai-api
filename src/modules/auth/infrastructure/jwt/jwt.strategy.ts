@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const user = await this.authService.findOneByExternalId(payload.sub);
+    const user = await this.authService.findOneByexternalId(payload.sub);
     if (!user) {
       throw new NotFoundException(COGNITO_RESPONSE.FAILED_LOGIN);
     }

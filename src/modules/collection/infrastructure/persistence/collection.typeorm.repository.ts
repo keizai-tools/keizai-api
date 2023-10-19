@@ -17,7 +17,7 @@ export class CollectionRepository implements ICollectionRepository {
     return this.repository.save(collection);
   }
 
-  async findOne(id: number): Promise<Collection> {
+  async findOne(id: string): Promise<Collection> {
     return await this.repository.findOne({
       relations: { user: true },
       where: {
@@ -26,7 +26,7 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
-  async findOneByIds(id: number, userId: number): Promise<Collection> {
+  async findOneByIds(id: string, userId: string): Promise<Collection> {
     return await this.repository.findOne({
       relations: { folders: true },
       where: {
@@ -36,7 +36,7 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
-  async findAllByUser(userId: number): Promise<Collection[]> {
+  async findAllByUser(userId: string): Promise<Collection[]> {
     return await this.repository.find({
       relations: { folders: { invocations: true } },
       where: {
@@ -51,7 +51,7 @@ export class CollectionRepository implements ICollectionRepository {
     return await this.repository.preload(collection);
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await this.findOne(id);
     if (result) {
       await this.repository.delete(id);

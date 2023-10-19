@@ -14,11 +14,11 @@ import {
 
 export interface ICollectionValues {
   name: string;
-  userId: number;
+  userId: string;
 }
 
 export interface IUpdateCollectionValues extends ICollectionValues {
-  id: number;
+  id: string;
 }
 
 @Injectable()
@@ -30,14 +30,14 @@ export class CollectionService {
     private readonly collectionRepository: ICollectionRepository,
   ) {}
 
-  async findAllByUser(id: number): Promise<CollectionResponseDto[]> {
+  async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
     const collections = await this.collectionRepository.findAllByUser(id);
     return collections.map((collection) =>
       this.collectionMapper.fromEntityToDto(collection),
     );
   }
 
-  async findOne(id: number): Promise<CollectionResponseDto> {
+  async findOne(id: string): Promise<CollectionResponseDto> {
     const collection = await this.collectionRepository.findOne(id);
     if (!collection) {
       throw new NotFoundException(
@@ -48,8 +48,8 @@ export class CollectionService {
   }
 
   async findOneByIds(
-    id: number,
-    userId: number,
+    id: string,
+    userId: string,
   ): Promise<CollectionResponseDto> {
     const collection = await this.collectionRepository.findOneByIds(id, userId);
     if (!collection) {
@@ -69,13 +69,17 @@ export class CollectionService {
       userId: user.id,
     };
     const collection = this.collectionMapper.fromDtoToEntity(collectionData);
-    const collectionSaved = await this.collectionRepository.save(collection);
-    return this.collectionMapper.fromEntityToDto(collectionSaved);
+    try {
+      const collectionSaved = await this.collectionRepository.save(collection);
+      return this.collectionMapper.fromEntityToDto(collectionSaved);
+    } catch (e) {
+      console.log({ e });
+    }
   }
 
   async update(
     collectionDto: UpdateCollectionDto,
-    userId: number,
+    userId: string,
   ): Promise<CollectionResponseDto> {
     const collectionData: IUpdateCollectionValues = {
       name: collectionDto.name,
@@ -99,7 +103,7 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collectionSaved);
   }
 
-  async delete(id: number, userId: number): Promise<boolean> {
+  async delete(id: string, userId: string): Promise<boolean> {
     const collection = await this.findOneByIds(id, userId);
 
     if (!collection) {

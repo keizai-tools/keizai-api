@@ -17,7 +17,7 @@ export class InvocationRepository implements IInvocationRepository {
     return this.repository.save(invocation);
   }
 
-  async findAll(userId: number): Promise<Invocation[]> {
+  async findAll(userId: string): Promise<Invocation[]> {
     return await this.repository.find({
       relations: { folder: true },
       where: {
@@ -26,7 +26,7 @@ export class InvocationRepository implements IInvocationRepository {
     });
   }
 
-  async findOne(id: number): Promise<Invocation> {
+  async findOne(id: string): Promise<Invocation> {
     return await this.repository.findOne({
       where: {
         id,
@@ -34,7 +34,7 @@ export class InvocationRepository implements IInvocationRepository {
     });
   }
 
-  async findOneByIds(id: number, userId: number): Promise<Invocation> {
+  async findOneByIds(id: string, userId: string): Promise<Invocation> {
     return await this.repository.findOne({
       where: {
         id,
@@ -47,7 +47,7 @@ export class InvocationRepository implements IInvocationRepository {
     return await this.repository.preload(invocation);
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const invocation = await this.findOne(id);
     if (invocation) {
       await this.repository.delete(id);

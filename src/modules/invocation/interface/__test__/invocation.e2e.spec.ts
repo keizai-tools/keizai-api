@@ -25,7 +25,7 @@ const mockedGuard = {
   canActivate: (context) => {
     const req = context.switchToHttp().getRequest();
     req.user = {
-      id: 1,
+      id: 'user0',
     };
     return true;
   },
@@ -66,7 +66,7 @@ describe('Invocation - [/invocation]', () => {
   describe('Create one  - [POST /invocation]', () => {
     it('It should create a new invocation', async () => {
       const responseExpected = expect.objectContaining({
-        id: 3,
+        id: expect.any(String),
         name: expect.any(String),
         method: expect.any(String),
         contractId: expect.any(String),
@@ -75,7 +75,7 @@ describe('Invocation - [/invocation]', () => {
         .post('/invocation')
         .send({
           name: 'test',
-          folderId: 1,
+          folderId: 'folder0',
           method: 'test',
           contractId: 'test contract',
         })
@@ -88,8 +88,8 @@ describe('Invocation - [/invocation]', () => {
   describe('Get all  - [GET /invocation]', () => {
     it('should get all invocations associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 1 }),
-        expect.objectContaining({ id: 3 }),
+        expect.objectContaining({ id: 'invocation0' }),
+        expect.objectContaining({ id: expect.any(String) }),
       ]);
       const response = await request(app.getHttpServer())
         .get('/invocation')
@@ -110,14 +110,14 @@ describe('Invocation - [/invocation]', () => {
   describe('Get one  - [GET /invocation/:id]', () => {
     it('should get one invocation associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 1,
+        id: 'invocation0',
         name: expect.any(String),
         method: expect.any(String),
         contractId: expect.any(String),
       });
 
       const response = await request(app.getHttpServer())
-        .get('/invocation/1')
+        .get('/invocation/invocation0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
@@ -125,7 +125,7 @@ describe('Invocation - [/invocation]', () => {
 
     it('should throw error when try to get one invocation not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation/2')
+        .get('/invocation/invocation1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
@@ -137,14 +137,14 @@ describe('Invocation - [/invocation]', () => {
   describe('Update one  - [PUT /invocation/:id]', () => {
     it('should update one invocation associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 1,
+        id: 'invocation0',
         name: 'invocation updated',
       });
       const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({
           name: 'invocation updated',
-          id: 1,
+          id: 'invocation0',
         })
         .expect(HttpStatus.OK);
 
@@ -155,7 +155,7 @@ describe('Invocation - [/invocation]', () => {
   describe('Delete one  - [DELETE /invocation/:id]', () => {
     it('should delete one invocation associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/invocation/1')
+        .delete('/invocation/invocation0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
@@ -163,7 +163,7 @@ describe('Invocation - [/invocation]', () => {
 
     it('should throw error when try to delete one invocation not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/invocation/2')
+        .delete('/invocation/invocation1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(

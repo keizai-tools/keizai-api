@@ -10,5 +10,5 @@ export const AuthUser = createParamDecorator(
 export interface IUserResponse {
   username: string;
   externalId: string;
-  id: number;
+  id: string;
 }

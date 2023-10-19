@@ -3,10 +3,10 @@ import { IBaseRepository } from '@/common/application/base.repository';
 import { Invocation } from '../../domain/invocation.domain';
 
 export interface IInvocationRepository extends IBaseRepository<Invocation> {
-  findAll(userId: number): Promise<Invocation[]>;
-  findOneByIds(id: number, userId: number): Promise<Invocation>;
+  findAll(userId: string): Promise<Invocation[]>;
+  findOneByIds(id: string, userId: string): Promise<Invocation>;
   update(folder: Invocation): Promise<Invocation>;
-  delete(id: number): Promise<boolean>;
+  delete(id: string): Promise<boolean>;
 }
 
 export const INVOCATION_REPOSITORY = 'INVOCATION_REPOSITORY';
