@@ -26,11 +26,9 @@ export class InvocationResponseDto extends Base {
   params: ParamResponseDto[];
 
   @IsOptional()
-  @IsString()
   selectedMethod: MethodResponseDto;
 
   @IsOptional()
-  @IsString()
   methods: MethodResponseDto[];
 
   constructor(
