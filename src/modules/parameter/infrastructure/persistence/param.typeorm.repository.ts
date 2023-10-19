@@ -17,7 +17,7 @@ export class ParamRepository implements IParamRepository {
     return this.repository.save(param);
   }
 
-  async findAll(userId: number): Promise<Param[]> {
+  async findAll(userId: string): Promise<Param[]> {
     return await this.repository.find({
       relations: { invocation: true },
       where: {
@@ -26,7 +26,7 @@ export class ParamRepository implements IParamRepository {
     });
   }
 
-  async findOne(id: number): Promise<Param> {
+  async findOne(id: string): Promise<Param> {
     return await this.repository.findOne({
       where: {
         id,
@@ -34,7 +34,7 @@ export class ParamRepository implements IParamRepository {
     });
   }
 
-  async findOneByIds(id: number, userId: number): Promise<Param> {
+  async findOneByIds(id: string, userId: string): Promise<Param> {
     return await this.repository.findOne({
       where: {
         id,
@@ -47,7 +47,7 @@ export class ParamRepository implements IParamRepository {
     return await this.repository.preload(param);
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const invocation = await this.findOne(id);
     if (invocation) {
       await this.repository.delete(id);

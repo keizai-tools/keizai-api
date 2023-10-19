@@ -25,7 +25,7 @@ const mockedGuard = {
   canActivate: (context) => {
     const req = context.switchToHttp().getRequest();
     req.user = {
-      id: 1,
+      id: 'user0',
     };
     return true;
   },
@@ -64,7 +64,7 @@ describe('Parameter - [/param]', () => {
   describe('Create one - [POST /param]', () => {
     it('Should create a new parameter', async () => {
       const responseExpected = expect.objectContaining({
-        id: 3,
+        id: expect.any(String),
         name: expect.any(String),
         value: expect.any(String),
       });
@@ -73,7 +73,7 @@ describe('Parameter - [/param]', () => {
         .send({
           name: 'test',
           value: 'test',
-          invocationId: 1,
+          invocationId: 'invocation0',
         })
         .expect(HttpStatus.CREATED);
 
@@ -83,8 +83,8 @@ describe('Parameter - [/param]', () => {
   describe('Get all - [GET /param]', () => {
     it('Should get all parameters associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 1 }),
-        expect.objectContaining({ id: 3 }),
+        expect.objectContaining({ id: expect.any(String) }),
+        expect.objectContaining({ id: 'param0' }),
       ]);
       const response = await request(app.getHttpServer())
         .get('/param')
@@ -104,20 +104,20 @@ describe('Parameter - [/param]', () => {
   describe('Get one - [GET /param/:id]', () => {
     it('Should get one parameter associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 1,
+        id: 'param0',
         name: expect.any(String),
         value: expect.any(String),
       });
 
       const response = await request(app.getHttpServer())
-        .get('/param/1')
+        .get('/param/param0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
     });
     it('Should throw error when try to get one parameter not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/param/2')
+        .get('/param/param1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
@@ -128,14 +128,14 @@ describe('Parameter - [/param]', () => {
   describe('Update one  - [PUT /param/:id]', () => {
     it('Should update one parameter associated with a user', async () => {
       const responseExpected = expect.objectContaining({
-        id: 1,
+        id: 'param0',
         name: 'param updated',
       });
       const response = await request(app.getHttpServer())
         .patch('/param')
         .send({
           name: 'param updated',
-          id: 1,
+          id: 'param0',
         })
         .expect(HttpStatus.OK);
 
@@ -146,7 +146,7 @@ describe('Parameter - [/param]', () => {
   describe('Delete one  - [DELETE /param/:id]', () => {
     it('Should delete one parameter associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/param/1')
+        .delete('/param/param0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
@@ -154,7 +154,7 @@ describe('Parameter - [/param]', () => {
 
     it('Should throw error when try to delete one param not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/param/2')
+        .delete('/param/param1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateParamDto {
   @IsNotEmpty()
@@ -10,6 +10,6 @@ export class CreateParamDto {
   value: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  invocationId: number;
+  @IsString()
+  invocationId: string;
 }

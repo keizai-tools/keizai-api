@@ -48,7 +48,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       joinColumn: {
         name: 'invocation_id',
       },
-      inverseSide: 'param',
+      inverseSide: 'invocation',
     },
   },
 });

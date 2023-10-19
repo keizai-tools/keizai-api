@@ -1,6 +1,7 @@
 entity: Invocation
 items:
   invocation0:
+    id: 'invocation0'
     name: 'invocation1'
     method: 'method1'
     contractId: 'contract test'
@@ -8,6 +9,7 @@ items:
     folder: '@folder0'
 
   invocation1:
+    id: 'invocation1'
     name: 'invocation2'
     method: 'method1'
     contractId: 'contract test'

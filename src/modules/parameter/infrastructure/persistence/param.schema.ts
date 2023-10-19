@@ -16,10 +16,10 @@ export const ParamSchema = new EntitySchema<Param>({
       type: 'varchar',
     },
     invocationId: {
-      type: Number,
+      type: String,
     },
     userId: {
-      type: Number,
+      type: String,
     },
   },
   relations: {

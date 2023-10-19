@@ -40,7 +40,7 @@ export class ParamController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: number) {
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.paramService.findOneByIds(user, id);
   }
 
@@ -55,7 +55,7 @@ export class ParamController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: number) {
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.paramService.delete(user, id);
   }
 }

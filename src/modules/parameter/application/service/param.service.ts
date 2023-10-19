@@ -19,9 +19,9 @@ import {
 export interface IParamValues {
   name: string;
   value: string;
-  invocationId: number;
-  userId: number;
-  id?: number;
+  invocationId: string;
+  userId: string;
+  id?: string;
 }
 
 @Injectable()
@@ -58,6 +58,7 @@ export class ParamService {
       invocationId: createParamDto.invocationId,
       userId: user.id,
     };
+
     const param = this.paramMapper.fromDtoToEntity(paramValues);
     const paramSaved = await this.paramRepository.save(param);
 
@@ -74,7 +75,7 @@ export class ParamService {
 
   async findOneByIds(
     user: IUserResponse,
-    id: number,
+    id: string,
   ): Promise<ParamResponseDto> {
     const param = await this.paramRepository.findOneByIds(id, user.id);
     if (!param) {
@@ -116,7 +117,7 @@ export class ParamService {
     return this.paramMapper.fromEntityToDto(paramSaved);
   }
 
-  async delete(user: IUserResponse, id: number): Promise<boolean> {
+  async delete(user: IUserResponse, id: string): Promise<boolean> {
     const param = await this.paramRepository.findOneByIds(id, user.id);
     if (!param) {
       throw new NotFoundException(

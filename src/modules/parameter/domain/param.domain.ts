@@ -5,16 +5,16 @@ import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 export class Param extends Base {
   name: string;
   value: string;
-  invocationId: number;
-  userId: number;
+  invocationId: string;
+  userId: string;
   user?: User;
   invocation?: Invocation;
   constructor(
     name: string,
     value: string,
-    invocationId: number,
-    userId: number,
-    id?: number,
+    invocationId: string,
+    userId: string,
+    id?: string,
   ) {
     super();
     this.name = name;
