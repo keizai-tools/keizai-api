@@ -19,6 +19,7 @@ export class FolderRepository implements IFolderRepository {
 
   async findAll(userId: string): Promise<Folder[]> {
     return await this.repository.find({
+      order: { createdAt: 'DESC' },
       relations: {
         invocations: { selectedMethod: true },
       },
