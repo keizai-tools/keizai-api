@@ -114,9 +114,9 @@ describe('Invocation - [/invocation]', () => {
       const responseExpected = expect.objectContaining({
         id: 'invocation0',
         name: expect.any(String),
-        secretKey: expect.any(String),
-        publicKey: expect.any(String),
-        contractId: expect.any(String),
+        secretKey: null,
+        publicKey: null,
+        contractId: null,
       });
 
       const response = await request(app.getHttpServer())

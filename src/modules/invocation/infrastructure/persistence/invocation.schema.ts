@@ -14,12 +14,15 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     },
     secretKey: {
       type: 'varchar',
+      nullable: true,
     },
     publicKey: {
       type: 'varchar',
+      nullable: true,
     },
     contractId: {
       type: 'varchar',
+      nullable: true,
     },
     folderId: {
       type: String,

@@ -3,17 +3,11 @@ items:
   invocation0:
     id: 'invocation0'
     name: 'invocation0'
-    secretKey: 'secret'
-    publicKey: 'public'
-    contractId: 'contract test'
     user: '@user0'
     folder: '@folder0'
 
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
-    secretKey: 'secret'
-    publicKey: 'public'
-    contractId: 'contract test'
     user: '@user1'
     folder: '@folder1'
