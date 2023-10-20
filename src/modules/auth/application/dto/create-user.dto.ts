@@ -1,7 +1,7 @@
-import { IsString, Matches } from 'class-validator';
+import { IsEmail, Matches } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString()
+  @IsEmail()
   username: string;
 
   @Matches(

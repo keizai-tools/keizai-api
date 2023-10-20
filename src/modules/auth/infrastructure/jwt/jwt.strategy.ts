@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { COGNITO_RESPONSE } from '../../application/enum/cognito.enum';
+import { COGNITO_RESPONSE } from '../../application/exceptions/cognito.enum';
 import { AuthService } from '../../application/service/auth.service';
 
 @Injectable()
