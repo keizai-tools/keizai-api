@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
@@ -60,6 +65,10 @@ export class FolderService {
     const folder = this.folderMapper.fromDtoToEntity(foldervalues);
 
     const folderSaved = await this.folderRepository.save(folder);
+    if (!folderSaved) {
+      throw new BadRequestException(FOLDER_RESPONSE.FOLDER_FAILED_SAVE);
+    }
+
     return this.folderMapper.fromEntityToDto(folderSaved);
   }
 
@@ -90,7 +99,6 @@ export class FolderService {
       updateFolderDto.id,
       user.id,
     );
-
     if (!folder) {
       throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID);
     }
@@ -100,7 +108,6 @@ export class FolderService {
         updateFolderDto.collectionId,
         user.id,
       );
-
       if (!collection) {
         throw new NotFoundException(
           FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND,
@@ -116,7 +123,14 @@ export class FolderService {
     };
     const folderMapped = this.folderMapper.fromUpdateDtoToEntity(folderValues);
     const folderUpdated = await this.folderRepository.update(folderMapped);
+    if (!folderUpdated) {
+      throw new BadRequestException(FOLDER_RESPONSE.FOLDER_FAILED_UPDATED);
+    }
+
     const folderSaved = await this.folderRepository.save(folderUpdated);
+    if (!folderSaved) {
+      throw new BadRequestException(FOLDER_RESPONSE.FOLDER_FAILED_SAVE);
+    }
 
     return this.folderMapper.fromEntityToDto(folderSaved);
   }
@@ -126,6 +140,11 @@ export class FolderService {
     if (!folder) {
       throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID);
     }
-    return this.folderRepository.delete(id);
+    const folderDeleted = this.folderRepository.delete(id);
+    if (!folderDeleted) {
+      throw new BadRequestException(FOLDER_RESPONSE.FOLDER_FAILED_DELETED);
+    }
+
+    return folderDeleted;
   }
 }
