@@ -1,5 +1,6 @@
-import { Inject } from '@nestjs/common';
+import { Inject, forwardRef } from '@nestjs/common';
 
+import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { ParamMapper } from '@/modules/parameter/application/mapper/param.mapper';
 
@@ -16,6 +17,8 @@ export class InvocationMapper {
     private readonly paramMapper: ParamMapper,
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
+    @Inject(forwardRef(() => FolderMapper))
+    private readonly folderMapper: FolderMapper,
   ) {}
 
   fromDtoToEntity(createFolderDto: IInvocationValues): Invocation {
@@ -37,6 +40,7 @@ export class InvocationMapper {
       secretKey,
       publicKey,
       contractId,
+      folder,
       params,
       id,
       methods,
@@ -47,19 +51,22 @@ export class InvocationMapper {
       this.methodMapper.fromEntityToDto(method),
     );
 
-    const selectedMethodMapped = selectedMethod
-      ? this.methodMapper.fromEntityToDto(selectedMethod)
-      : null;
+    const selectedMethodMapped =
+      selectedMethod && this.methodMapper.fromEntityToDto(selectedMethod);
 
     const paramsMapped = params?.map((param) =>
       this.paramMapper.fromEntityToDto(param),
     );
+
+    const folderMapped = folder && this.folderMapper.fromEntityToDto(folder);
+
     return new InvocationResponseDto(
       name,
       secretKey,
       publicKey,
       contractId,
       paramsMapped,
+      folderMapped,
       methodsMapped,
       selectedMethodMapped,
       id,
