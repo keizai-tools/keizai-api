@@ -5,15 +5,15 @@ export class CreateInvocationDto {
   @IsString()
   name: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   publicKey: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   secretKey: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   contractId: string;
 
