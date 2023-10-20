@@ -77,6 +77,19 @@ describe('Parameter - [/param]', () => {
 
       expect(response.body).toEqual(responseExpected);
     });
+    it('should throw error when try to create a new method not associated with an invocation ', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/method')
+        .send({
+          name: 'test',
+          invocationId: 'invocation',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
   });
   describe('Get all - [GET /method]', () => {
     it('Should get all parameters associated with a user', async () => {
@@ -137,6 +150,19 @@ describe('Parameter - [/param]', () => {
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
+    });
+    it('should throw error when try to update a method not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/method')
+        .send({
+          name: 'method updated',
+          id: 'method',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+      );
     });
   });
 
