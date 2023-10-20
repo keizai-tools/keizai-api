@@ -14,7 +14,8 @@ export class InvocationRepository implements IInvocationRepository {
   ) {}
 
   async save(invocation: Invocation): Promise<Invocation> {
-    return this.repository.save(invocation);
+    await this.repository.save(invocation);
+    return this.findOneByIds(invocation.id, invocation.userId);
   }
 
   async findAll(userId: string): Promise<Invocation[]> {
@@ -41,6 +42,12 @@ export class InvocationRepository implements IInvocationRepository {
 
   async findOneByIds(id: string, userId: string): Promise<Invocation> {
     return await this.repository.findOne({
+      relations: {
+        folder: true,
+        selectedMethod: true,
+        methods: true,
+        params: true,
+      },
       where: {
         id,
         userId,

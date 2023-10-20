@@ -70,7 +70,6 @@ export class InvocationService {
     };
 
     const invocation = this.invocationMapper.fromDtoToEntity(invocationValues);
-
     const invocationSaved = await this.invocationRepository.save(invocation);
 
     return this.invocationMapper.fromEntityToDto(invocationSaved);

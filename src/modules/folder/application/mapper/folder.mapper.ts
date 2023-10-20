@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, forwardRef } from '@nestjs/common';
 
 import { InvocationMapper } from '@/modules/invocation/application/mapper/invocation.mapper';
 
@@ -8,7 +8,7 @@ import { IFolderValues, IUpdateFolderValues } from '../service/folder.service';
 
 export class FolderMapper {
   constructor(
-    @Inject(InvocationMapper)
+    @Inject(forwardRef(() => InvocationMapper))
     private readonly invocationMapper: InvocationMapper,
   ) {}
   fromDtoToEntity(createFolderDto: IFolderValues): Folder {
