@@ -20,7 +20,10 @@ export interface IFolderValues {
   name: string;
   collectionId: string;
   userId: string;
-  id?: string;
+}
+
+export interface IUpdateFolderValues extends Partial<IFolderValues> {
+  id: string;
 }
 
 @Injectable()
@@ -104,7 +107,7 @@ export class FolderService {
       }
     }
 
-    const folderValues: IFolderValues = {
+    const folderValues: IUpdateFolderValues = {
       name: updateFolderDto.name,
       collectionId: updateFolderDto.collectionId,
       userId: user.id,
