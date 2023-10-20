@@ -21,7 +21,10 @@ export interface IParamValues {
   value: string;
   invocationId: string;
   userId: string;
-  id?: string;
+}
+
+export interface IUpdateParamValues extends Partial<IParamValues> {
+  id: string;
 }
 
 @Injectable()
@@ -103,7 +106,7 @@ export class ParamService {
         PARAM_RESPONSE.PARAM_NOT_FOUND_BY_USER_AND_ID,
       );
     }
-    const paramValues: IParamValues = {
+    const paramValues: IUpdateParamValues = {
       name: updateParamDto.name,
       value: updateParamDto.value,
       invocationId: updateParamDto.invocationId,

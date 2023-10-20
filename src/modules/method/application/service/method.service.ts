@@ -22,7 +22,10 @@ export interface IMethodValues {
   name: string;
   invocationId: string;
   userId: string;
-  id?: string;
+}
+
+export interface IUpdateMethodValues extends Partial<IMethodValues> {
+  id: string;
 }
 
 @Injectable()
@@ -119,7 +122,7 @@ export class MethodService {
     if (!invocation) {
       throw new NotFoundException(METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND);
     }
-    const methodValues: IMethodValues = {
+    const methodValues: IUpdateMethodValues = {
       name: updateMethodDto.name,
       invocationId: updateMethodDto.invocationId,
       userId: user.id,

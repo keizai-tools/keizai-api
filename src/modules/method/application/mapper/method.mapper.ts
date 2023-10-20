@@ -1,6 +1,6 @@
 import { Method } from '../../domain/method.domain';
 import { MethodResponseDto } from '../dto/method-response.dto';
-import { IMethodValues } from '../service/method.service';
+import { IMethodValues, IUpdateMethodValues } from '../service/method.service';
 
 export class MethodMapper {
   fromDtoToEntity(createMethodDto: IMethodValues): Method {
@@ -13,7 +13,7 @@ export class MethodMapper {
     return new MethodResponseDto(name, id);
   }
 
-  fromUpdateDtoToEntity(updateParamDto: IMethodValues): Method {
+  fromUpdateDtoToEntity(updateParamDto: IUpdateMethodValues): Method {
     const { name, invocationId, userId, id } = updateParamDto;
     return new Method(name, invocationId, userId, id);
   }

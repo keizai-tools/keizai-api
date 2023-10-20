@@ -4,7 +4,7 @@ import { InvocationMapper } from '@/modules/invocation/application/mapper/invoca
 
 import { Folder } from '../../domain/folder.domain';
 import { FolderResponseDto } from '../dto/folder-response.dto';
-import { IFolderValues } from '../service/folder.service';
+import { IFolderValues, IUpdateFolderValues } from '../service/folder.service';
 
 export class FolderMapper {
   constructor(
@@ -24,7 +24,7 @@ export class FolderMapper {
     return new FolderResponseDto(name, id, invocationsMapped);
   }
 
-  fromUpdateDtoToEntity(updateFolderDto: IFolderValues): Folder {
+  fromUpdateDtoToEntity(updateFolderDto: IUpdateFolderValues): Folder {
     const { name, collectionId, userId, id } = updateFolderDto;
     return new Folder(name, collectionId, userId, id);
   }
