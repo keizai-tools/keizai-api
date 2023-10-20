@@ -108,6 +108,7 @@ describe('Folder - [/folder]', () => {
       expect(response.body).toEqual({
         id: 'folder0',
         name: 'folder0',
+        invocations: expect.any(Array),
       });
     });
 
