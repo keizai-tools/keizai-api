@@ -41,11 +41,12 @@ export class FolderService {
     createFolderDto: CreateFolderDto,
     user: IUserResponse,
   ): Promise<FolderResponseDto> {
-    const collection = await this.collectionRepository.findOne(
+    const collection = await this.collectionRepository.findOneByIds(
       createFolderDto.collectionId,
+      user.id,
     );
 
-    if (!(collection?.user.id === user.id)) {
+    if (!collection) {
       throw new NotFoundException(
         FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
