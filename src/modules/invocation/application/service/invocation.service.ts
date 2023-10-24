@@ -1,10 +1,15 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
+import { generateMethodsFromContractId } from '@/common/application/helpers/contract';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
   FOLDER_REPOSITORY,
   IFolderRepository,
 } from '@/modules/folder/application/repository/folder.repository';
+import {
+  IMethodRepository,
+  METHOD_REPOSITORY,
+} from '@/modules/method/application/repository/method.interface.repository';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -39,6 +44,8 @@ export class InvocationService {
     private readonly invocationRepository: IInvocationRepository,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
+    @Inject(METHOD_REPOSITORY)
+    private readonly methodRepository: IMethodRepository,
   ) {}
 
   async create(
@@ -123,6 +130,14 @@ export class InvocationService {
       );
     }
 
+    if (updateInvocationDto.contractId) {
+      const generatedMethods = await generateMethodsFromContractId(
+        updateInvocationDto.contractId,
+      );
+
+      // TODO Delete old methods and save recenlty generated methods
+    }
+
     const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
       secretKey: updateInvocationDto.publicKey,
@@ -132,6 +147,7 @@ export class InvocationService {
       userId: user.id,
       id: updateInvocationDto.id,
     };
+
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
     const invocationUpdated = await this.invocationRepository.update(

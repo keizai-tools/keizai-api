@@ -55,4 +55,21 @@ export class MethodRepository implements IMethodRepository {
     }
     return false;
   }
+
+  async deleteByInvocationId(invocationId: string): Promise<boolean> {
+    const method = await this.repository.find({
+      where: {
+        invocation: {
+          id: invocationId,
+        },
+      },
+    });
+
+    if (method.length > 0) {
+      await this.repository.remove(method);
+      return true;
+    }
+
+    return false;
+  }
 }

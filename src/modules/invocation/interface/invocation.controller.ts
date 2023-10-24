@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import {
   AuthUser,
@@ -45,7 +47,14 @@ export class InvocationController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch()
+  @Patch('')
+  @UseInterceptors(
+    ResilienceInterceptor(
+      new RetryStrategy({
+        maxRetries: 5,
+      }),
+    ),
+  )
   update(
     @Body() updateFoldertDto: UpdateInvocationDto,
     @AuthUser() user: IUserResponse,

@@ -26,6 +26,6 @@ import { MethodController } from './interface/method.controller';
       useClass: MethodRepository,
     },
   ],
-  exports: [MethodMapper],
+  exports: [MethodMapper, METHOD_REPOSITORY],
 })
 export class MethodModule {}

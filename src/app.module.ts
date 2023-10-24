@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ResilienceModule } from 'nestjs-resilience';
 import { DataSource } from 'typeorm';
 
 import { configuration } from '@configuration/configuration';
@@ -31,6 +32,7 @@ import { ParamModule } from './modules/parameter/param.module';
         return new DataSource(options).initialize();
       },
     }),
+    ResilienceModule.forRoot({}),
     CommonModule,
     AuthModule,
     CollectionModule,
