@@ -79,6 +79,20 @@ describe('Parameter - [/param]', () => {
 
       expect(response.body).toEqual(responseExpected);
     });
+    it('Should throw error when try to create a new param not associated with an invocation', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/param')
+        .send({
+          name: 'test',
+          value: 'test',
+          invocationId: 'invocation',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        PARAM_RESPONSE.PARAM_INVOCATION_NOT_FOUND,
+      );
+    });
   });
   describe('Get all - [GET /param]', () => {
     it('Should get all parameters associated with a user', async () => {
@@ -140,6 +154,19 @@ describe('Parameter - [/param]', () => {
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
+    });
+    it('Should throw error when try to update a param not associated with an invocation', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/param')
+        .send({
+          name: 'param updated',
+          id: 'param',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        PARAM_RESPONSE.PARAM_NOT_FOUND_BY_USER_AND_ID,
+      );
     });
   });
 

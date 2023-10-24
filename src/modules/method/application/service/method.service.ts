@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { InvocationMapper } from '@/modules/invocation/application/mapper/invocation.mapper';
@@ -63,6 +68,9 @@ export class MethodService {
 
     const method = this.methodMapper.fromDtoToEntity(methodValues);
     const methodSaved = await this.methodRepository.save(method);
+    if (!methodSaved) {
+      throw new BadRequestException(METHOD_RESPONSE.METHOD_NOT_SAVED);
+    }
 
     const invocationValues: IUpdateInvocationValues = {
       id: invocation.id,
@@ -130,7 +138,13 @@ export class MethodService {
     };
     const methodMapped = this.methodMapper.fromUpdateDtoToEntity(methodValues);
     const methodUpdated = await this.methodRepository.update(methodMapped);
+    if (!methodUpdated) {
+      throw new BadRequestException(METHOD_RESPONSE.METHOD_NOT_UPDATED);
+    }
     const methodSaved = await this.methodRepository.save(methodUpdated);
+    if (!methodSaved) {
+      throw new BadRequestException(METHOD_RESPONSE.METHOD_NOT_SAVED);
+    }
 
     return this.methodMapper.fromEntityToDto(methodSaved);
   }

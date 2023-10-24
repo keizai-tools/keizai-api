@@ -75,6 +75,19 @@ describe('Folder - [/folder]', () => {
 
       expect(response.body).toEqual({ name: 'test', id: expect.any(String) });
     });
+    it('should throw error when try to create a new folder not associated with the user and collections', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/folder')
+        .send({
+          name: 'test',
+          collectionId: 'collection',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_AND_USER,
+      );
+    });
   });
 
   describe('Get all  - [GET /folder]', () => {
@@ -137,6 +150,19 @@ describe('Folder - [/folder]', () => {
         id: 'folder0',
         name: 'folder updated',
       });
+    });
+    it('should throw error when try to update one folder not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/folder')
+        .send({
+          name: 'folder updated',
+          id: 'folder1',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
+      );
     });
   });
 

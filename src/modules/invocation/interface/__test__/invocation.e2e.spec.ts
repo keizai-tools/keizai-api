@@ -85,6 +85,22 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body).toEqual(responseExpected);
     });
+    it('should throw error when try to create a new invocation not associated with a folder', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/invocation')
+        .send({
+          name: 'test',
+          folderId: 'folder',
+          secretKey: 'test',
+          publicKey: 'test',
+          contractId: 'test contract',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
+      );
+    });
   });
 
   describe('Get all  - [GET /invocation]', () => {
@@ -152,6 +168,19 @@ describe('Invocation - [/invocation]', () => {
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(responseExpected);
+    });
+    it('should throw error when try to update an invocation not associated with a folder', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+      );
     });
   });
 

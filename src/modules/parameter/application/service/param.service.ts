@@ -64,6 +64,9 @@ export class ParamService {
 
     const param = this.paramMapper.fromDtoToEntity(paramValues);
     const paramSaved = await this.paramRepository.save(param);
+    if (!paramSaved) {
+      throw new NotFoundException(PARAM_RESPONSE.PARAM_NOT_SAVED);
+    }
 
     return this.paramMapper.fromEntityToDto(paramSaved);
   }
@@ -115,7 +118,14 @@ export class ParamService {
     };
     const paramMapped = this.paramMapper.fromUpdateDtoToEntity(paramValues);
     const paramUpdated = await this.paramRepository.update(paramMapped);
+    if (!paramUpdated) {
+      throw new NotFoundException(PARAM_RESPONSE.PARAM_NOT_UPDATED);
+    }
+
     const paramSaved = await this.paramRepository.save(paramUpdated);
+    if (!paramSaved) {
+      throw new NotFoundException(PARAM_RESPONSE.PARAM_NOT_SAVED);
+    }
 
     return this.paramMapper.fromEntityToDto(paramSaved);
   }

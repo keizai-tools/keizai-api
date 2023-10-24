@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
@@ -71,6 +76,9 @@ export class InvocationService {
 
     const invocation = this.invocationMapper.fromDtoToEntity(invocationValues);
     const invocationSaved = await this.invocationRepository.save(invocation);
+    if (!invocationSaved) {
+      throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
+    }
 
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
@@ -137,9 +145,15 @@ export class InvocationService {
     const invocationUpdated = await this.invocationRepository.update(
       invocationMapped,
     );
+    if (!invocationUpdated) {
+      throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_UPDATED);
+    }
     const invocationSaved = await this.invocationRepository.save(
       invocationUpdated,
     );
+    if (!invocationSaved) {
+      throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
+    }
 
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
