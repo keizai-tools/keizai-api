@@ -6,10 +6,12 @@ import {
   FOLDER_REPOSITORY,
   IFolderRepository,
 } from '@/modules/folder/application/repository/folder.repository';
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import {
   IMethodRepository,
   METHOD_REPOSITORY,
 } from '@/modules/method/application/repository/method.interface.repository';
+import { IMethodValues } from '@/modules/method/application/service/method.service';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -46,6 +48,8 @@ export class InvocationService {
     private readonly folderRepository: IFolderRepository,
     @Inject(METHOD_REPOSITORY)
     private readonly methodRepository: IMethodRepository,
+    @Inject(MethodMapper)
+    private readonly methodMapper: MethodMapper,
   ) {}
 
   async create(
@@ -134,8 +138,24 @@ export class InvocationService {
       const generatedMethods = await generateMethodsFromContractId(
         updateInvocationDto.contractId,
       );
+      console.log(generatedMethods);
+      const oldMethods = invocation.methods;
+      oldMethods?.map(
+        async (method) => await this.methodRepository.delete(method.id),
+      );
 
-      // TODO Delete old methods and save recenlty generated methods
+      const methodsMapped = generatedMethods.map((method) => {
+        const methodValues: IMethodValues = {
+          name: method.name,
+          inputs: method.inputs,
+          outputs: method.outputs,
+          invocationId: invocation.id,
+          userId: user.id,
+        };
+        return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
+      });
+
+      await this.methodRepository.saveAll(methodsMapped);
     }
 
     const invocationValues: IUpdateInvocationValues = {

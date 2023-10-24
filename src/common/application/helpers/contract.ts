@@ -1,6 +1,6 @@
-import { Address, Contract, Server, xdr } from 'soroban-client';
+import { Contract, Server, xdr } from 'soroban-client';
 
-interface IGeneratedMethod {
+export interface IGeneratedMethod {
   name: string;
   docs: string | null;
   inputs: { name: string; type: string }[];
@@ -34,18 +34,6 @@ const SCSpecTypeMap = {
   1006: 'SC_SPEC_TYPE_BYTES_N',
   2000: 'SC_SPEC_TYPE_UDT',
 };
-
-function getLedgerKeyContractCode(contractId: string) {
-  const ledgerKey = xdr.LedgerKey.contractData(
-    new xdr.LedgerKeyContractData({
-      contract: new Address(contractId).toScAddress(),
-      key: xdr.ScVal.scvLedgerKeyContractInstance(),
-      durability: xdr.ContractDataDurability.persistent(),
-    }),
-  );
-
-  return ledgerKey;
-}
 
 function getLedgerKeyWasmId(contractCodeLedgerEntryData: string) {
   const entry = xdr.LedgerEntryData.fromXDR(
@@ -153,7 +141,6 @@ const extractFunctionInfo = (decodedSection, SCSpecTypeMap) => {
 
   return functionObj;
 };
-
 export async function generateMethodsFromContractId(contractId: string) {
   try {
     const contract = new Contract(contractId);
@@ -198,7 +185,9 @@ export async function generateMethodsFromContractId(contractId: string) {
       .map((decodedSection) =>
         extractFunctionInfo(decodedSection, SCSpecTypeMap),
       )
-      .filter((f) => Object.keys(f).length > 0);
+      .filter((f) => {
+        return Object.keys(f).length > 0 && f.name.length > 0;
+      });
 
     return functions;
   } catch (error) {

@@ -13,8 +13,12 @@ export class MethodRepository implements IMethodRepository {
     private readonly repository: Repository<Method>,
   ) {}
 
-  async save(param: Method): Promise<Method> {
-    return this.repository.save(param);
+  async save(method: Method): Promise<Method> {
+    return this.repository.save(method);
+  }
+
+  async saveAll(methods: Method[]): Promise<Method[]> {
+    return this.repository.save(methods);
   }
 
   async findAll(userId: string): Promise<Method[]> {

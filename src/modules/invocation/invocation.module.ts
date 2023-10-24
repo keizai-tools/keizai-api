@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { generateMethodsFromContractId } from '@/common/application/helpers/contract';
 import { CommonModule } from '@/common/common.module';
 
 import { FolderModule } from '../folder/folder.module';
