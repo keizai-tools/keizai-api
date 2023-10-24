@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 
@@ -32,6 +37,10 @@ export class CollectionService {
 
   async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
     const collections = await this.collectionRepository.findAllByUser(id);
+    if (!collections) {
+      throw new NotFoundException(COLLECTION_RESPONSE.COLLECTIONS_NOT_FOUND);
+    }
+
     return collections.map((collection) =>
       this.collectionMapper.fromEntityToDto(collection),
     );
@@ -72,8 +81,8 @@ export class CollectionService {
     try {
       const collectionSaved = await this.collectionRepository.save(collection);
       return this.collectionMapper.fromEntityToDto(collectionSaved);
-    } catch (e) {
-      console.log({ e });
+    } catch (error) {
+      throw new BadRequestException(COLLECTION_RESPONSE.COLLECTION_FAILED_SAVE);
     }
   }
 
@@ -86,7 +95,15 @@ export class CollectionService {
       userId,
       id: collectionDto.id,
     };
-    await this.findOneByIds(collectionData.id, collectionData.userId);
+    const collection = await this.findOneByIds(
+      collectionData.id,
+      collectionData.userId,
+    );
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
 
     const collectionMapped =
       this.collectionMapper.fromUpdateDtoToEntity(collectionData);
@@ -95,20 +112,32 @@ export class CollectionService {
       collectionMapped,
     );
     if (!collectionUpdated) {
-      throw new NotFoundException(COLLECTION_RESPONSE.COLLECTION_NOT_UPDATED);
+      throw new BadRequestException(
+        COLLECTION_RESPONSE.COLLECTION_FAILED_UPDATED,
+      );
     }
     const collectionSaved = await this.collectionRepository.save(
       collectionUpdated,
     );
+    if (!collectionSaved) {
+      throw new BadRequestException(COLLECTION_RESPONSE.COLLECTION_FAILED_SAVE);
+    }
     return this.collectionMapper.fromEntityToDto(collectionSaved);
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
     const collection = await this.findOneByIds(id, userId);
-
     if (!collection) {
-      throw new NotFoundException(COLLECTION_RESPONSE.COLLECTION_NOT_DELETED);
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
     }
-    return this.collectionRepository.delete(id);
+    const collectionDeleted = await this.collectionRepository.delete(id);
+    if (!collectionDeleted) {
+      throw new BadRequestException(
+        COLLECTION_RESPONSE.COLLECTION_FAILED_DELETED,
+      );
+    }
+    return collectionDeleted;
   }
 }
