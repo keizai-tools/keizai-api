@@ -183,6 +183,20 @@ describe('Invocation - [/invocation]', () => {
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
     });
+    it('should throw error when try to update and invocation with an invalid contract id', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          contractId: 'invalid contract id',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+      );
+    });
   });
 
   describe('Delete one  - [DELETE /invocation/:id]', () => {
