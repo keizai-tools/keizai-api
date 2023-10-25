@@ -170,6 +170,24 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body).toEqual(responseExpected);
     });
+    it('should asign new method and remove old params', async () => {
+      const responseExpected = expect.objectContaining({
+        id: 'invocation0',
+        name: 'invocation updated',
+        selectedMethod: expect.objectContaining({ id: 'method2' }),
+        params: [],
+      });
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          selectedMethodId: 'method2',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(responseExpected);
+    });
     it('should throw error when try to update an invocation not associated with a folder', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation')
