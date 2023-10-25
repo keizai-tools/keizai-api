@@ -18,6 +18,16 @@ export const MethodSchema = new EntitySchema<Method>({
     userId: {
       type: String,
     },
+    inputs: {
+      type: 'json',
+    },
+    docs: {
+      type: String,
+      nullable: true,
+    },
+    outputs: {
+      type: 'json',
+    },
   },
   relations: {
     invocation: {

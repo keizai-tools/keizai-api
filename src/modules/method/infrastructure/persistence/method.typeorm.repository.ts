@@ -13,8 +13,12 @@ export class MethodRepository implements IMethodRepository {
     private readonly repository: Repository<Method>,
   ) {}
 
-  async save(param: Method): Promise<Method> {
-    return this.repository.save(param);
+  async save(method: Method): Promise<Method> {
+    return this.repository.save(method);
+  }
+
+  async saveAll(methods: Method[]): Promise<Method[]> {
+    return this.repository.save(methods);
   }
 
   async findAll(userId: string): Promise<Method[]> {
@@ -53,6 +57,23 @@ export class MethodRepository implements IMethodRepository {
       await this.repository.delete(id);
       return true;
     }
+    return false;
+  }
+
+  async deleteByInvocationId(invocationId: string): Promise<boolean> {
+    const method = await this.repository.find({
+      where: {
+        invocation: {
+          id: invocationId,
+        },
+      },
+    });
+
+    if (method.length > 0) {
+      await this.repository.remove(method);
+      return true;
+    }
+
     return false;
   }
 }

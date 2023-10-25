@@ -5,11 +5,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { generateMethodsFromContractId } from '@/common/application/helpers/contract';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
   FOLDER_REPOSITORY,
   IFolderRepository,
 } from '@/modules/folder/application/repository/folder.repository';
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import {
+  IMethodRepository,
+  METHOD_REPOSITORY,
+} from '@/modules/method/application/repository/method.interface.repository';
+import { IMethodValues } from '@/modules/method/application/service/method.service';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -44,6 +51,10 @@ export class InvocationService {
     private readonly invocationRepository: IInvocationRepository,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
+    @Inject(METHOD_REPOSITORY)
+    private readonly methodRepository: IMethodRepository,
+    @Inject(MethodMapper)
+    private readonly methodMapper: MethodMapper,
   ) {}
 
   async create(
@@ -131,6 +142,30 @@ export class InvocationService {
       );
     }
 
+    if (updateInvocationDto.contractId) {
+      const generatedMethods = await generateMethodsFromContractId(
+        updateInvocationDto.contractId,
+      );
+      const oldMethods = invocation.methods;
+      oldMethods?.map(
+        async (method) => await this.methodRepository.delete(method.id),
+      );
+
+      const methodsMapped = generatedMethods.map((method) => {
+        const methodValues: IMethodValues = {
+          name: method.name,
+          inputs: method.inputs,
+          outputs: method.outputs,
+          docs: method.docs,
+          invocationId: invocation.id,
+          userId: user.id,
+        };
+        return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
+      });
+
+      await this.methodRepository.saveAll(methodsMapped);
+    }
+
     const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
       secretKey: updateInvocationDto.publicKey,
@@ -140,6 +175,7 @@ export class InvocationService {
       userId: user.id,
       id: updateInvocationDto.id,
     };
+
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
     const invocationUpdated = await this.invocationRepository.update(

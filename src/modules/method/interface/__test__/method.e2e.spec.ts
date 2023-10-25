@@ -71,6 +71,8 @@ describe('Parameter - [/param]', () => {
         .post('/method')
         .send({
           name: 'test',
+          inputs: [],
+          outputs: [],
           invocationId: 'invocation0',
         })
         .expect(HttpStatus.CREATED);

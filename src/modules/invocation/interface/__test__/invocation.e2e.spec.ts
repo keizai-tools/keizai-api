@@ -37,6 +37,7 @@ describe('Invocation - [/invocation]', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
+      providers: [],
     })
       .overrideProvider(JwtStrategy)
       .useValue(mockedJwtStrategy)

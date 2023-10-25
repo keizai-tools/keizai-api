@@ -3,11 +3,17 @@ items:
   method0:
     id: 'method0'
     name: 'method0'
+    inputs: []
+    outputs: []
+    docs: 'docs0'
     user: '@user0'
     invocation: '@invocation0'
 
   method1:
     id: 'method1'
     name: 'method1'
+    inputs: []
+    outputs: []
+    docs: 'docs1'
     user: '@user1'
     invocation: '@invocation1'
