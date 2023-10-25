@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateMethodDto {
   @IsNotEmpty()
@@ -10,6 +10,10 @@ export class CreateMethodDto {
 
   @IsArray()
   outputs: { type: string }[];
+
+  @IsOptional()
+  @IsString()
+  docs: string;
 
   @IsNotEmpty()
   @IsString()

@@ -138,7 +138,6 @@ export class InvocationService {
       const generatedMethods = await generateMethodsFromContractId(
         updateInvocationDto.contractId,
       );
-      console.log(generatedMethods);
       const oldMethods = invocation.methods;
       oldMethods?.map(
         async (method) => await this.methodRepository.delete(method.id),
@@ -149,6 +148,7 @@ export class InvocationService {
           name: method.name,
           inputs: method.inputs,
           outputs: method.outputs,
+          docs: method.docs,
           invocationId: invocation.id,
           userId: user.id,
         };

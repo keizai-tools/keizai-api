@@ -15,16 +15,22 @@ export class MethodResponseDto extends Base {
   @IsArray()
   outputs: { type: string }[];
 
+  @IsNotEmpty()
+  @IsString()
+  docs: string;
+
   constructor(
     name: string,
     inputs: { name: string; type: string }[],
     outputs: { type: string }[],
+    docs: string,
     id: string,
   ) {
     super();
     this.name = name;
     this.inputs = inputs;
     this.outputs = outputs;
+    this.docs = docs;
     this.id = id;
   }
 }

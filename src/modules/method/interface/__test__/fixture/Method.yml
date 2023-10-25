@@ -5,6 +5,7 @@ items:
     name: 'method0'
     inputs: []
     outputs: []
+    docs: 'docs0'
     user: '@user0'
     invocation: '@invocation0'
 
@@ -13,5 +14,6 @@ items:
     name: 'method1'
     inputs: []
     outputs: []
+    docs: 'docs1'
     user: '@user1'
     invocation: '@invocation1'

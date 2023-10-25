@@ -21,6 +21,10 @@ export const MethodSchema = new EntitySchema<Method>({
     inputs: {
       type: 'json',
     },
+    docs: {
+      type: String,
+      nullable: true,
+    },
     outputs: {
       type: 'json',
     },

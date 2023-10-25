@@ -22,6 +22,7 @@ export interface IMethodValues {
   name: string;
   inputs: { name: string; type: string }[];
   outputs: { type: string }[];
+  docs: string;
   invocationId: string;
   userId: string;
 }
@@ -61,6 +62,7 @@ export class MethodService {
       name: createParamDto.name,
       inputs: createParamDto.inputs,
       outputs: createParamDto.outputs,
+      docs: createParamDto.docs,
       invocationId: createParamDto.invocationId,
       userId: user.id,
     };
