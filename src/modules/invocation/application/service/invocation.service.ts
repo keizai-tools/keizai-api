@@ -143,27 +143,33 @@ export class InvocationService {
     }
 
     if (updateInvocationDto.contractId) {
-      const generatedMethods = await generateMethodsFromContractId(
-        updateInvocationDto.contractId,
-      );
-      const oldMethods = invocation.methods;
-      oldMethods?.map(
-        async (method) => await this.methodRepository.delete(method.id),
-      );
+      try {
+        const generatedMethods = await generateMethodsFromContractId(
+          updateInvocationDto.contractId,
+        );
+        const oldMethods = invocation.methods;
+        oldMethods?.map(
+          async (method) => await this.methodRepository.delete(method.id),
+        );
 
-      const methodsMapped = generatedMethods.map((method) => {
-        const methodValues: IMethodValues = {
-          name: method.name,
-          inputs: method.inputs,
-          outputs: method.outputs,
-          docs: method.docs,
-          invocationId: invocation.id,
-          userId: user.id,
-        };
-        return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
-      });
+        const methodsMapped = generatedMethods.map((method) => {
+          const methodValues: IMethodValues = {
+            name: method.name,
+            inputs: method.inputs,
+            outputs: method.outputs,
+            docs: method.docs,
+            invocationId: invocation.id,
+            userId: user.id,
+          };
+          return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
+        });
 
-      await this.methodRepository.saveAll(methodsMapped);
+        await this.methodRepository.saveAll(methodsMapped);
+      } catch (error) {
+        throw new NotFoundException(
+          INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+        );
+      }
     }
 
     const invocationValues: IUpdateInvocationValues = {
