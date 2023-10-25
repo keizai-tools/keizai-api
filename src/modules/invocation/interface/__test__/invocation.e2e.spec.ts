@@ -174,7 +174,7 @@ describe('Invocation - [/invocation]', () => {
       const responseExpected = expect.objectContaining({
         id: 'invocation0',
         name: 'invocation updated',
-        selectedMethod: expect.objectContaining({ id: 'method3' }),
+        selectedMethod: expect.objectContaining({ id: 'method2' }),
         params: [],
       });
       const response = await request(app.getHttpServer())
@@ -182,7 +182,7 @@ describe('Invocation - [/invocation]', () => {
         .send({
           name: 'invocation updated',
           id: 'invocation0',
-          selectedMethodId: 'method3',
+          selectedMethodId: 'method2',
         })
         .expect(HttpStatus.OK);
 

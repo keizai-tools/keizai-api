@@ -19,8 +19,8 @@ items:
     invocation: '@invocation1'
 
   method2:
-    id: 'method3'
-    name: 'method3'
+    id: 'method2'
+    name: 'method2'
     inputs: []
     outputs: []
     docs: 'docs0'
