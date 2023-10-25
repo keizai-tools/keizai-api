@@ -26,6 +26,6 @@ import { ParamController } from './interface/param.controller';
       useClass: ParamRepository,
     },
   ],
-  exports: [ParamMapper],
+  exports: [ParamMapper, ParamService],
 })
 export class ParamModule {}

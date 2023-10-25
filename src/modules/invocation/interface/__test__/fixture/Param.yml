@@ -1,0 +1,8 @@
+entity: Param
+items:
+  param0:
+    id: 'param0'
+    name: 'param0'
+    value: 'value0'
+    user: '@user0'
+    invocation: '@invocation0'
