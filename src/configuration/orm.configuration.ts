@@ -45,14 +45,6 @@ const development: DataSourceOptions = {
   namingStrategy: new SnakeNamingStrategy(),
 };
 
-const automatedTests: DataSourceOptions = {
-  type: 'better-sqlite3',
-  database: `./data/tests.${Math.random()}.db`,
-  synchronize: true,
-  dropSchema: false,
-  namingStrategy: new SnakeNamingStrategy(),
-};
-
 export const datasourceOptions: DataSourceOptions = (() => {
   if (process.env.NODE_ENV === ENVIRONMENT.PRODUCTION) {
     return production;
@@ -64,10 +56,6 @@ export const datasourceOptions: DataSourceOptions = (() => {
 
   if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
     return development;
-  }
-
-  if (process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) {
-    return automatedTests;
   }
 
   throw new Error('No environment defined');

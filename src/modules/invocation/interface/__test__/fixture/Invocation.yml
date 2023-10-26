@@ -11,3 +11,10 @@ items:
     name: 'invocation1'
     user: '@user1'
     folder: '@folder1'
+
+  invocation2:
+    id: 'invocation2'
+    name: 'invocation2'
+    user: '@user0'
+    folder: '@folder0'
+    publicKey: 'publicKey2'

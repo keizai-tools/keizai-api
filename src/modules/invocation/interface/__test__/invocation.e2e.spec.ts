@@ -6,6 +6,7 @@ import * as request from 'supertest';
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
+import * as contractHelpers from '@/common/application/helpers/contract';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
@@ -114,7 +115,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(3);
       expect(response.body).toEqual(responseExpected);
     });
     it('should only get invocations associated with a user', async () => {
@@ -122,7 +123,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(3);
     });
   });
 
@@ -170,6 +171,21 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body).toEqual(responseExpected);
     });
+    it('should mock generateMethodsFromContractId function', async () => {
+      const spy = jest
+        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+        .mockResolvedValue([]);
+      await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          contractId: 'test contract',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(spy.mock.calls).toHaveLength(1);
+    });
     it('should throw error when try to update an invocation not associated with a folder', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation')
@@ -184,6 +200,9 @@ describe('Invocation - [/invocation]', () => {
       );
     });
     it('should throw error when try to update and invocation with an invalid contract id', async () => {
+      const spy = jest
+        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+        .mockRejectedValue(new Error());
       const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({
@@ -196,6 +215,47 @@ describe('Invocation - [/invocation]', () => {
       expect(response.body.message).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
       );
+    });
+    it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
+      const spy = jest
+        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+        .mockRejectedValue(new Error());
+      await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          contractId: 'test contract',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should update contract id with a selected method', async () => {
+      jest
+        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+        .mockResolvedValue([]);
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          contractId: 'new test contract',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.contractId).toEqual('new test contract');
+    });
+    it('should update secretKey without removing publicKey', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation2',
+          secretKey: 'newSecretKey',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.publicKey).toEqual('publicKey2');
+      expect(response.body.secretKey).toEqual('newSecretKey');
     });
   });
 
