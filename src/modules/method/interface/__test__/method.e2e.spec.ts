@@ -73,6 +73,7 @@ describe('Parameter - [/param]', () => {
           name: 'test',
           inputs: [],
           outputs: [],
+          params: [],
           invocationId: 'invocation0',
         })
         .expect(HttpStatus.CREATED);

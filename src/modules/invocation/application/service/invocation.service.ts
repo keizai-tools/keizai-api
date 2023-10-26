@@ -17,7 +17,6 @@ import {
   METHOD_REPOSITORY,
 } from '@/modules/method/application/repository/method.interface.repository';
 import { IMethodValues } from '@/modules/method/application/service/method.service';
-import { ParamService } from '@/modules/parameter/application/service/param.service';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -56,7 +55,6 @@ export class InvocationService {
     private readonly methodRepository: IMethodRepository,
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
-    private readonly paramService: ParamService,
   ) {}
 
   async create(
@@ -165,20 +163,12 @@ export class InvocationService {
           };
           return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
         });
-
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
         throw new NotFoundException(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
       }
-    }
-
-    if (updateInvocationDto.selectedMethodId) {
-      const paramsToRemove = await this.paramService.findAll(user);
-      paramsToRemove?.map(
-        async (param) => await this.paramService.delete(user, param.id),
-      );
     }
 
     const invocationValues: IUpdateInvocationValues = {

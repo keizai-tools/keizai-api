@@ -3,7 +3,6 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Base } from '@/common/domain/base.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { MethodResponseDto } from '@/modules/method/application/dto/method-response.dto';
-import { ParamResponseDto } from '@/modules/parameter/application/dto/param-response.dto';
 
 export class InvocationResponseDto extends Base {
   @IsNotEmpty()
@@ -23,9 +22,6 @@ export class InvocationResponseDto extends Base {
   contractId: string;
 
   @IsNotEmpty()
-  params: ParamResponseDto[];
-
-  @IsNotEmpty()
   folder: FolderResponseDto;
 
   @IsOptional()
@@ -39,7 +35,6 @@ export class InvocationResponseDto extends Base {
     secretKey: string,
     publicKey: string,
     contractId: string,
-    params: ParamResponseDto[],
     folder: FolderResponseDto,
     methods?: MethodResponseDto[],
     selectedMethod?: MethodResponseDto,
@@ -51,7 +46,6 @@ export class InvocationResponseDto extends Base {
     this.publicKey = publicKey;
     this.contractId = contractId;
     this.id = id;
-    this.params = params;
     this.folder = folder;
     this.methods = methods;
     this.selectedMethod = selectedMethod;

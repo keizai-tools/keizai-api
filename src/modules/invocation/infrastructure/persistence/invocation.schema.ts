@@ -52,14 +52,6 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       },
       onDelete: 'CASCADE',
     },
-    params: {
-      target: 'Param',
-      type: 'one-to-many',
-      joinColumn: {
-        name: 'invocation_id',
-      },
-      inverseSide: 'invocation',
-    },
     methods: {
       target: 'Method',
       type: 'one-to-many',

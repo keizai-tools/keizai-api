@@ -19,10 +19,15 @@ export class MethodResponseDto extends Base {
   @IsString()
   docs: string;
 
+  @IsNotEmpty()
+  @IsArray()
+  params: { name: string; value: string }[];
+
   constructor(
     name: string,
     inputs: { name: string; type: string }[],
     outputs: { type: string }[],
+    params: { name: string; value: string }[],
     docs: string,
     id: string,
   ) {
@@ -30,6 +35,7 @@ export class MethodResponseDto extends Base {
     this.name = name;
     this.inputs = inputs;
     this.outputs = outputs;
+    this.params = params;
     this.docs = docs;
     this.id = id;
   }

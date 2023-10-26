@@ -25,7 +25,6 @@ export class InvocationRepository implements IInvocationRepository {
         folder: true,
         selectedMethod: true,
         methods: true,
-        params: true,
       },
       where: {
         userId,
@@ -47,7 +46,6 @@ export class InvocationRepository implements IInvocationRepository {
         folder: true,
         selectedMethod: true,
         methods: true,
-        params: true,
       },
       where: {
         id,

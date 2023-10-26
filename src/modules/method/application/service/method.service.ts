@@ -27,6 +27,7 @@ export interface IMethodValues {
   name: string;
   inputs: { name: string; type: string }[];
   outputs: { type: string }[];
+  params?: { name: string; value: string }[];
   docs: string;
   invocationId: string;
   userId: string;
@@ -67,6 +68,7 @@ export class MethodService {
       name: createParamDto.name,
       inputs: createParamDto.inputs,
       outputs: createParamDto.outputs,
+      params: createParamDto.params,
       docs: createParamDto.docs,
       invocationId: createParamDto.invocationId,
       userId: user.id,
@@ -139,6 +141,7 @@ export class MethodService {
     const methodValues: IUpdateMethodValues = {
       name: updateMethodDto.name,
       invocationId: updateMethodDto.invocationId,
+      params: updateMethodDto.params,
       userId: user.id,
       id: updateMethodDto.id,
     };
@@ -151,7 +154,6 @@ export class MethodService {
     if (!methodSaved) {
       throw new BadRequestException(METHOD_RESPONSE.METHOD_NOT_SAVED);
     }
-
     return this.methodMapper.fromEntityToDto(methodSaved);
   }
 
