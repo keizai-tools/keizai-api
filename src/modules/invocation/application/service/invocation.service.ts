@@ -3,12 +3,13 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import {
   CONTRACT_SERVICE,
   IContractService,
-} from '@/common/application/repository/contract.service';
+} from '@/common/application/repository/contract.interface.service';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
   FOLDER_REPOSITORY,
@@ -54,13 +55,28 @@ export class InvocationService {
     private readonly invocationRepository: IInvocationRepository,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
-    @Inject(METHOD_REPOSITORY)
+    @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
-    @Inject(MethodMapper)
+    @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IContractService,
   ) {}
+
+  async runInvocation(user: IUserResponse, id: string) {
+    const invocation = await this.findOneByIds(user, id);
+    try {
+      await this.contractService.runInvocation(
+        invocation.publicKey,
+        id,
+        invocation.secretKey,
+      );
+    } catch (error) {
+      throw new NotFoundException(
+        INVOCATION_RESPONSE.INVOCATION_FAIL_RUN_INVOCATION,
+      );
+    }
+  }
 
   async create(
     createFolderDto: CreateInvocationDto,

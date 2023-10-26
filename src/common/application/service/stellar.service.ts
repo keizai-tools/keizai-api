@@ -9,7 +9,7 @@ import {
   xdr,
 } from 'soroban-client';
 
-import { IContractService } from '../repository/contract.service';
+import { IContractService } from '../repository/contract.interface.service';
 
 export interface IGeneratedMethod {
   name: string;
@@ -214,7 +214,7 @@ export class StellarService implements IContractService {
     }
   }
 
-  async runInvocation(publicKey, contractId, secretString) {
+  async runInvocation(publicKey, contractId, secretKey) {
     const account = await this.server.getAccount(publicKey);
 
     // Fee hardcoded for this example.
@@ -241,7 +241,7 @@ export class StellarService implements IContractService {
     )) as Transaction;
 
     // sign the transaction
-    transaction.sign(Keypair.fromSecret(secretString));
+    transaction.sign(Keypair.fromSecret(secretKey));
 
     try {
       const transactionResult = await this.server.sendTransaction(transaction);

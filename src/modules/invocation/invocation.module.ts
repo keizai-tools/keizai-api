@@ -16,10 +16,10 @@ import { InvocationController } from './interface/invocation.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([InvocationSchema]),
-    forwardRef(() => CommonModule),
+    CommonModule,
+    MethodModule,
+    ParamModule,
     forwardRef(() => FolderModule),
-    forwardRef(() => ParamModule),
-    forwardRef(() => MethodModule),
   ],
   controllers: [InvocationController],
   providers: [

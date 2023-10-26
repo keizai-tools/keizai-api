@@ -13,12 +13,12 @@ import {
 
 export class InvocationMapper {
   constructor(
+    @Inject(forwardRef(() => FolderMapper))
+    private readonly folderMapper: FolderMapper,
     @Inject(ParamMapper)
     private readonly paramMapper: ParamMapper,
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
-    @Inject(forwardRef(() => FolderMapper))
-    private readonly folderMapper: FolderMapper,
   ) {}
 
   fromDtoToEntity(createFolderDto: IInvocationValues): Invocation {

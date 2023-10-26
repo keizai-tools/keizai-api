@@ -7,6 +7,7 @@ export interface IContractService {
   generateMethodsFromContractId(
     contractId: string,
   ): Promise<IGeneratedMethod[]>;
+  runInvocation(publicKey, contractId, secretKey);
 }
 
 export const CONTRACT_SERVICE = 'CONTRACT_SERVICE';

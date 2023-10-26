@@ -47,6 +47,12 @@ export class InvocationController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/:id/run')
+  runInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.runInvocation(user, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseInterceptors(
     ResilienceInterceptor(

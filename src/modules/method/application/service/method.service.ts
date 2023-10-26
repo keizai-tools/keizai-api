@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
@@ -41,11 +42,11 @@ export class MethodService {
   constructor(
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
-    @Inject(InvocationMapper)
+    @Inject(forwardRef(() => InvocationMapper))
     private readonly invocationMapper: InvocationMapper,
     @Inject(METHOD_REPOSITORY)
     private readonly methodRepository: IMethodRepository,
-    @Inject(INVOCATION_REPOSITORY)
+    @Inject(forwardRef(() => INVOCATION_REPOSITORY))
     private readonly invocationRepository: IInvocationRepository,
   ) {}
 
