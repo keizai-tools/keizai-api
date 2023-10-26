@@ -20,7 +20,10 @@ import {
   IMethodRepository,
   METHOD_REPOSITORY,
 } from '@/modules/method/application/repository/method.interface.repository';
-import { IMethodValues } from '@/modules/method/application/service/method.service';
+import {
+  IMethodValues,
+  MethodService,
+} from '@/modules/method/application/service/method.service';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -61,6 +64,7 @@ export class InvocationService {
     private readonly methodMapper: MethodMapper,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IContractService,
+    private readonly methodService: MethodService,
   ) {}
 
   async runInvocation(user: IUserResponse, id: string) {
@@ -153,11 +157,7 @@ export class InvocationService {
       user.id,
     );
 
-    const folder = await this.folderRepository.findOne(
-      updateInvocationDto.folderId,
-    );
-
-    if (!folder || !invocation) {
+    if (!invocation) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
@@ -169,10 +169,7 @@ export class InvocationService {
           await this.contractService.generateMethodsFromContractId(
             updateInvocationDto.contractId,
           );
-        const oldMethods = invocation.methods;
-        oldMethods?.map(
-          async (method) => await this.methodRepository.delete(method.id),
-        );
+        await this.methodService.deleteAll(user);
 
         const methodsMapped = generatedMethods.map((method) => {
           const methodValues: IMethodValues = {
@@ -185,7 +182,6 @@ export class InvocationService {
           };
           return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
         });
-
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
         throw new NotFoundException(
@@ -196,10 +192,11 @@ export class InvocationService {
 
     const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
-      secretKey: updateInvocationDto.publicKey,
+      secretKey: updateInvocationDto.secretKey,
       publicKey: updateInvocationDto.publicKey,
       contractId: updateInvocationDto.contractId,
       folderId: updateInvocationDto.folderId,
+      selectedMethodId: updateInvocationDto.selectedMethodId,
       userId: user.id,
       id: updateInvocationDto.id,
     };
@@ -218,7 +215,6 @@ export class InvocationService {
     if (!invocationSaved) {
       throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
     }
-
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
 

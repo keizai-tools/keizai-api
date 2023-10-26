@@ -4,24 +4,56 @@ import { IMethodValues, IUpdateMethodValues } from '../service/method.service';
 
 export class MethodMapper {
   fromDtoToEntity(createMethodDto: IMethodValues): Method {
-    const { name, inputs, outputs, invocationId, docs, userId } =
+    const { name, inputs, outputs, invocationId, params, docs, userId } =
       createMethodDto;
-    return new Method(name, inputs, outputs, docs, invocationId, userId);
+    return new Method(
+      name,
+      inputs,
+      outputs,
+      params,
+      docs,
+      invocationId,
+      userId,
+    );
   }
 
-  fromEntityToDto(param: Method): MethodResponseDto {
-    const { name, inputs, outputs, docs, id } = param;
-    return new MethodResponseDto(name, inputs, outputs, docs, id);
+  fromEntityToDto(method: Method): MethodResponseDto {
+    const { name, inputs, outputs, params, docs, id } = method;
+    return new MethodResponseDto(name, inputs, outputs, params, docs, id);
   }
 
   fromUpdateDtoToEntity(updateParamDto: IUpdateMethodValues): Method {
-    const { name, inputs, outputs, docs, invocationId, userId, id } =
+    const { name, inputs, outputs, params, docs, invocationId, userId, id } =
       updateParamDto;
-    return new Method(name, inputs, outputs, docs, invocationId, userId, id);
+    return new Method(
+      name,
+      inputs,
+      outputs,
+      params,
+      docs,
+      invocationId,
+      userId,
+      id,
+    );
   }
 
   fromGeneratedMethodToEntity(method: IMethodValues): Method {
     const { name, inputs, outputs, docs, invocationId, userId } = method;
-    return new Method(name, inputs, outputs, docs, invocationId, userId);
+    const paramsValue = inputs.map((input) => {
+      return {
+        name: input.name,
+        value: '',
+      };
+    });
+
+    return new Method(
+      name,
+      inputs,
+      outputs,
+      paramsValue,
+      docs,
+      invocationId,
+      userId,
+    );
   }
 }

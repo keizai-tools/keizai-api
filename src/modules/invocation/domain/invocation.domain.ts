@@ -2,7 +2,6 @@ import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
 import { Folder } from '@/modules/folder/domain/folder.domain';
 import { Method } from '@/modules/method/domain/method.domain';
-import { Param } from '@/modules/parameter/domain/param.domain';
 
 export class Invocation extends Base {
   name: string;
@@ -14,7 +13,6 @@ export class Invocation extends Base {
   selectedMethodId?: string;
   folder?: Folder;
   user?: User;
-  params?: Param[];
   methods?: Method[];
   selectedMethod?: Method;
   constructor(

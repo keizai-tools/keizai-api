@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, In, Repository } from 'typeorm';
 
 import { IMethodRepository } from '../../application/repository/method.interface.repository';
 import { Method } from '../../domain/method.domain';
@@ -60,20 +60,9 @@ export class MethodRepository implements IMethodRepository {
     return false;
   }
 
-  async deleteByInvocationId(invocationId: string): Promise<boolean> {
-    const method = await this.repository.find({
-      where: {
-        invocation: {
-          id: invocationId,
-        },
-      },
+  async deleteAll(ids: string[]): Promise<DeleteResult> {
+    return await this.repository.delete({
+      id: In(ids),
     });
-
-    if (method.length > 0) {
-      await this.repository.remove(method);
-      return true;
-    }
-
-    return false;
   }
 }
