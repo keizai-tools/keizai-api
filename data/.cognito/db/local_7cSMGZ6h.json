@@ -29,24 +29,6 @@
       "Username": "jorge.luis@test.com",
       "UserStatus": "VERIFIED",
       "ConfirmationCode": "768113"
-    },
-    "leooo@test.com": {
-      "Attributes": [
-        {
-          "Name": "sub",
-          "Value": "5d4f673b-b223-44df-90f5-74a9a342a6de"
-        }
-      ],
-      "Enabled": true,
-      "Password": "Test123456+",
-      "RefreshTokens": [
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOnVzZXJuYW1lIjoibGVvb29AdGVzdC5jb20iLCJpYXQiOjE2OTgyODE0NzEsImp0aSI6IjNmZGM2ZTA1LWFjYTItNDEwZC04MTY5LWExODY0YmI2MGUxZCIsImV4cCI6MTY5ODg4NjI3MSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MjI5L2xvY2FsXzdjU01HWjZoIn0.2FWHQeNrR2c1viSajlQfhAC2xPvaVkKtcPH7hW67wUbryprx8HpNAy410RiUnJges0qYkxLyy6Ux0p_P598O3lVxV0MWL2EsusBQ2jJlwTn8ZDPi6rLV15L8k4JPMsg94hfD2N5vQPxcB1h1h0w-4k93wBfJkHrAS1GuXxRr3zeNmz5ZacVp6pCDj6FoDhSiHVhvZK23xdHm3d0HpwfZlbHj8bc5Y175jBvbpK1cn1HgBvUHiB5IIq_i0WXThlevBaAts-pdeVkX3X3SCxbRnWV7pC9V66iopxRujkRy1sOFhauwjddEFnwTxH2ccKAvVe5vqqzqqVNUuGbeuiS4XQ"
-      ],
-      "UserCreateDate": "2023-10-26T00:50:49.155Z",
-      "UserLastModifiedDate": "2023-10-26T00:50:49.155Z",
-      "Username": "leooo@test.com",
-      "UserStatus": "VERIFIED",
-      "ConfirmationCode": "574986"
     }
   },
   "Options": {
