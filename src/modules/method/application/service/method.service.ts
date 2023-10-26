@@ -158,12 +158,22 @@ export class MethodService {
   }
 
   async delete(user: IUserResponse, id: string): Promise<boolean> {
-    const param = await this.methodRepository.findOneByIds(id, user.id);
-    if (!param) {
+    const method = await this.methodRepository.findOneByIds(id, user.id);
+    if (!method) {
       throw new NotFoundException(
         METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
       );
     }
     return this.methodRepository.delete(id);
+  }
+
+  async deleteAll(user: IUserResponse): Promise<boolean> {
+    const methods = await this.methodRepository.findAll(user.id);
+    if (methods) {
+      await this.methodRepository.deleteAll(methods.map((method) => method.id));
+      return true;
+    } else {
+      throw new NotFoundException(METHOD_RESPONSE.METHODS_NOT_DELETED);
+    }
   }
 }
