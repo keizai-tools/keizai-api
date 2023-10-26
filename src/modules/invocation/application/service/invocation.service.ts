@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { generateMethodsFromContractId } from '@/common/application/helpers/contract';
+import {
+  CONTRACT_SERVICE,
+  IContractService,
+} from '@/common/application/repository/contract.service';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
   FOLDER_REPOSITORY,
@@ -55,6 +58,8 @@ export class InvocationService {
     private readonly methodRepository: IMethodRepository,
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
+    @Inject(CONTRACT_SERVICE)
+    private readonly contractService: IContractService,
   ) {}
 
   async create(
@@ -144,9 +149,10 @@ export class InvocationService {
 
     if (updateInvocationDto.contractId) {
       try {
-        const generatedMethods = await generateMethodsFromContractId(
-          updateInvocationDto.contractId,
-        );
+        const generatedMethods =
+          await this.contractService.generateMethodsFromContractId(
+            updateInvocationDto.contractId,
+          );
         const oldMethods = invocation.methods;
         oldMethods?.map(
           async (method) => await this.methodRepository.delete(method.id),

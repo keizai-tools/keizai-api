@@ -16,7 +16,7 @@ import { InvocationController } from './interface/invocation.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([InvocationSchema]),
-    CommonModule,
+    forwardRef(() => CommonModule),
     forwardRef(() => FolderModule),
     forwardRef(() => ParamModule),
     forwardRef(() => MethodModule),

@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CommonModule } from '@/common/common.module';
-
 import { CollectionModule } from '../collection/collection.module';
 import { InvocationModule } from '../invocation/invocation.module';
 import { FolderMapper } from './application/mapper/folder.mapper';
@@ -15,7 +13,6 @@ import { FolderController } from './interface/folder.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([FolderSchema]),
-    CommonModule,
     forwardRef(() => CollectionModule),
     forwardRef(() => InvocationModule),
   ],

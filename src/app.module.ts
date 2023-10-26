@@ -42,5 +42,6 @@ import { ParamModule } from './modules/parameter/param.module';
   ],
   controllers: [],
   providers: [],
+  exports: [],
 })
 export class AppModule {}

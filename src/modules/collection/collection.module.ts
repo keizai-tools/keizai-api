@@ -14,7 +14,6 @@ import { CollectionController } from './interface/collection.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([CollectionSchema]),
-    CommonModule,
     forwardRef(() => FolderModule),
   ],
   controllers: [CollectionController],

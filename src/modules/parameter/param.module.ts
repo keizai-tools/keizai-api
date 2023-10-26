@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CommonModule } from '@/common/common.module';
-
 import { InvocationModule } from '../invocation/invocation.module';
 import { ParamMapper } from './application/mapper/param.mapper';
 import { PARAM_REPOSITORY } from './application/repository/param.repository';
@@ -14,7 +12,6 @@ import { ParamController } from './interface/param.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ParamSchema]),
-    CommonModule,
     forwardRef(() => InvocationModule),
   ],
   controllers: [ParamController],
