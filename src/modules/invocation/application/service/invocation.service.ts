@@ -16,7 +16,10 @@ import {
   IMethodRepository,
   METHOD_REPOSITORY,
 } from '@/modules/method/application/repository/method.interface.repository';
-import { IMethodValues } from '@/modules/method/application/service/method.service';
+import {
+  IMethodValues,
+  MethodService,
+} from '@/modules/method/application/service/method.service';
 
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -55,6 +58,7 @@ export class InvocationService {
     private readonly methodRepository: IMethodRepository,
     @Inject(MethodMapper)
     private readonly methodMapper: MethodMapper,
+    private readonly methodService: MethodService,
   ) {}
 
   async create(
@@ -143,14 +147,7 @@ export class InvocationService {
         const generatedMethods = await generateMethodsFromContractId(
           updateInvocationDto.contractId,
         );
-
-        await this.invocationRepository.update({
-          ...invocation,
-          selectedMethodId: null,
-          selectedMethod: null,
-        });
-
-        await this.methodRepository.deleteByInvocationId(invocation.id);
+        await this.methodService.deleteAll(user);
 
         const methodsMapped = generatedMethods.map((method) => {
           const methodValues: IMethodValues = {
@@ -165,7 +162,6 @@ export class InvocationService {
         });
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
-        console.log(error);
         throw new NotFoundException(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );

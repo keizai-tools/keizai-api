@@ -66,7 +66,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       joinColumn: {
         name: 'selected_method_id',
       },
-      onDelete: 'CASCADE',
+      onDelete: 'SET NULL',
     },
   },
 });
