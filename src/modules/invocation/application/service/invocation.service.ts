@@ -132,11 +132,7 @@ export class InvocationService {
       user.id,
     );
 
-    const folder = await this.folderRepository.findOne(
-      updateInvocationDto.folderId,
-    );
-
-    if (!folder || !invocation) {
+    if (!invocation) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
