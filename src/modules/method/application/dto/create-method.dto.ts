@@ -18,4 +18,8 @@ export class CreateMethodDto {
   @IsNotEmpty()
   @IsString()
   invocationId: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  params: { name: string; value: string }[];
 }

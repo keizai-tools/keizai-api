@@ -14,7 +14,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { FolderModule } from './modules/folder/folder.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
-import { ParamModule } from './modules/parameter/param.module';
 
 @Module({
   imports: [
@@ -38,7 +37,6 @@ import { ParamModule } from './modules/parameter/param.module';
     CollectionModule,
     FolderModule,
     InvocationModule,
-    ParamModule,
   ],
   controllers: [],
   providers: [],

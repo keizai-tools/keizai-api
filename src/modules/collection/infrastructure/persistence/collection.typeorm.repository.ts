@@ -41,7 +41,7 @@ export class CollectionRepository implements ICollectionRepository {
       order: { createdAt: 'DESC' },
       relations: {
         folders: {
-          invocations: { params: true, methods: true, selectedMethod: true },
+          invocations: { methods: true, selectedMethod: true },
         },
       },
       where: {

@@ -28,6 +28,9 @@ export const MethodSchema = new EntitySchema<Method>({
     outputs: {
       type: 'json',
     },
+    params: {
+      type: 'json',
+    },
   },
   relations: {
     invocation: {

@@ -6,6 +6,7 @@ export class Method extends Base {
   name: string;
   inputs: { name: string; type: string }[];
   outputs: { type: string }[];
+  params: { name: string; value: string }[];
   docs?: string;
   invocationId?: string;
   userId?: string;
@@ -16,6 +17,7 @@ export class Method extends Base {
     name: string,
     inputs: { name: string; type: string }[],
     outputs: { type: string }[],
+    params: { name: string; value: string }[],
     docs: string,
     invocationId?: string,
     userId?: string,
@@ -25,6 +27,7 @@ export class Method extends Base {
     this.name = name;
     this.inputs = inputs;
     this.outputs = outputs;
+    this.params = params;
     this.docs = docs;
     this.invocationId = invocationId;
     this.userId = userId;
