@@ -143,10 +143,14 @@ export class InvocationService {
         const generatedMethods = await generateMethodsFromContractId(
           updateInvocationDto.contractId,
         );
-        const oldMethods = invocation.methods;
-        oldMethods?.map(
-          async (method) => await this.methodRepository.delete(method.id),
-        );
+
+        await this.invocationRepository.update({
+          ...invocation,
+          selectedMethodId: null,
+          selectedMethod: null,
+        });
+
+        await this.methodRepository.deleteByInvocationId(invocation.id);
 
         const methodsMapped = generatedMethods.map((method) => {
           const methodValues: IMethodValues = {
@@ -161,6 +165,7 @@ export class InvocationService {
         });
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
+        console.log(error);
         throw new NotFoundException(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
@@ -169,7 +174,7 @@ export class InvocationService {
 
     const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
-      secretKey: updateInvocationDto.publicKey,
+      secretKey: updateInvocationDto.secretKey,
       publicKey: updateInvocationDto.publicKey,
       contractId: updateInvocationDto.contractId,
       folderId: updateInvocationDto.folderId,

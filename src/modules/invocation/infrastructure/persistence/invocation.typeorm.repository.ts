@@ -55,7 +55,7 @@ export class InvocationRepository implements IInvocationRepository {
   }
 
   async update(invocation: Invocation): Promise<Invocation> {
-    return await this.repository.preload(invocation);
+    return await this.repository.save(invocation);
   }
 
   async delete(id: string): Promise<boolean> {
