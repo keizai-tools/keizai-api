@@ -28,10 +28,10 @@ export class InvocationController {
   @UseGuards(JwtAuthGuard)
   @Post('')
   async create(
-    @Body() createFolderDto: CreateInvocationDto,
+    @Body() createInvocationDto: CreateInvocationDto,
     @AuthUser() user: IUserResponse,
   ) {
-    return this.invocationService.create(createFolderDto, user);
+    return this.invocationService.create(createInvocationDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -56,10 +56,10 @@ export class InvocationController {
     ),
   )
   update(
-    @Body() updateFoldertDto: UpdateInvocationDto,
+    @Body() updateInvocationDto: UpdateInvocationDto,
     @AuthUser() user: IUserResponse,
   ) {
-    return this.invocationService.update(updateFoldertDto, user);
+    return this.invocationService.update(updateInvocationDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
