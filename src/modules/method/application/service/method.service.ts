@@ -107,13 +107,13 @@ export class MethodService {
     user: IUserResponse,
     id: string,
   ): Promise<MethodResponseDto> {
-    const param = await this.methodRepository.findOneByIds(id, user.id);
-    if (!param) {
+    const method = await this.methodRepository.findOneByIds(id, user.id);
+    if (!method) {
       throw new NotFoundException(
         METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
       );
     }
-    return this.methodMapper.fromEntityToDto(param);
+    return this.methodMapper.fromEntityToDto(method);
   }
 
   async update(
