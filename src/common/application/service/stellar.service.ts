@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   Contract,
-  Keypair,
   Networks,
   Server,
-  Transaction,
   TransactionBuilder,
   xdr,
 } from 'soroban-client';
@@ -214,40 +212,34 @@ export class StellarService implements IContractService {
     }
   }
 
-  async runInvocation(publicKey, contractId, secretKey) {
-    const account = await this.server.getAccount(publicKey);
+  async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
+    {
+      const account = await this.server.getAccount(publicKey);
+      const fee = '100';
 
-    // Fee hardcoded for this example.
-    const fee = '100';
+      const contract = new Contract(contractId);
 
-    const contract = new Contract(contractId);
+      let transaction: any = new TransactionBuilder(account, {
+        fee,
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(contract.call(selectedMethod.name))
+        .setTimeout(30)
+        .build();
 
-    let transaction = new TransactionBuilder(account, {
-      fee,
-      networkPassphrase: Networks.STANDALONE,
-    })
-      .addOperation(
-        // An operation to call increment on the contract
-        contract.call('increment'),
-      )
-      .setTimeout(30)
-      .build();
+      transaction = await this.server.prepareTransaction(transaction);
+      console.log(transaction);
+      const xdr = await transaction.toXDR();
 
-    // Simulate the transaction to discover the storage footprint, and update the
-    // transaction to include it. If you already know the storage footprint you
-    // can use `addFootprint` to add it yourself, skipping this step.
-    transaction = (await this.server.prepareTransaction(
-      transaction,
-    )) as Transaction;
-
-    // sign the transaction
-    transaction.sign(Keypair.fromSecret(secretKey));
-
-    try {
-      const transactionResult = await this.server.sendTransaction(transaction);
-      console.log(transactionResult);
-    } catch (err) {
-      console.error(err);
+      try {
+        const transactionResult = await this.server.sendTransaction(
+          transaction,
+        );
+        console.log(transactionResult);
+      } catch (err) {
+        console.log(err);
+        console.error(err);
+      }
     }
   }
 }
