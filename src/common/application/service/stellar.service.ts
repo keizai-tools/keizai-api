@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
+  BASE_FEE,
   Contract,
+  Keypair,
   Networks,
   Server,
   TransactionBuilder,
@@ -213,33 +215,55 @@ export class StellarService implements IContractService {
   }
 
   async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
-    {
-      const account = await this.server.getAccount(publicKey);
-      const fee = '100';
+    const account = await this.server.getAccount(publicKey);
+    const fee = BASE_FEE;
 
-      const contract = new Contract(contractId);
+    const contract = new Contract(contractId);
 
-      let transaction: any = new TransactionBuilder(account, {
-        fee,
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(contract.call(selectedMethod.name))
-        .setTimeout(30)
-        .build();
+    let transaction: any = new TransactionBuilder(account, {
+      fee,
+      networkPassphrase: Networks.TESTNET,
+    })
+      .addOperation(
+        contract.call(
+          selectedMethod.name,
+          selectedMethod.params.map((param) => param.value),
+        ),
+      )
+      .setTimeout(30)
+      .build();
+    transaction = await this.server.prepareTransaction(transaction);
+    console.log(transaction);
+    transaction.sign(Keypair.fromSecret(secretKey));
 
-      transaction = await this.server.prepareTransaction(transaction);
-      console.log(transaction);
-      const xdr = await transaction.toXDR();
+    try {
+      const sendResponse = await this.server.sendTransaction(transaction);
+      console.log(`Sent transaction: ${JSON.stringify(sendResponse)}`);
 
-      try {
-        const transactionResult = await this.server.sendTransaction(
-          transaction,
-        );
-        console.log(transactionResult);
-      } catch (err) {
-        console.log(err);
-        console.error(err);
+      if (sendResponse.status === 'PENDING') {
+        let getResponse = await this.server.getTransaction(sendResponse.hash);
+        while (getResponse.status === 'NOT_FOUND') {
+          console.log('Waiting for transaction confirmation...');
+          getResponse = await this.server.getTransaction(sendResponse.hash);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        if (getResponse.status === 'SUCCESS') {
+          if (!getResponse.resultMetaXdr) {
+            throw 'Empty resultMetaXDR in getTransaction response';
+          }
+          const transactionMeta = getResponse.resultMetaXdr;
+          const returnValue = transactionMeta.v3().sorobanMeta().returnValue();
+          console.log(`Transaction result: ${returnValue.value()}`);
+        } else {
+          throw `Transaction failed}`;
+        }
+      } else {
+        throw `Transaction failed}`;
       }
+    } catch (err) {
+      console.log('Sending transaction failed');
+      console.log(JSON.stringify(err));
     }
   }
 }

@@ -70,15 +70,13 @@ export class InvocationService {
   async runInvocation(user: IUserResponse, id: string) {
     const invocation = await this.findOneByIds(user, id);
     try {
-      await this.contractService.runInvocation(
+      return await this.contractService.runInvocation(
         invocation.publicKey,
         invocation.secretKey,
         invocation.contractId,
         invocation.selectedMethod,
       );
     } catch (error) {
-      console.log({ error });
-
       throw new NotFoundException(
         INVOCATION_RESPONSE.INVOCATION_FAIL_RUN_INVOCATION,
       );
