@@ -191,6 +191,7 @@ export async function generateMethodsFromContractId(contractId: string) {
 
     return functions;
   } catch (error) {
+    console.log(error);
     throw new Error(error);
   }
 }
