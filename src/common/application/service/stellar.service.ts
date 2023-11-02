@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  Account,
   BASE_FEE,
   Contract,
   ContractSpec,
