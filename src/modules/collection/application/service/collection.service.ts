@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../dto/collection-response.dto';
 import { CreateCollectionDto } from '../dto/create-collection.dto';
@@ -67,6 +68,20 @@ export class CollectionService {
       );
     }
     return this.collectionMapper.fromEntityToDto(collection);
+  }
+
+  async findFoldersByCollectionId(
+    id: string,
+    userId: string,
+  ): Promise<FolderResponseDto[]> {
+    const collection = await this.findOneByIds(id, userId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+
+    return collection.folders;
   }
 
   async create(
