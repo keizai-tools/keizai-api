@@ -265,8 +265,14 @@ export class StellarService implements IContractService {
         newresponse = await this.server.getTransaction(response.hash);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-
-      return JSON.stringify(newresponse);
+      return JSON.stringify(
+        newresponse.status === 'SUCCESS'
+          ? {
+              value: newresponse.returnValue.value(),
+              status: newresponse.status,
+            }
+          : null,
+      );
     } catch (e) {
       console.log(e);
       return e;

@@ -68,6 +68,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       },
       onDelete: 'SET NULL',
       nullable: true,
+      onUpdate: 'CASCADE',
     },
   },
 });
