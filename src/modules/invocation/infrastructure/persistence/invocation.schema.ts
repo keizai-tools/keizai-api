@@ -67,6 +67,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
         name: 'selected_method_id',
       },
       onDelete: 'SET NULL',
+      nullable: true,
     },
   },
 });
