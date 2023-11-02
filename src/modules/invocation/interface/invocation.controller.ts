@@ -48,6 +48,13 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id/run')
+  @UseInterceptors(
+    ResilienceInterceptor(
+      new RetryStrategy({
+        maxRetries: 5,
+      }),
+    ),
+  )
   runInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.invocationService.runInvocation(user, id);
   }

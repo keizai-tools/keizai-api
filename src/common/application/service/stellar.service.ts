@@ -3,6 +3,7 @@ import {
   Account,
   BASE_FEE,
   Contract,
+  ContractSpec,
   Keypair,
   Networks,
   Server,
@@ -24,7 +25,7 @@ export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
   private server: Server;
   constructor() {
-    this.server = new Server('https://soroban-testnet.stellar.org');
+    this.server = new Server('https://rpc-futurenet.stellar.org');
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
       1: 'SC_SPEC_TYPE_BOOL',
@@ -110,7 +111,6 @@ export class StellarService implements IContractService {
         break;
       }
       if (offset >= arrayBuffer.length) {
-        console.log('Successfully decoded the entire buffer.');
         break;
       }
     }
@@ -163,7 +163,8 @@ export class StellarService implements IContractService {
 
     return functionObj;
   }
-  async generateMethodsFromContractId(contractId: string) {
+
+  async getContractSpecEntries(contractId) {
     try {
       const contract = new Contract(contractId);
 
@@ -200,6 +201,15 @@ export class StellarService implements IContractService {
       )[0];
 
       const decodedSections = await this.decodeContractSpecBuffer(buffer);
+      return decodedSections;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async generateMethodsFromContractId(contractId: string) {
+    try {
+      const decodedSections = await this.getContractSpecEntries(contractId);
 
       const functions = decodedSections
         .map((decodedSection) =>
@@ -217,45 +227,50 @@ export class StellarService implements IContractService {
 
   async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
     const account = await this.server.getAccount(publicKey);
-    const fee = BASE_FEE;
+
+    const contract = new Contract(contractId);
+
+    const specEntries = await this.getContractSpecEntries(contractId);
+    const contractSpec = new ContractSpec(specEntries);
+
+    const params = selectedMethod.params.reduce(
+      (acc, param) => ({
+        ...acc,
+        [param.name]: param.value,
+      }),
+      {},
+    );
+
+    const scArgs = contractSpec.funcArgsToScVals(selectedMethod.name, params);
+
+    let transaction: any = new TransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: Networks.TESTNET,
+    })
+      .addOperation(contract.call(selectedMethod.name, ...scArgs))
+      .setTimeout(60)
+      .build();
+    transaction = await this.server.prepareTransaction(transaction);
+    transaction.sign(Keypair.fromSecret(secretKey));
+
     try {
-      const contract = new Contract(contractId);
-      const transaction: any = new TransactionBuilder(account, {
-        fee,
-      })
-        .setNetworkPassphrase(Networks.TESTNET)
-        .setTimeout(30)
-        .addOperation(contract.call(selectedMethod))
-        .build();
+      const response = await this.server._sendTransaction(transaction);
 
-      const preparedTransaction = await this.server.prepareTransaction(
-        transaction,
-      );
-
-      const sourceKeypair = Keypair.fromSecret(secretKey);
-      preparedTransaction.sign(sourceKeypair);
-
-      const transactionResult = await this.server._sendTransaction(
-        preparedTransaction,
-      );
-
-      if (transactionResult.status === 'PENDING') {
-        let getResponse = await this.server.getTransaction(
-          transactionResult.hash,
-        );
-        while (getResponse.status === 'NOT_FOUND') {
-          getResponse = await this.server.getTransaction(
-            transactionResult.hash,
-          );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-
-        return getResponse;
-      } else {
-        return transactionResult;
+      if (response.status === 'ERROR') {
+        return response;
       }
-    } catch (err) {
-      console.error(err);
+
+      let newresponse = await this.server.getTransaction(response.hash);
+
+      while (newresponse.status === 'NOT_FOUND') {
+        newresponse = await this.server.getTransaction(response.hash);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      return JSON.stringify(newresponse);
+    } catch (e) {
+      console.log(e);
+      return e;
     }
   }
 }
