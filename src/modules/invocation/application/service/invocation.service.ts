@@ -168,6 +168,7 @@ export class InvocationService {
           await this.contractService.generateMethodsFromContractId(
             updateInvocationDto.contractId,
           );
+        console.log(generatedMethods, 'generatedMethods');
         await this.methodService.deleteAll(user);
 
         const methodsMapped = generatedMethods.map((method) => {
