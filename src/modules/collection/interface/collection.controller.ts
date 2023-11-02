@@ -14,6 +14,7 @@ import {
   IUserResponse,
 } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
 import { CreateCollectionDto } from '../application/dto/create-collection.dto';
@@ -49,6 +50,16 @@ export class CollectionController {
   ): Promise<CollectionResponseDto> {
     return this.collectionService.findOneByIds(id, user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:id/folders')
+  async findFoldersByCollection(
+    @AuthUser() user: IUserResponse,
+    @Param('id') id: string,
+  ): Promise<FolderResponseDto[]> {
+    return this.collectionService.findFoldersByCollectionId(id, user.id);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch('/')
   async update(
@@ -57,6 +68,7 @@ export class CollectionController {
   ): Promise<CollectionResponseDto> {
     return this.collectionService.update(collectionDto, user.id);
   }
+
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   async delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {

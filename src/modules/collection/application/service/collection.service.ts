@@ -6,6 +6,12 @@ import {
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
+import {
+  FOLDER_REPOSITORY,
+  IFolderRepository,
+} from '@/modules/folder/application/repository/folder.repository';
 
 import { CollectionResponseDto } from '../dto/collection-response.dto';
 import { CreateCollectionDto } from '../dto/create-collection.dto';
@@ -33,6 +39,10 @@ export class CollectionService {
     private readonly collectionMapper: CollectionMapper,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
+    @Inject(FOLDER_REPOSITORY)
+    private readonly foldersRepository: IFolderRepository,
+    @Inject(FolderMapper)
+    private readonly folderMapper: FolderMapper,
   ) {}
 
   async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
@@ -67,6 +77,23 @@ export class CollectionService {
       );
     }
     return this.collectionMapper.fromEntityToDto(collection);
+  }
+
+  async findFoldersByCollectionId(
+    id: string,
+    userId: string,
+  ): Promise<FolderResponseDto[]> {
+    const folders = await this.foldersRepository.findAllByCollectionId(
+      id,
+      userId,
+    );
+    if (!folders) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+
+    return folders.map((folder) => this.folderMapper.fromEntityToDto(folder));
   }
 
   async create(
