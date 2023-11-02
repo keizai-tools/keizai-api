@@ -4,6 +4,10 @@ import { Folder } from '../../domain/folder.domain';
 
 export interface IFolderRepository extends IBaseRepository<Folder> {
   findAll(userId: string): Promise<Folder[]>;
+  findAllByCollectionId(
+    collectionId: string,
+    userId: string,
+  ): Promise<Folder[]>;
   findOneByIds(id: string, userId: string): Promise<Folder>;
   update(folder: Folder): Promise<Folder>;
   delete(id: string): Promise<boolean>;

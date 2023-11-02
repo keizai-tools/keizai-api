@@ -6,10 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import {
-  COLLECTION_REPOSITORY,
-  ICollectionRepository,
-} from '@/modules/collection/application/repository/collection.repository';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { CreateFolderDto } from '../dto/create-folder.dto';
 import { FolderResponseDto } from '../dto/folder-response.dto';
@@ -38,15 +35,15 @@ export class FolderService {
     private readonly folderMapper: FolderMapper,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
-    @Inject(COLLECTION_REPOSITORY)
-    private readonly collectionRepository: ICollectionRepository,
+    @Inject(CollectionService)
+    private readonly collectionService: CollectionService,
   ) {}
 
   async create(
     createFolderDto: CreateFolderDto,
     user: IUserResponse,
   ): Promise<FolderResponseDto> {
-    const collection = await this.collectionRepository.findOneByIds(
+    const collection = await this.collectionService.findOneByIds(
       createFolderDto.collectionId,
       user.id,
     );
@@ -104,7 +101,7 @@ export class FolderService {
     }
 
     if (updateFolderDto.collectionId) {
-      const collection = await this.collectionRepository.findOneByIds(
+      const collection = await this.collectionService.findOneByIds(
         updateFolderDto.collectionId,
         user.id,
       );

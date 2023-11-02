@@ -96,6 +96,20 @@ describe('Collection - [/collection]', () => {
 
       expect(response.body).toHaveLength(2);
     });
+    it('should get folders by collections id', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection0/folders')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+          }),
+        ]),
+      );
+    });
   });
 
   describe('Get one  - [GET /collection/:id]', () => {

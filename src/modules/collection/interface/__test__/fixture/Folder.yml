@@ -1,0 +1,7 @@
+entity: Folder
+items:
+  folder0:
+    id: 'folder0'
+    name: 'folder0'
+    user: '@user0'
+    collection: '@collection0'

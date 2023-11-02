@@ -6,7 +6,7 @@ import * as request from 'supertest';
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
-import * as contractHelpers from '@/common/application/helpers/contract';
+import { CONTRACT_SERVICE } from '@/common/application/repository/contract.interface.service';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
@@ -20,6 +20,11 @@ const mockedCognitoService = {
 
 const mockedJwtStrategy = {
   validate: jest.fn(),
+};
+
+const mockedContractService = {
+  runInvocation: jest.fn(),
+  generateMethodsFromContractId: jest.fn(),
 };
 
 const mockedGuard = {
@@ -42,6 +47,8 @@ describe('Invocation - [/invocation]', () => {
     })
       .overrideProvider(JwtStrategy)
       .useValue(mockedJwtStrategy)
+      .overrideProvider(CONTRACT_SERVICE)
+      .useValue(mockedContractService)
       .overrideProvider(COGNITO_SERVICE)
       .useValue(mockedCognitoService)
       .overrideGuard(JwtAuthGuard)
@@ -173,7 +180,7 @@ describe('Invocation - [/invocation]', () => {
     });
     it('should mock generateMethodsFromContractId function', async () => {
       const spy = jest
-        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
       await request(app.getHttpServer())
         .patch('/invocation')
@@ -183,7 +190,6 @@ describe('Invocation - [/invocation]', () => {
           contractId: 'test contract',
         })
         .expect(HttpStatus.OK);
-
       expect(spy.mock.calls).toHaveLength(1);
     });
     it('should throw error when try to update an invocation not associated with a folder', async () => {
@@ -200,9 +206,10 @@ describe('Invocation - [/invocation]', () => {
       );
     });
     it('should throw error when try to update and invocation with an invalid contract id', async () => {
-      const spy = jest
-        .spyOn(contractHelpers, 'generateMethodsFromContractId')
-        .mockRejectedValue(new Error());
+      jest
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
+        .mockResolvedValue(new Error());
+
       const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({
@@ -217,9 +224,10 @@ describe('Invocation - [/invocation]', () => {
       );
     });
     it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
-      const spy = jest
-        .spyOn(contractHelpers, 'generateMethodsFromContractId')
-        .mockRejectedValue(new Error());
+      jest
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
+        .mockResolvedValue(new Error());
+
       await request(app.getHttpServer())
         .patch('/invocation')
         .send({
@@ -230,8 +238,8 @@ describe('Invocation - [/invocation]', () => {
         .expect(HttpStatus.NOT_FOUND);
     });
     it('should update contract id with a selected method', async () => {
-      jest
-        .spyOn(contractHelpers, 'generateMethodsFromContractId')
+      const spy = jest
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
       const response = await request(app.getHttpServer())
         .patch('/invocation')

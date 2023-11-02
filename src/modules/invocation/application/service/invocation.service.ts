@@ -3,9 +3,13 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
-import { generateMethodsFromContractId } from '@/common/application/helpers/contract';
+import {
+  CONTRACT_SERVICE,
+  IContractService,
+} from '@/common/application/repository/contract.interface.service';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import {
   FOLDER_REPOSITORY,
@@ -54,12 +58,28 @@ export class InvocationService {
     private readonly invocationRepository: IInvocationRepository,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
-    @Inject(METHOD_REPOSITORY)
+    @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
-    @Inject(MethodMapper)
+    @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
+    @Inject(CONTRACT_SERVICE)
+    private readonly contractService: IContractService,
     private readonly methodService: MethodService,
   ) {}
+
+  async runInvocation(user: IUserResponse, id: string) {
+    const invocation = await this.findOneByIds(user, id);
+    try {
+      return await this.contractService.runInvocation(
+        invocation.publicKey,
+        invocation.secretKey,
+        invocation.contractId,
+        invocation.selectedMethod,
+      );
+    } catch (error) {
+      return error;
+    }
+  }
 
   async create(
     createFolderDto: CreateInvocationDto,
@@ -144,10 +164,10 @@ export class InvocationService {
 
     if (updateInvocationDto.contractId) {
       try {
-        const generatedMethods = await generateMethodsFromContractId(
-          updateInvocationDto.contractId,
-        );
-        console.log({ generatedMethods });
+        const generatedMethods =
+          await this.contractService.generateMethodsFromContractId(
+            updateInvocationDto.contractId,
+          );
         await this.methodService.deleteAll(user);
 
         const methodsMapped = generatedMethods.map((method) => {
