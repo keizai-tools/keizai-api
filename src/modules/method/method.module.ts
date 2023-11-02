@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CommonModule } from '@/common/common.module';
-
 import { InvocationModule } from '../invocation/invocation.module';
 import { MethodMapper } from './application/mapper/method.mapper';
 import { METHOD_REPOSITORY } from './application/repository/method.interface.repository';
@@ -14,7 +12,6 @@ import { MethodController } from './interface/method.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([MethodSchema]),
-    CommonModule,
     forwardRef(() => InvocationModule),
   ],
   controllers: [MethodController],

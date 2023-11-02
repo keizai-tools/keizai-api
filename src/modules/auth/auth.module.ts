@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CommonModule } from '@/common/common.module';
-
 import { AuthMapper } from './application/mapper/user.mapper';
 import { COGNITO_SERVICE } from './application/repository/cognito.interface.service';
 import { USER_REPOSITORY } from './application/repository/user.repository.interface';
@@ -18,7 +16,6 @@ import { AuthController } from './interface/auth.controller';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([UserSchema]),
-    CommonModule,
   ],
   controllers: [AuthController],
   providers: [

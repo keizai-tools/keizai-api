@@ -32,13 +32,14 @@ import { InvocationModule } from './modules/invocation/invocation.module';
       },
     }),
     ResilienceModule.forRoot({}),
-    CommonModule,
     AuthModule,
     CollectionModule,
     FolderModule,
     InvocationModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],
+  exports: [],
 })
 export class AppModule {}

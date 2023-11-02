@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CommonModule } from '@/common/common.module';
-
 import { FolderModule } from '../folder/folder.module';
 import { CollectionMapper } from './application/mapper/collection.mapper';
 import { COLLECTION_REPOSITORY } from './application/repository/collection.repository';
@@ -14,7 +12,6 @@ import { CollectionController } from './interface/collection.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([CollectionSchema]),
-    CommonModule,
     forwardRef(() => FolderModule),
   ],
   controllers: [CollectionController],
@@ -31,6 +28,7 @@ import { CollectionController } from './interface/collection.controller';
       provide: COLLECTION_REPOSITORY,
       useClass: CollectionRepository,
     },
+    CollectionService,
   ],
 })
 export class CollectionModule {}
