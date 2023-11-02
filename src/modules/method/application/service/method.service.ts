@@ -170,6 +170,7 @@ export class MethodService {
 
   async deleteAll(user: IUserResponse): Promise<boolean> {
     const methods = await this.methodRepository.findAll(user.id);
+    console.log(methods);
     if (methods) {
       await this.methodRepository.deleteAll(methods.map((method) => method.id));
       return true;
