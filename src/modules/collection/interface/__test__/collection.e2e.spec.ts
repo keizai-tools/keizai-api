@@ -9,8 +9,6 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
-import { FOLDER_REPOSITORY } from '@/modules/folder/application/repository/folder.repository';
-import { FolderRepository } from '@/modules/folder/infrastructure/persistence/folder.typeorm.repository';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
 
@@ -46,8 +44,6 @@ describe('Collection - [/collection]', () => {
       .useValue(mockedCognitoService)
       .overrideGuard(JwtAuthGuard)
       .useValue(mockedGuard)
-      .overrideProvider(FOLDER_REPOSITORY)
-      .useClass(FolderRepository)
       .compile();
 
     await loadFixtures(
