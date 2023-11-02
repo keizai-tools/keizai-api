@@ -155,7 +155,6 @@ export class InvocationService {
       updateInvocationDto.id,
       user.id,
     );
-    console.log({ updateInvocationDto });
     if (!invocation) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
@@ -168,7 +167,6 @@ export class InvocationService {
           await this.contractService.generateMethodsFromContractId(
             updateInvocationDto.contractId,
           );
-        console.log(generatedMethods, 'generatedMethods');
         await this.methodService.deleteAll(user);
 
         const methodsMapped = generatedMethods.map((method) => {
