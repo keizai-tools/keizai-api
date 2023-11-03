@@ -268,10 +268,14 @@ export class StellarService implements IContractService {
       return JSON.stringify(
         newresponse.status === 'SUCCESS'
           ? {
-              value: newresponse.returnValue.value(),
+              method: selectedMethod,
+              response: newresponse.returnValue.value(),
               status: newresponse.status,
             }
-          : null,
+          : {
+              status: 'FAILED',
+              method: selectedMethod,
+            },
       );
     } catch (e) {
       console.log(e);
