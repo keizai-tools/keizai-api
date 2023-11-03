@@ -55,34 +55,6 @@ export class StellarService implements IContractService {
     };
   }
 
-  getLedgerKeyWasmId(contractCodeLedgerEntryData: string) {
-    const entry = xdr.LedgerEntryData.fromXDR(
-      contractCodeLedgerEntryData,
-      'base64',
-    );
-
-    const instance = new xdr.ScContractInstance({
-      executable: entry.contractData().val() as any,
-      storage: [],
-    });
-
-    const ledgerKey = xdr.LedgerKey.contractCode(
-      new xdr.LedgerKeyContractCode({
-        hash: (
-          xdr.ContractExecutable.contractExecutableWasm(
-            instance.executable() as any,
-          ) as any
-        )
-          .wasmHash()
-          .instance()
-          .executable()
-          .wasmHash(),
-      }),
-    );
-
-    return ledgerKey;
-  }
-
   async decodeContractSpecBuffer(buffer) {
     const arrayBuffer = new Uint8Array(buffer);
     const decodedData = [];
@@ -165,29 +137,37 @@ export class StellarService implements IContractService {
   }
 
   async getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry> {
-    const instanceKey = xdr.LedgerKey.contractData(
-      new xdr.LedgerKeyContractData({
-        contract: new Address(contractId).toScAddress(),
-        key: xdr.ScVal.scvLedgerKeyContractInstance(),
-        durability: xdr.ContractDataDurability.persistent(),
-      }),
-    );
+    try {
+      const instanceKey = xdr.LedgerKey.contractData(
+        new xdr.LedgerKeyContractData({
+          contract: new Address(contractId).toScAddress(),
+          key: xdr.ScVal.scvLedgerKeyContractInstance(),
+          durability: xdr.ContractDataDurability.persistent(),
+        }),
+      );
 
-    const response = await this.server.getLedgerEntries(instanceKey);
-    const dataEntry = response.entries[0].val.contractData();
-    return dataEntry;
+      const response = await this.server.getLedgerEntries(instanceKey);
+      const dataEntry = response.entries[0].val.contractData();
+      return dataEntry;
+    } catch (error) {
+      console.log('Error while getting instance value: ', error);
+    }
   }
 
   async getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer> {
-    const codeKey = xdr.LedgerKey.contractCode(
-      new xdr.LedgerKeyContractCode({
-        hash: instance.executable().wasmHash(),
-      }),
-    );
+    try {
+      const codeKey = xdr.LedgerKey.contractCode(
+        new xdr.LedgerKeyContractCode({
+          hash: instance.executable().wasmHash(),
+        }),
+      );
 
-    const response = await this.server.getLedgerEntries(codeKey);
-    const wasmCode = response.entries[0].val.contractCode().code();
-    return wasmCode;
+      const response = await this.server.getLedgerEntries(codeKey);
+      const wasmCode = response.entries[0].val.contractCode().code();
+      return wasmCode;
+    } catch (error) {
+      console.log('Error while getting wasm code: ', error);
+    }
   }
 
   async getContractSpecEntries(contractId) {
