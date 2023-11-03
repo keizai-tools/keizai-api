@@ -1,9 +1,12 @@
+import { xdr } from 'soroban-client';
+
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { IGeneratedMethod } from '../service/stellar.service';
 
 export interface IContractService {
-  getLedgerKeyWasmId(contractCodeLedgerEntryData: string);
+  getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry>;
+  getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer>;
   decodeContractSpecBuffer(buffer);
   extractFunctionInfo(decodedSection, SCSpecTypeMap);
   generateMethodsFromContractId(

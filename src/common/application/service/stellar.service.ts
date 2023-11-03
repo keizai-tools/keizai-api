@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  Address,
   BASE_FEE,
   Contract,
   ContractSpec,
@@ -52,34 +53,6 @@ export class StellarService implements IContractService {
       1006: 'SC_SPEC_TYPE_BYTES_N',
       2000: 'SC_SPEC_TYPE_UDT',
     };
-  }
-
-  getLedgerKeyWasmId(contractCodeLedgerEntryData: string) {
-    const entry = xdr.LedgerEntryData.fromXDR(
-      contractCodeLedgerEntryData,
-      'base64',
-    );
-
-    const instance = new xdr.ScContractInstance({
-      executable: entry.contractData().val() as any,
-      storage: [],
-    });
-
-    const ledgerKey = xdr.LedgerKey.contractCode(
-      new xdr.LedgerKeyContractCode({
-        hash: (
-          xdr.ContractExecutable.contractExecutableWasm(
-            instance.executable() as any,
-          ) as any
-        )
-          .wasmHash()
-          .instance()
-          .executable()
-          .wasmHash(),
-      }),
-    );
-
-    return ledgerKey;
   }
 
   async decodeContractSpecBuffer(buffer) {
@@ -163,34 +136,46 @@ export class StellarService implements IContractService {
     return functionObj;
   }
 
-  async getContractSpecEntries(contractId) {
+  async getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry> {
     try {
-      const contract = new Contract(contractId);
-
-      const ledgerKeys = await contract.getFootprint();
-
-      const { entries } = await this.server.getLedgerEntries(...ledgerKeys);
-
-      const entry = entries?.[0];
-      if (!entry) {
-        throw new Error('No entry found for the given hash');
-      }
-
-      const wasmLedgerKey = this.getLedgerKeyWasmId(entry.val.toXDR('base64'));
-
-      const wasmResponse = await this.server.getLedgerEntries(wasmLedgerKey);
-
-      const wasmEntry = wasmResponse.entries?.[0];
-      if (!wasmEntry) {
-        throw new Error('No entry found for the given wasmLedgerKey');
-      }
-
-      const entryData = xdr.LedgerEntryData.fromXDR(
-        wasmEntry.val.toXDR('base64'),
-        'base64',
+      const instanceKey = xdr.LedgerKey.contractData(
+        new xdr.LedgerKeyContractData({
+          contract: new Address(contractId).toScAddress(),
+          key: xdr.ScVal.scvLedgerKeyContractInstance(),
+          durability: xdr.ContractDataDurability.persistent(),
+        }),
       );
 
-      const contractCode = entryData.contractCode().code();
+      const response = await this.server.getLedgerEntries(instanceKey);
+      const dataEntry = response.entries[0].val.contractData();
+      return dataEntry;
+    } catch (error) {
+      console.log('Error while getting instance value: ', error);
+    }
+  }
+
+  async getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer> {
+    try {
+      const codeKey = xdr.LedgerKey.contractCode(
+        new xdr.LedgerKeyContractCode({
+          hash: instance.executable().wasmHash(),
+        }),
+      );
+
+      const response = await this.server.getLedgerEntries(codeKey);
+      const wasmCode = response.entries[0].val.contractCode().code();
+      return wasmCode;
+    } catch (error) {
+      console.log('Error while getting wasm code: ', error);
+    }
+  }
+
+  async getContractSpecEntries(contractId) {
+    try {
+      const instanceValue = await this.getInstanceValue(contractId);
+      const contractCode = await this.getWasmCode(
+        instanceValue.val().instance(),
+      );
 
       const wasmModule = new WebAssembly.Module(contractCode);
 
