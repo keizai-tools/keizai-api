@@ -29,6 +29,7 @@ import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
 import { INVOCATION_RESPONSE } from '../exceptions/invocation-response.enum.dto';
+import { InvocationException } from '../exceptions/invocation.exceptions';
 import { InvocationMapper } from '../mapper/invocation.mapper';
 import {
   IInvocationRepository,
@@ -65,6 +66,7 @@ export class InvocationService {
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IContractService,
     private readonly methodService: MethodService,
+    private readonly invocationException: InvocationException,
   ) {}
 
   async runInvocation(user: IUserResponse, id: string) {
@@ -155,11 +157,11 @@ export class InvocationService {
       updateInvocationDto.id,
       user.id,
     );
-    if (!invocation) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-      );
-    }
+
+    this.invocationException.validateInvocation(
+      invocation,
+      updateInvocationDto,
+    );
 
     if (updateInvocationDto.contractId) {
       try {
@@ -167,7 +169,16 @@ export class InvocationService {
           await this.contractService.generateMethodsFromContractId(
             updateInvocationDto.contractId,
           );
-        await this.methodService.deleteAllByInvocationId(user, invocation.id);
+
+        const methodsToRemove =
+          await this.methodRepository.findAllByInvocationId(
+            updateInvocationDto.id,
+            user.id,
+          );
+
+        if (methodsToRemove) {
+          await this.methodService.deleteAll(methodsToRemove);
+        }
 
         const methodsMapped = generatedMethods.map((method) => {
           const methodValues: IMethodValues = {
@@ -199,7 +210,6 @@ export class InvocationService {
       userId: user.id,
       id: updateInvocationDto.id,
     };
-
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
     const invocationUpdated = await this.invocationRepository.update(

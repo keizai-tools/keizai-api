@@ -192,6 +192,64 @@ describe('Invocation - [/invocation]', () => {
         .expect(HttpStatus.OK);
       expect(spy.mock.calls).toHaveLength(1);
     });
+
+    it('should remove methods associated with an invocation when update the contract', async () => {
+      jest
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
+        .mockResolvedValue([
+          {
+            name: 'method3',
+            inputs: [],
+            outputs: [],
+            docs: 'doc0',
+          },
+        ]);
+
+      const expectedResponse = expect.objectContaining({
+        id: 'invocation0',
+        selectedMethod: null,
+        contractId: 'contract test',
+        methods: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'method3',
+          }),
+        ]),
+      });
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          id: 'invocation0',
+          contractId: 'contract test',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(expectedResponse);
+
+      expect(response.body.methods).toHaveLength(1);
+
+      await request(app.getHttpServer())
+        .get('/method/method2')
+        .expect(HttpStatus.NOT_FOUND);
+
+      await request(app.getHttpServer())
+        .get('/method/method0')
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should throw error when try to update selected method and contract at the same time', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          name: 'invocation updated',
+          id: 'invocation0',
+          contractId: 'test contract',
+          selectedMethodId: 'method2',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD,
+      );
+    });
     it('should throw error when try to update an invocation not associated with a folder', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation')
