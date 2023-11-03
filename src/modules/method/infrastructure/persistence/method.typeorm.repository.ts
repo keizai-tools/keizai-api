@@ -30,6 +30,18 @@ export class MethodRepository implements IMethodRepository {
     });
   }
 
+  async findAllByInvocationId(
+    invocationId: string,
+    userId: string,
+  ): Promise<Method[]> {
+    return await this.repository.find({
+      where: {
+        invocationId,
+        userId,
+      },
+    });
+  }
+
   async findOne(id: string): Promise<Method> {
     return await this.repository.findOne({
       where: {

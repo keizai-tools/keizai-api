@@ -177,4 +177,17 @@ export class MethodService {
       throw new NotFoundException(METHOD_RESPONSE.METHODS_NOT_DELETED);
     }
   }
+
+  async deleteAllByInvocationId(user: IUserResponse, invocationId: string) {
+    const methods = await this.methodRepository.findAllByInvocationId(
+      invocationId,
+      user.id,
+    );
+    if (methods) {
+      await this.methodRepository.deleteAll(methods.map((method) => method.id));
+      return true;
+    } else {
+      throw new NotFoundException(METHOD_RESPONSE.METHODS_NOT_DELETED);
+    }
+  }
 }

@@ -7,6 +7,10 @@ import { Method } from '../../domain/method.domain';
 export interface IMethodRepository extends IBaseRepository<Method> {
   saveAll(methods: Method[]): Promise<Method[]>;
   findAll(userId: string): Promise<Method[]>;
+  findAllByInvocationId(
+    invocationId: string,
+    userId: string,
+  ): Promise<Method[]>;
   findOneByIds(id: string, userId: string): Promise<Method>;
   update(param: Method): Promise<Method>;
   delete(id: string): Promise<boolean>;
