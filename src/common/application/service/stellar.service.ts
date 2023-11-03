@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  Address,
   BASE_FEE,
   Contract,
   ContractSpec,
@@ -163,34 +164,38 @@ export class StellarService implements IContractService {
     return functionObj;
   }
 
+  async getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry> {
+    const instanceKey = xdr.LedgerKey.contractData(
+      new xdr.LedgerKeyContractData({
+        contract: new Address(contractId).toScAddress(),
+        key: xdr.ScVal.scvLedgerKeyContractInstance(),
+        durability: xdr.ContractDataDurability.persistent(),
+      }),
+    );
+
+    const response = await this.server.getLedgerEntries(instanceKey);
+    const dataEntry = response.entries[0].val.contractData();
+    return dataEntry;
+  }
+
+  async getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer> {
+    const codeKey = xdr.LedgerKey.contractCode(
+      new xdr.LedgerKeyContractCode({
+        hash: instance.executable().wasmHash(),
+      }),
+    );
+
+    const response = await this.server.getLedgerEntries(codeKey);
+    const wasmCode = response.entries[0].val.contractCode().code();
+    return wasmCode;
+  }
+
   async getContractSpecEntries(contractId) {
     try {
-      const contract = new Contract(contractId);
-
-      const ledgerKeys = await contract.getFootprint();
-
-      const { entries } = await this.server.getLedgerEntries(...ledgerKeys);
-
-      const entry = entries?.[0];
-      if (!entry) {
-        throw new Error('No entry found for the given hash');
-      }
-
-      const wasmLedgerKey = this.getLedgerKeyWasmId(entry.val.toXDR('base64'));
-
-      const wasmResponse = await this.server.getLedgerEntries(wasmLedgerKey);
-
-      const wasmEntry = wasmResponse.entries?.[0];
-      if (!wasmEntry) {
-        throw new Error('No entry found for the given wasmLedgerKey');
-      }
-
-      const entryData = xdr.LedgerEntryData.fromXDR(
-        wasmEntry.val.toXDR('base64'),
-        'base64',
+      const instanceValue = await this.getInstanceValue(contractId);
+      const contractCode = await this.getWasmCode(
+        instanceValue.val().instance(),
       );
-
-      const contractCode = entryData.contractCode().code();
 
       const wasmModule = new WebAssembly.Module(contractCode);
 
