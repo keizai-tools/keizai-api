@@ -5,6 +5,7 @@ import { CommonModule } from '@/common/common.module';
 
 import { FolderModule } from '../folder/folder.module';
 import { MethodModule } from '../method/method.module';
+import { InvocationException } from './application/exceptions/invocation.exceptions';
 import { InvocationMapper } from './application/mapper/invocation.mapper';
 import { INVOCATION_REPOSITORY } from './application/repository/invocation.repository';
 import { InvocationService } from './application/service/invocation.service';
@@ -21,6 +22,7 @@ import { InvocationController } from './interface/invocation.controller';
   ],
   controllers: [InvocationController],
   providers: [
+    InvocationException,
     InvocationService,
     InvocationMapper,
     {

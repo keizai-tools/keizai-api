@@ -14,6 +14,7 @@ import {
 } from '@/modules/invocation/application/repository/invocation.repository';
 import { IUpdateInvocationValues } from '@/modules/invocation/application/service/invocation.service';
 
+import { Method } from '../../domain/method.domain';
 import { CreateMethodDto } from '../dto/create-method.dto';
 import { MethodResponseDto } from '../dto/method-response.dto';
 import { UpdateMethodDto } from '../dto/update-method.dto';
@@ -168,13 +169,11 @@ export class MethodService {
     return this.methodRepository.delete(id);
   }
 
-  async deleteAll(user: IUserResponse): Promise<boolean> {
-    const methods = await this.methodRepository.findAll(user.id);
-    if (methods) {
-      await this.methodRepository.deleteAll(methods.map((method) => method.id));
-      return true;
-    } else {
+  async deleteAll(methods: Method[]): Promise<boolean> {
+    if (!methods) {
       throw new NotFoundException(METHOD_RESPONSE.METHODS_NOT_DELETED);
     }
+    await this.methodRepository.deleteAll(methods.map((method) => method.id));
+    return true;
   }
 }

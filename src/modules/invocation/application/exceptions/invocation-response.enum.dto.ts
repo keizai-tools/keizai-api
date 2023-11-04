@@ -9,4 +9,6 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_FOLDER_NOT_EXISTS = 'Folder not exists or its not yours',
   INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID = 'It was not possible to generate new methods with the assigned contract id.',
   INVOCATION_FAIL_RUN_INVOCATION = 'It was not possible to run the invocation',
+  INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD = 'You cannot set a new method and new contract at the same time',
+  INVOCATION_FAIL_SELECTING_METHOD_WITHOUT_CONTRACT = 'You cannot choose a method without having a loaded contract',
 }
