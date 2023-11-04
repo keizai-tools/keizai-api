@@ -11,4 +11,5 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_FAIL_RUN_INVOCATION = 'It was not possible to run the invocation',
   INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD = 'You cannot set a new method and new contract at the same time',
   INVOCATION_FAIL_SELECTING_METHOD_WITHOUT_CONTRACT = 'You cannot choose a method without having a loaded contract',
+  INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD = 'It was not possible to run the invocation. Check if you have selected method or keys',
 }
