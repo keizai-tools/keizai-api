@@ -71,6 +71,16 @@ export class InvocationService {
 
   async runInvocation(user: IUserResponse, id: string) {
     const invocation = await this.findOneByIds(user, id);
+
+    if (
+      !invocation.secretKey ||
+      !invocation.publicKey ||
+      !invocation.selectedMethod
+    ) {
+      throw new NotFoundException(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
+      );
+    }
     try {
       return await this.contractService.runInvocation(
         invocation.publicKey,
