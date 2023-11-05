@@ -72,12 +72,17 @@ export class InvocationService {
   async runInvocation(user: IUserResponse, id: string) {
     const invocation = await this.findOneByIds(user, id);
 
+    const hasEmptyParameters = invocation.selectedMethod?.params?.some(
+      (param) => !param.value,
+    );
+
     if (
       !invocation.secretKey ||
       !invocation.publicKey ||
-      !invocation.selectedMethod
+      !invocation.selectedMethod ||
+      hasEmptyParameters
     ) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }

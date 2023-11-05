@@ -29,3 +29,23 @@ items:
     docs: 'docs0'
     user: '@user0'
     invocation: '@invocation0'
+
+  method3:
+    id: 'method3'
+    name: 'method3'
+    inputs: []
+    outputs: []
+    params: [{ name: 'name', value: 'value' }]
+    docs: 'docs1'
+    user: '@user0'
+    invocation: '@invocation2'
+
+  method4:
+    id: 'method4'
+    name: 'method4'
+    inputs: []
+    outputs: []
+    params: [{ name: 'name', value: '' }]
+    docs: 'docs1'
+    user: '@user0'
+    invocation: '@invocation2'
