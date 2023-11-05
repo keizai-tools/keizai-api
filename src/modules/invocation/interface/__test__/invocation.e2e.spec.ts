@@ -122,7 +122,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(3);
+      expect(response.body).toHaveLength(5);
       expect(response.body).toEqual(responseExpected);
     });
     it('should only get invocations associated with a user', async () => {
@@ -130,7 +130,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(3);
+      expect(response.body).toHaveLength(5);
     });
   });
 
@@ -341,6 +341,32 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body.message).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
+  });
+
+  describe('Run one  - [GET /invocation/:id/run]', () => {
+    it('should not throw error when try to run an invocation', async () => {
+      await request(app.getHttpServer())
+        .get('/invocation/invocation3/run')
+        .expect(HttpStatus.OK);
+    });
+    it('should validate all required fields', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/invocation/invocation4/run')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
+      );
+    });
+    it('should validate missing params', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/invocation/invocation4/run')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     });
   });

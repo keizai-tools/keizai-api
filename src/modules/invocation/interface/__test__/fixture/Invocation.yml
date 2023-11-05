@@ -18,3 +18,27 @@ items:
     user: '@user0'
     folder: '@folder0'
     publicKey: 'publicKey2'
+
+  invocation3:
+    id: 'invocation3'
+    name: 'invocation3'
+    user: '@user0'
+    folder: '@folder1'
+    publicKey: 'publicKey3'
+    secretKey: 'secretKey3'
+    selectedMethod: '@method3'
+
+  invocation4:
+    id: 'invocation4'
+    name: 'invocation4'
+    user: '@user0'
+    folder: '@folder0'
+
+  invocation5:
+    id: 'invocation5'
+    name: 'invocation5'
+    user: '@user1'
+    folder: '@folder1'
+    publicKey: 'publicKey5'
+    secretKey: 'secretKey5'
+    selectedMethod: '@method4'
