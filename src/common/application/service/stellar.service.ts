@@ -286,6 +286,7 @@ export class StellarService implements IContractService {
         STATUS: rawResponse.status,
         // TODO Decode XDRs
         response: rawResponse,
+        method: selectedMethod,
       };
     } catch (e) {
       console.log(e);
