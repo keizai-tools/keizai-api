@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, RequestTimeoutException } from '@nestjs/common';
 import {
   Address,
   BASE_FEE,
@@ -214,7 +214,28 @@ export class StellarService implements IContractService {
 
     const contract = new Contract(contractId);
 
-    const specEntries = await this.getContractSpecEntries(contractId);
+    const maxRetries = 7;
+    let retries = 0;
+    let specEntries;
+
+    while (retries < maxRetries) {
+      try {
+        specEntries = await this.getContractSpecEntries(contractId);
+        break;
+      } catch (error) {
+        console.log(
+          `Error getting contract spec entries (Retry ${retries + 1}): ${
+            error.message
+          }`,
+        );
+        retries++;
+      }
+    }
+
+    if (retries === maxRetries) {
+      throw new RequestTimeoutException('Unable to get contract spec entries.');
+    }
+
     const contractSpec = new ContractSpec(specEntries);
 
     const params = selectedMethod.params.reduce(
@@ -250,18 +271,22 @@ export class StellarService implements IContractService {
         newresponse = await this.server.getTransaction(response.hash);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      return JSON.stringify(
-        newresponse.status === 'SUCCESS'
-          ? {
-              method: selectedMethod,
-              response: newresponse.returnValue.value(),
-              status: newresponse.status,
-            }
-          : {
-              status: 'FAILED',
-              method: selectedMethod,
-            },
-      );
+
+      if (newresponse.status === 'SUCCESS') {
+        return {
+          method: selectedMethod,
+          response: newresponse.returnValue.value(),
+          status: newresponse.status,
+        };
+      }
+
+      const rawResponse = await this.server._getTransaction(response.hash);
+
+      return {
+        STATUS: rawResponse.status,
+        // TODO Decode XDRs
+        response: rawResponse,
+      };
     } catch (e) {
       console.log(e);
       return e;
