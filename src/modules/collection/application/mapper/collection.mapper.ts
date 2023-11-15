@@ -1,5 +1,6 @@
 import { Inject } from '@nestjs/common';
 
+import { EnviromentMapper } from '@/modules/enviroment/application/mapper/enviroment.mapper';
 import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
 
 import { Collection } from '../../domain/collection.domain';
@@ -13,6 +14,8 @@ export class CollectionMapper {
   constructor(
     @Inject(FolderMapper)
     private readonly folderMapper: FolderMapper,
+    @Inject(EnviromentMapper)
+    private readonly enviromentMapper: EnviromentMapper,
   ) {}
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
     const { name, userId } = collectionData;
@@ -23,10 +26,13 @@ export class CollectionMapper {
     return new Collection(name, userId, id);
   }
   fromEntityToDto(collection: Collection): CollectionResponseDto {
-    const { name, id, folders } = collection;
+    const { name, id, folders, enviroments } = collection;
     const foldersMapped = folders?.map((folder) => {
       return this.folderMapper.fromEntityToDto(folder);
     });
-    return new CollectionResponseDto(id, name, foldersMapped);
+    const enviromentMapped = enviroments?.map((enviroment) => {
+      return this.enviromentMapper.fromEntityToDto(enviroment);
+    });
+    return new CollectionResponseDto(id, name, foldersMapped, enviromentMapped);
   }
 }
