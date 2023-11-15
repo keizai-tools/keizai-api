@@ -33,5 +33,13 @@ export const CollectionSchema = new EntitySchema<Collection>({
       },
       inverseSide: 'collection',
     },
+    enviroments: {
+      target: 'Enviroment',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'enviroment_id',
+      },
+      inverseSide: 'collection',
+    },
   },
 });
