@@ -1,0 +1,17 @@
+entity: Enviroment
+items:
+  enviroment0:
+    id: 'enviroment0'
+    name: 'enviroment0'
+    type: 'enviroment0'
+    value: 'enviroment0'
+    user: '@user0'
+    collection: '@collection0'
+
+  enviroment1:
+    id: 'enviroment1'
+    name: 'enviroment1'
+    type: 'enviroment1'
+    value: 'enviroment1'
+    user: '@user1'
+    collection: '@collection1'
