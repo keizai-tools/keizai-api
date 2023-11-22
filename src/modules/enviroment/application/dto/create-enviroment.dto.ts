@@ -6,9 +6,6 @@ export class CreateEnviromentDto {
   name: string;
 
   @IsString()
-  type: string;
-
-  @IsString()
   value: string;
 
   @IsNotEmpty()

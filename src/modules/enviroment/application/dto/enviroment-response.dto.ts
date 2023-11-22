@@ -9,16 +9,11 @@ export class EnviromentResponseDto extends Base {
 
   @IsNotEmpty()
   @IsString()
-  type: string;
-
-  @IsNotEmpty()
-  @IsString()
   value: string;
 
-  constructor(name: string, type: string, value: string, id: string) {
+  constructor(name: string, value: string, id: string) {
     super();
     this.name = name;
-    this.type = type;
     this.value = value;
     this.id = id;
   }

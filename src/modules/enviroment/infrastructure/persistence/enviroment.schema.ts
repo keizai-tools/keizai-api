@@ -12,9 +12,6 @@ export const EnviromentSchema = new EntitySchema<Enviroment>({
     name: {
       type: String,
     },
-    type: {
-      type: String,
-    },
     value: {
       type: String,
     },

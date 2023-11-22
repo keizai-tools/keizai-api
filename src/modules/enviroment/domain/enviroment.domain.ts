@@ -4,7 +4,6 @@ import { Collection } from '@/modules/collection/domain/collection.domain';
 
 export class Enviroment extends Base {
   name: string;
-  type: string;
   value: string;
   userId: string;
   collectionId: string;
@@ -13,7 +12,6 @@ export class Enviroment extends Base {
 
   constructor(
     name: string,
-    type: string,
     value: string,
     userId: string,
     collectionId: string,
@@ -21,7 +19,6 @@ export class Enviroment extends Base {
   ) {
     super();
     this.name = name;
-    this.type = type;
     this.value = value;
     this.userId = userId;
     this.collectionId = collectionId;
