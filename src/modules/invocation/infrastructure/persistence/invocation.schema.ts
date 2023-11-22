@@ -70,5 +70,13 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       nullable: true,
       onUpdate: 'CASCADE',
     },
+    preInvocation: {
+      target: 'PreInvocation',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'invocation_id',
+      },
+      inverseSide: 'invocation',
+    },
   },
 });

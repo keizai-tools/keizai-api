@@ -10,6 +10,7 @@ import { datasourceOptions } from '@configuration/orm.configuration';
 
 import { CommonModule } from '@common/common.module';
 
+import { PreInvocationModule } from './modules/PreInvocation/pre-invocation.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
@@ -39,6 +40,7 @@ import { InvocationModule } from './modules/invocation/invocation.module';
     InvocationModule,
     CommonModule,
     EnviromentModule,
+    PreInvocationModule,
   ],
   controllers: [],
   providers: [],

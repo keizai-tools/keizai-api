@@ -2,6 +2,7 @@ import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
 import { Folder } from '@/modules/folder/domain/folder.domain';
 import { Method } from '@/modules/method/domain/method.domain';
+import { PreInvocation } from '@/modules/preInvocation/domain/pre-invocation.domain';
 
 export class Invocation extends Base {
   name: string;
@@ -15,6 +16,7 @@ export class Invocation extends Base {
   user?: User;
   methods?: Method[];
   selectedMethod?: Method;
+  preInvocation?: PreInvocation;
   constructor(
     name: string,
     secretKey: string,
