@@ -16,8 +16,9 @@ import { CollectionService } from '../collection.service';
 const collection: Collection = { name: 'test', userId: '1' };
 const collectionResponseDto: CollectionResponseDto = {
   id: '1',
-  name: 'test',
+  name: '',
   folders: [],
+  enviroments: [],
 };
 
 const mockCollectionRepository = {
