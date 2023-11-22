@@ -66,7 +66,6 @@ describe('Enviroment - [/enviroment]', () => {
   describe('Create one - [POST /enviroment]', () => {
     const enviromentDto = {
       name: 'test',
-      type: 'test',
       value: 'test',
     };
     it('should create a new enviroment', async () => {
@@ -115,7 +114,6 @@ describe('Enviroment - [/enviroment]', () => {
       expect(response.body).toEqual({
         id: 'enviroment0',
         name: 'enviroment0',
-        type: 'enviroment0',
         value: 'enviroment0',
       });
     });
@@ -143,7 +141,6 @@ describe('Enviroment - [/enviroment]', () => {
       expect(response.body).toEqual({
         id: 'enviroment0',
         name: 'enviroment updated',
-        type: 'enviroment0',
         value: 'enviroment0',
       });
     });
