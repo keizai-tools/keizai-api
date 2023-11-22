@@ -20,7 +20,6 @@ import {
 
 export interface IEnviromentValues {
   name: string;
-  type: string;
   value: string;
   collectionId: string;
   userId: string;
@@ -57,7 +56,6 @@ export class EnviromentService {
 
     const enviromentValues: IEnviromentValues = {
       name: createEnviromentDto.name,
-      type: createEnviromentDto.type,
       value: createEnviromentDto.value,
       collectionId: createEnviromentDto.collectionId,
       userId: user.id,
@@ -123,7 +121,6 @@ export class EnviromentService {
 
     const enviromentValues: IUpdateEnviromentValues = {
       name: updateEnviromentDto.name,
-      type: updateEnviromentDto.type,
       value: updateEnviromentDto.value,
       collectionId: updateEnviromentDto.collectionId,
       userId: user.id,
