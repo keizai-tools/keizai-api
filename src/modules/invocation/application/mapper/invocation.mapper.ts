@@ -19,12 +19,20 @@ export class InvocationMapper {
   ) {}
 
   fromDtoToEntity(createFolderDto: IInvocationValues): Invocation {
-    const { name, secretKey, publicKey, contractId, folderId, userId } =
-      createFolderDto;
+    const {
+      name,
+      secretKey,
+      publicKey,
+      preInvocation,
+      contractId,
+      folderId,
+      userId,
+    } = createFolderDto;
     return new Invocation(
       name,
       secretKey,
       publicKey,
+      preInvocation,
       contractId,
       folderId,
       userId,
@@ -36,6 +44,7 @@ export class InvocationMapper {
       name,
       secretKey,
       publicKey,
+      preInvocation,
       contractId,
       folder,
       id,
@@ -56,6 +65,7 @@ export class InvocationMapper {
       name,
       secretKey,
       publicKey,
+      preInvocation,
       contractId,
       folderMapped,
       methodsMapped,
@@ -69,16 +79,19 @@ export class InvocationMapper {
       name,
       secretKey,
       publicKey,
+      preInvocation,
       contractId,
       folderId,
       selectedMethodId,
       id,
       userId,
     } = updateFolderDto;
+    console.log(updateFolderDto);
     return new Invocation(
       name,
       secretKey,
       publicKey,
+      preInvocation,
       contractId,
       folderId,
       userId,

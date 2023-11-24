@@ -323,6 +323,19 @@ describe('Invocation - [/invocation]', () => {
       expect(response.body.publicKey).toEqual('publicKey2');
       expect(response.body.secretKey).toEqual('newSecretKey');
     });
+
+    it('should update pre invocation code', async () => {
+      const preInvocationValue = 'console.log("pre invocation)';
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          preInvocation: preInvocationValue,
+          id: 'invocation2',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.preInvocation).toEqual(preInvocationValue);
+    });
   });
 
   describe('Delete one  - [DELETE /invocation/:id]', () => {

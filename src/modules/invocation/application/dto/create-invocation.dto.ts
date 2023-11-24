@@ -15,6 +15,10 @@ export class CreateInvocationDto {
 
   @IsOptional()
   @IsString()
+  preInvocation: string;
+
+  @IsOptional()
+  @IsString()
   contractId: string;
 
   @IsNotEmpty()

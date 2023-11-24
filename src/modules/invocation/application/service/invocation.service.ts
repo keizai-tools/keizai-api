@@ -40,6 +40,7 @@ export interface IInvocationValues {
   name: string;
   secretKey: string;
   publicKey: string;
+  preInvocation: string;
   contractId: string;
   folderId: string;
   userId: string;
@@ -121,6 +122,7 @@ export class InvocationService {
       name: createFolderDto.name,
       secretKey: createFolderDto.secretKey,
       publicKey: createFolderDto.publicKey,
+      preInvocation: createFolderDto.preInvocation,
       contractId: createFolderDto.contractId,
       folderId: createFolderDto.folderId,
       userId: user.id,
@@ -219,6 +221,7 @@ export class InvocationService {
       name: updateInvocationDto.name,
       secretKey: updateInvocationDto.secretKey,
       publicKey: updateInvocationDto.publicKey,
+      preInvocation: updateInvocationDto.preInvocation,
       contractId: updateInvocationDto.contractId,
       folderId: updateInvocationDto.folderId,
       selectedMethodId: updateInvocationDto.selectedMethodId,

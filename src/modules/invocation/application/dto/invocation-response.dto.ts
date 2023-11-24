@@ -19,6 +19,10 @@ export class InvocationResponseDto extends Base {
 
   @IsNotEmpty()
   @IsString()
+  preInvocation: string;
+
+  @IsNotEmpty()
+  @IsString()
   contractId: string;
 
   @IsNotEmpty()
@@ -34,6 +38,7 @@ export class InvocationResponseDto extends Base {
     name: string,
     secretKey: string,
     publicKey: string,
+    preInvocation: string,
     contractId: string,
     folder: FolderResponseDto,
     methods?: MethodResponseDto[],
@@ -44,6 +49,7 @@ export class InvocationResponseDto extends Base {
     this.name = name;
     this.secretKey = secretKey;
     this.publicKey = publicKey;
+    this.preInvocation = preInvocation;
     this.contractId = contractId;
     this.id = id;
     this.folder = folder;
