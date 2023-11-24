@@ -18,7 +18,7 @@ export class InvocationMapper {
     private readonly methodMapper: MethodMapper,
   ) {}
 
-  fromDtoToEntity(createFolderDto: IInvocationValues): Invocation {
+  fromDtoToEntity(createInvocationDto: IInvocationValues): Invocation {
     const {
       name,
       secretKey,
@@ -27,7 +27,7 @@ export class InvocationMapper {
       contractId,
       folderId,
       userId,
-    } = createFolderDto;
+    } = createInvocationDto;
     return new Invocation(
       name,
       secretKey,
@@ -74,7 +74,9 @@ export class InvocationMapper {
     );
   }
 
-  fromUpdateDtoToEntity(updateFolderDto: IUpdateInvocationValues): Invocation {
+  fromUpdateDtoToEntity(
+    updateInvocationDto: IUpdateInvocationValues,
+  ): Invocation {
     const {
       name,
       secretKey,
@@ -85,8 +87,7 @@ export class InvocationMapper {
       selectedMethodId,
       id,
       userId,
-    } = updateFolderDto;
-    console.log(updateFolderDto);
+    } = updateInvocationDto;
     return new Invocation(
       name,
       secretKey,
