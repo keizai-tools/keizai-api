@@ -122,7 +122,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(5);
+      expect(response.body).toHaveLength(6);
       expect(response.body).toEqual(responseExpected);
     });
     it('should only get invocations associated with a user', async () => {
@@ -130,7 +130,7 @@ describe('Invocation - [/invocation]', () => {
         .get('/invocation')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(5);
+      expect(response.body).toHaveLength(6);
     });
   });
 
@@ -338,6 +338,20 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
+  describe('Run all - [GET /invocation/run]', () => {
+    it('should run correctly the invocation and pre invocation', async () => {
+      const preInvocationResponse = 'a';
+      const invocationId = 'invocation5';
+      const response = await request(app.getHttpServer()).get(
+        `/invocation/${invocationId}/run`,
+      );
+
+      expect(response.body.preInvocation.response).toEqual(
+        preInvocationResponse,
+      );
+    });
+  });
+
   describe('Delete one  - [DELETE /invocation/:id]', () => {
     it('should delete one invocation associated with a user', async () => {
       const response = await request(app.getHttpServer())
@@ -359,11 +373,16 @@ describe('Invocation - [/invocation]', () => {
   });
 
   describe('Run one  - [GET /invocation/:id/run]', () => {
-    it('should not throw error when try to run an invocation', async () => {
-      await request(app.getHttpServer())
+    it('should throw error when try to run an invocation because pre invocation is invalid', async () => {
+      const response = await request(app.getHttpServer())
         .get('/invocation/invocation3/run')
-        .expect(HttpStatus.OK);
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_PRE_INVOCATION,
+      );
     });
+
     it('should validate all required fields', async () => {
       const response = await request(app.getHttpServer())
         .get('/invocation/invocation4/run')

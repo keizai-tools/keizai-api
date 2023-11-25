@@ -25,6 +25,7 @@ import {
   MethodService,
 } from '@/modules/method/application/service/method.service';
 
+import { Invocation } from '../../domain/invocation.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
@@ -44,6 +45,11 @@ export interface IInvocationValues {
   contractId: string;
   folderId: string;
   userId: string;
+}
+
+interface IPreInvocationValue {
+  response: string;
+  statusCode: number;
 }
 
 export interface IUpdateInvocationValues extends Partial<IInvocationValues> {
@@ -71,12 +77,14 @@ export class InvocationService {
   ) {}
 
   async runInvocation(user: IUserResponse, id: string) {
-    const invocation = await this.findOneByIds(user, id);
-
+    const invocation = await this.invocationRepository.findOneByIds(
+      id,
+      user.id,
+    );
+    const preInvocationResponse = this.runPreInvocation(invocation);
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
-
     if (
       !invocation.secretKey ||
       !invocation.publicKey ||
@@ -87,15 +95,38 @@ export class InvocationService {
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }
+
     try {
-      return await this.contractService.runInvocation(
+      const invocationResult = await this.contractService.runInvocation(
         invocation.publicKey,
         invocation.secretKey,
         invocation.contractId,
         invocation.selectedMethod,
       );
+
+      return {
+        preInvocation: preInvocationResponse,
+        invocation: invocationResult,
+      };
     } catch (error) {
       return error;
+    }
+  }
+
+  runPreInvocation(invocation: Invocation): IPreInvocationValue {
+    try {
+      const preInvocationValue = invocation.validatePreInvocation(
+        invocation.preInvocation,
+      );
+
+      return {
+        response: preInvocationValue,
+        statusCode: 200,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_PRE_INVOCATION,
+      );
     }
   }
 

@@ -1,4 +1,10 @@
-import { Injectable, RequestTimeoutException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  RequestTimeoutException,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 import {
   Address,
   BASE_FEE,
@@ -10,6 +16,8 @@ import {
   TransactionBuilder,
   xdr,
 } from 'soroban-client';
+
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 
 import { IContractService } from '../repository/contract.interface.service';
 
@@ -24,7 +32,9 @@ export interface IGeneratedMethod {
 export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
   private server: Server;
-  constructor() {
+  constructor(
+    @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
+  ) {
     this.server = new Server('https://rpc-futurenet.stellar.org');
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
@@ -209,6 +219,13 @@ export class StellarService implements IContractService {
     }
   }
 
+  @UseInterceptors(
+    ResilienceInterceptor(
+      new RetryStrategy({
+        maxRetries: 5,
+      }),
+    ),
+  )
   async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
     const account = await this.server.getAccount(publicKey);
 
@@ -271,22 +288,21 @@ export class StellarService implements IContractService {
         newresponse = await this.server.getTransaction(response.hash);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-
+      const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
       if (newresponse.status === 'SUCCESS') {
         return {
-          method: selectedMethod,
+          method: methodMapped,
           response: newresponse.returnValue.value(),
           status: newresponse.status,
         };
       }
 
       const rawResponse = await this.server._getTransaction(response.hash);
-
       return {
         STATUS: rawResponse.status,
         // TODO Decode XDRs
         response: rawResponse,
-        method: selectedMethod,
+        method: methodMapped,
       };
     } catch (e) {
       console.log(e);

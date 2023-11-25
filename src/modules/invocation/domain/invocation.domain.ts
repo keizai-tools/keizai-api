@@ -38,4 +38,10 @@ export class Invocation extends Base {
     this.selectedMethodId = selectedMethodId;
     this.id = id;
   }
+
+  validatePreInvocation(preInvocation: string) {
+    if (preInvocation) {
+      return eval(preInvocation);
+    }
+  }
 }
