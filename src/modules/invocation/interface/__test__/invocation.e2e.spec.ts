@@ -325,7 +325,7 @@ describe('Invocation - [/invocation]', () => {
     });
 
     it('should update pre invocation code', async () => {
-      const preInvocationValue = 'console.log("pre invocation)';
+      const preInvocationValue = 'console.log("pre invocation")';
       const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({
