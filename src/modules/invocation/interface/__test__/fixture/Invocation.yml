@@ -26,6 +26,7 @@ items:
     folder: '@folder1'
     publicKey: 'publicKey3'
     secretKey: 'secretKey3'
+    preInvocation: 'a'
     selectedMethod: '@method3'
 
   invocation4:
@@ -37,8 +38,9 @@ items:
   invocation5:
     id: 'invocation5'
     name: 'invocation5'
-    user: '@user1'
+    user: '@user0'
     folder: '@folder1'
     publicKey: 'publicKey5'
     secretKey: 'secretKey5'
+    preInvocation: 'const a = () => "a"; a();'
     selectedMethod: '@method4'

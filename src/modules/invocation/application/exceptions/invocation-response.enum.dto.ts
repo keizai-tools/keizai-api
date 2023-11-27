@@ -12,4 +12,5 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD = 'Cannot set a new contract and method simultaneously',
   INVOCATION_FAIL_SELECTING_METHOD_WITHOUT_CONTRACT = 'Method selection requires a loaded contract',
   INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD = 'Invocation failed: Ensure a method is selected, authentication keys are provided, and all required parameters are set.',
+  INVOCATION_FAILED_TO_RUN_PRE_INVOCATION = 'Pre invocation script failed. Verified if the pre-invocation script is valid.',
 }
