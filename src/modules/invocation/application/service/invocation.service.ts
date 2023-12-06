@@ -81,7 +81,6 @@ export class InvocationService {
       id,
       user.id,
     );
-    const preInvocationResponse = this.runPreInvocation(invocation);
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
@@ -103,30 +102,9 @@ export class InvocationService {
         invocation.contractId,
         invocation.selectedMethod,
       );
-
-      return {
-        preInvocation: preInvocationResponse,
-        invocation: invocationResult,
-      };
+      return invocationResult;
     } catch (error) {
       return error;
-    }
-  }
-
-  runPreInvocation(invocation: Invocation): IPreInvocationValue {
-    try {
-      const preInvocationValue = invocation.validatePreInvocation(
-        invocation.preInvocation,
-      );
-
-      return {
-        response: preInvocationValue,
-        statusCode: 200,
-      };
-    } catch (error) {
-      throw new BadRequestException(
-        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_PRE_INVOCATION,
-      );
     }
   }
 
