@@ -1,7 +1,6 @@
-import { Collection } from 'typeorm';
-
 import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
+import { Collection } from '@/modules/collection/domain/collection.domain';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 export class Folder extends Base {
