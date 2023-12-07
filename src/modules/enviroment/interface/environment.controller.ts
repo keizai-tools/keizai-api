@@ -15,47 +15,47 @@ import {
 } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 
-import { CreateEnviromentDto } from '../application/dto/create-enviroment.dto';
-import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
-import { EnviromentService } from '../application/service/enviroment.service';
+import { CreateEnvironmentDto } from '../application/dto/create-environment.dto';
+import { UpdateEnvironmentDto } from '../application/dto/update-environment.dto';
+import { EnvironmentService } from '../application/service/environment.service';
 
-@Controller('enviroment')
-export class EnviromentController {
-  constructor(private readonly enviromentService: EnviromentService) {}
+@Controller('environment')
+export class EnvironmentController {
+  constructor(private readonly environmentService: EnvironmentService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('')
   async create(
-    @Body() createEnviromentDto: CreateEnviromentDto,
+    @Body() createEnvironmentDto: CreateEnvironmentDto,
     @AuthUser() user: IUserResponse,
   ) {
-    return this.enviromentService.create(createEnviromentDto, user);
+    return this.environmentService.create(createEnvironmentDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('')
   findAll(@AuthUser() user: IUserResponse) {
-    return this.enviromentService.findAll(user);
+    return this.environmentService.findAll(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
   findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.enviromentService.findOneByIds(user, id);
+    return this.environmentService.findOneByIds(user, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch()
   update(
-    @Body() updateEnviromentDto: UpdateEnviromentDto,
+    @Body() updateEnvironmentDto: UpdateEnvironmentDto,
     @AuthUser() user: IUserResponse,
   ) {
-    return this.enviromentService.update(updateEnviromentDto, user);
+    return this.environmentService.update(updateEnvironmentDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.enviromentService.delete(user, id);
+    return this.environmentService.delete(user, id);
   }
 }
