@@ -18,7 +18,7 @@ const collectionResponseDto: CollectionResponseDto = {
   id: '1',
   name: '',
   folders: [],
-  enviroments: [],
+  environments: [],
 };
 
 const mockCollectionRepository = {
