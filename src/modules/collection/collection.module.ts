@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { EnviromentModule } from '../enviroment/enviroment.module';
+import { EnvironmentModule } from '../enviroment/environment.module';
 import { FolderModule } from '../folder/folder.module';
 import { CollectionMapper } from './application/mapper/collection.mapper';
 import { COLLECTION_REPOSITORY } from './application/repository/collection.repository';
@@ -14,7 +14,7 @@ import { CollectionController } from './interface/collection.controller';
   imports: [
     TypeOrmModule.forFeature([CollectionSchema]),
     forwardRef(() => FolderModule),
-    forwardRef(() => EnviromentModule),
+    forwardRef(() => EnvironmentModule),
   ],
   controllers: [CollectionController],
   providers: [
