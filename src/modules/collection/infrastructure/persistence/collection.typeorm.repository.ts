@@ -19,7 +19,7 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOne(id: string): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { user: true, enviroments: true },
+      relations: { user: true, environments: true },
       where: {
         id,
       },
@@ -40,7 +40,7 @@ export class CollectionRepository implements ICollectionRepository {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
-        enviroments: true,
+        environments: true,
         folders: {
           invocations: { methods: true, selectedMethod: true },
         },
