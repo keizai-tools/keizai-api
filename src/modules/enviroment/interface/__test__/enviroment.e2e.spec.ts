@@ -10,7 +10,7 @@ import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.i
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
 
-import { ENVIROMENT_RESPONSE } from '../../application/exceptions/enviroment-response.enum';
+import { ENVIRONMENT_RESPONSE } from '../../application/exceptions/environment-response.enum';
 
 const mockedCognitoService = {
   registerAccount: jest.fn(),
@@ -63,14 +63,14 @@ describe('Enviroment - [/enviroment]', () => {
     await app.init();
   });
 
-  describe('Create one - [POST /enviroment]', () => {
+  describe('Create one - [POST /environment]', () => {
     const enviromentDto = {
       name: 'test',
       value: 'test',
     };
     it('should create a new enviroment', async () => {
       const response = await request(app.getHttpServer())
-        .post('/enviroment')
+        .post('/environment')
         .send({ ...enviromentDto, collectionId: 'collection0' })
         .expect(HttpStatus.CREATED);
 
@@ -81,23 +81,23 @@ describe('Enviroment - [/enviroment]', () => {
     });
     it('should throw error when try to create a new environment not associated with the user and collections', async () => {
       const response = await request(app.getHttpServer())
-        .post('/enviroment')
+        .post('/environment')
         .send({ ...enviromentDto, collectionId: 'collection' })
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
     });
   });
-  describe('Get all  - [GET /enviroment]', () => {
-    it('should get all enviroments associated with a collection', async () => {
+  describe('Get all  - [GET /environment]', () => {
+    it('should get all environments associated with a collection', async () => {
       const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 'enviroment0' }),
+        expect.objectContaining({ id: 'environment0' }),
         expect.objectContaining({ id: expect.any(String) }),
       ]);
       const response = await request(app.getHttpServer())
-        .get('/enviroment')
+        .get('/environment')
         .expect(HttpStatus.OK);
 
       expect(response.body).toHaveLength(2);
@@ -105,48 +105,48 @@ describe('Enviroment - [/enviroment]', () => {
     });
   });
 
-  describe('Get one - [GET /enviroment/:id]', () => {
-    it('should get one enviroment associated with a collection', async () => {
+  describe('Get one - [GET /environment/:id]', () => {
+    it('should get one environment associated with a collection', async () => {
       const response = await request(app.getHttpServer())
-        .get('/enviroment/enviroment0')
+        .get('/environment/environment0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
-        id: 'enviroment0',
+        id: 'environment0',
         name: 'enviroment0',
         value: 'enviroment0',
       });
     });
-    it('should throw error when try to get one enviroment not associated with a user', async () => {
+    it('should throw error when try to get one environment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/enviroment/enviroment1')
+        .get('/environment/environment1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
 
-  describe('Update one  - [PUT /enviroment/:id]', () => {
+  describe('Update one  - [PUT /environment/:id]', () => {
     it('should update one enviroment associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/enviroment')
+        .patch('/environment')
         .send({
           name: 'enviroment updated',
-          id: 'enviroment0',
+          id: 'environment0',
         })
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({
-        id: 'enviroment0',
+        id: 'environment0',
         name: 'enviroment updated',
         value: 'enviroment0',
       });
     });
     it('should throw error when try to update one enviroment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/enviroment')
+        .patch('/environment')
         .send({
           name: 'enviroment updated',
           id: 'enviroment1',
@@ -154,27 +154,27 @@ describe('Enviroment - [/enviroment]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
 
-  describe('Delete one  - [DELETE /enviroment/:id]', () => {
-    it('should delete one enviroment associated with a user', async () => {
+  describe('Delete one  - [DELETE /environment/:id]', () => {
+    it('should delete one environment associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/enviroment/enviroment0')
+        .delete('/environment/environment0')
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
     });
 
-    it('should throw error when try to delete one enviroment not associated with a user', async () => {
+    it('should throw error when try to delete one environment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/enviroment/enviroment1')
+        .delete('/environment/environment1')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
