@@ -12,7 +12,7 @@ import { CommonModule } from '@common/common.module';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
-import { EnviromentModule } from './modules/enviroment/enviroment.module';
+import { EnvironmentModule } from './modules/enviroment/environment.module';
 import { FolderModule } from './modules/folder/folder.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
 
@@ -38,7 +38,7 @@ import { InvocationModule } from './modules/invocation/invocation.module';
     FolderModule,
     InvocationModule,
     CommonModule,
-    EnviromentModule,
+    EnvironmentModule,
   ],
   controllers: [],
   providers: [],

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateEnviromentDto {
+export class CreateEnvironmentDto {
   @IsNotEmpty()
   @IsString()
   name: string;

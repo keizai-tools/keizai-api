@@ -1,14 +1,14 @@
-entity: Enviroment
+entity: Environment
 items:
-  enviroment0:
-    id: 'enviroment0'
+  environment0:
+    id: 'environment0'
     name: 'enviroment0'
     value: 'enviroment0'
     user: '@user0'
     collection: '@collection0'
 
-  enviroment1:
-    id: 'enviroment1'
+  environment1:
+    id: 'environment1'
     name: 'enviroment1'
     value: 'enviroment1'
     user: '@user1'

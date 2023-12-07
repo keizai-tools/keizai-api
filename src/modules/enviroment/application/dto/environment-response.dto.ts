@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 
 import { Base } from '@/common/domain/base.domain';
 
-export class EnviromentResponseDto extends Base {
+export class EnvironmentResponseDto extends Base {
   @IsNotEmpty()
   @IsString()
   name: string;
