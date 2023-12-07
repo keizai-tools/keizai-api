@@ -2,11 +2,11 @@ import { EntitySchema } from 'typeorm';
 
 import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
 
-import { Enviroment } from '../../domain/enviroment.domain';
+import { Environment } from '../../domain/environment.domain';
 
-export const EnviromentSchema = new EntitySchema<Enviroment>({
-  name: 'Enviroment',
-  target: Enviroment,
+export const EnvironmentSchema = new EntitySchema<Environment>({
+  name: 'Environment',
+  target: Environment,
   columns: {
     ...baseColumnSchemas,
     name: {

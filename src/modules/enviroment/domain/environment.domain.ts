@@ -2,7 +2,7 @@ import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
 import { Collection } from '@/modules/collection/domain/collection.domain';
 
-export class Enviroment extends Base {
+export class Environment extends Base {
   name: string;
   value: string;
   userId: string;
