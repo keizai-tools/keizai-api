@@ -25,18 +25,6 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
-  async findAllByCollection(
-    collectionId: string,
-    userId: string,
-  ): Promise<Enviroment[]> {
-    return await this.repository.find({
-      where: {
-        userId,
-        collectionId,
-      },
-    });
-  }
-
   async findOne(id: string): Promise<Enviroment> {
     return await this.repository.findOne({
       relations: { user: true },
