@@ -80,34 +80,6 @@ export class InvocationService {
       user.id,
     );
 
-    const paramsMapped = await Promise.all(
-      invocation.selectedMethod.params.map(async (param) => {
-        const envsNames = invocation.selectedMethod.getParamValue(param.value);
-        const envsByName = await this.enviromentService.findByNames(
-          envsNames,
-          invocation.folder.collectionId,
-        );
-        const envsValues: { name: string; value: string }[] = envsByName.map(
-          (env) => {
-            return {
-              name: env.name,
-              value: env.value,
-            };
-          },
-        );
-        if (envsValues.length > 0) {
-          param.value = invocation.selectedMethod.replaceParamValue(
-            envsValues,
-            param.value,
-          );
-        }
-        return param;
-      }),
-    );
-    const selectedMethodMapped: Partial<Method> = {
-      ...invocation.selectedMethod,
-      params: paramsMapped,
-    };
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
@@ -121,6 +93,37 @@ export class InvocationService {
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }
+    const paramsMapped = await Promise.all(
+      invocation.selectedMethod?.params.map(async (param) => {
+        const envsNames = invocation.selectedMethod.getParamValue(param.value);
+        const envsByName =
+          envsNames &&
+          (await this.enviromentService.findByNames(
+            envsNames,
+            invocation.folder.collectionId,
+          ));
+
+        const envsValues: { name: string; value: string }[] =
+          envsByName &&
+          envsByName?.map((env) => {
+            return {
+              name: env.name,
+              value: env.value,
+            };
+          });
+        if (envsValues.length > 0) {
+          param.value = invocation.selectedMethod.replaceParamValue(
+            envsValues,
+            param.value,
+          );
+        }
+        return param;
+      }),
+    );
+    const selectedMethodMapped: Partial<Method> = {
+      ...invocation.selectedMethod,
+      params: paramsMapped,
+    };
 
     try {
       const invocationResult = await this.contractService.runInvocation(
