@@ -19,7 +19,7 @@ import { CreateEnviromentDto } from '../application/dto/create-enviroment.dto';
 import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
 import { EnviromentService } from '../application/service/enviroment.service';
 
-@Controller('enviroment')
+@Controller('environment')
 export class EnviromentController {
   constructor(private readonly enviromentService: EnviromentService) {}
 
