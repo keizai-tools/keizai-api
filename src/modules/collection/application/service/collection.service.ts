@@ -3,12 +3,10 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../dto/collection-response.dto';
@@ -37,8 +35,6 @@ export class CollectionService {
     private readonly collectionMapper: CollectionMapper,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
-    @Inject(forwardRef(() => EnviromentService))
-    private readonly environmentService: EnviromentService,
   ) {}
 
   async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
@@ -50,20 +46,6 @@ export class CollectionService {
     return collections.map((collection) =>
       this.collectionMapper.fromEntityToDto(collection),
     );
-  }
-
-  async findEnvironmentsByCollectionId(
-    collectionId: string,
-    userId,
-  ): Promise<EnviromentResponseDto[]> {
-    const environments = await this.environmentService.findAllByCollection(
-      collectionId,
-      userId,
-    );
-    if (!environments) {
-      throw new NotFoundException(COLLECTION_RESPONSE.COLLECTIONS_NOT_FOUND);
-    }
-    return environments;
   }
 
   async findOne(id: string): Promise<CollectionResponseDto> {
@@ -87,6 +69,19 @@ export class CollectionService {
       );
     }
     return this.collectionMapper.fromEntityToDto(collection);
+  }
+
+  async findEnvironmentsByCollectionId(
+    collectionId: string,
+    userId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    const collection = await this.findOneByIds(collectionId, userId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+    return collection.enviroments;
   }
 
   async findFoldersByCollectionId(
