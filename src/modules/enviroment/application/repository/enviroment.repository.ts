@@ -4,6 +4,7 @@ import { Enviroment } from '../../domain/enviroment.domain';
 
 export interface IEnviromentRepository extends IBaseRepository<Enviroment> {
   findAll(userId: string): Promise<Enviroment[]>;
+  findAllByCollection(id: string, userId: string): Promise<Enviroment[]>;
   findOneByIds(id: string, userId: string): Promise<Enviroment>;
   update(enviroment: Enviroment): Promise<Enviroment>;
   delete(id: string): Promise<boolean>;

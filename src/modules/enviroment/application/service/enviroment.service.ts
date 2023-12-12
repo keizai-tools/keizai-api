@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
@@ -36,7 +37,7 @@ export class EnviromentService {
     private readonly enviromentMapper: EnviromentMapper,
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
-    @Inject(CollectionService)
+    @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
   ) {}
 
@@ -71,6 +72,23 @@ export class EnviromentService {
 
   async findAll(user: IUserResponse): Promise<EnviromentResponseDto[]> {
     const enviroments = await this.enviromentRepository.findAll(user.id);
+    if (!enviroments)
+      throw new NotFoundException(
+        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+      );
+    return enviroments.map((enviroment) =>
+      this.enviromentMapper.fromEntityToDto(enviroment),
+    );
+  }
+
+  async findAllByCollection(
+    collectionId: string,
+    userId,
+  ): Promise<EnviromentResponseDto[]> {
+    const enviroments = await this.enviromentRepository.findAllByCollection(
+      collectionId,
+      userId,
+    );
     if (!enviroments)
       throw new NotFoundException(
         ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,

@@ -23,6 +23,6 @@ import { EnviromentController } from './interface/enviroment.controller';
       useClass: EnviromentRepository,
     },
   ],
-  exports: [EnviromentMapper],
+  exports: [EnviromentMapper, EnviromentService],
 })
 export class EnviromentModule {}
