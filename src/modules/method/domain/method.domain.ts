@@ -33,4 +33,32 @@ export class Method extends Base {
     this.userId = userId;
     this.id = id;
   }
+
+  getParamValue(paramValue: string): string[] {
+    const regex = /\{\{([^}]+)\}\}/g;
+    try {
+      const matches: string[] = paramValue.match(regex) || [];
+      return matches.length > 0 && matches.map((match) => match.slice(2, -2));
+    } catch (error) {
+      return [];
+    }
+  }
+
+  replaceParamValue(
+    paramsValues: { name: string; value: string }[],
+    inputString: string,
+  ) {
+    const variableMap: { [key: string]: string } = {};
+
+    paramsValues.forEach((variable) => {
+      variableMap[variable.name] = variable.value;
+    });
+
+    const regex = /\{\{([^}]+)\}\}/g;
+    inputString = inputString.replace(regex, (match, variableName) => {
+      return variableMap[variableName] || match;
+    });
+
+    return inputString;
+  }
 }
