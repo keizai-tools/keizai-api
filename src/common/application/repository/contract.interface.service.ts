@@ -1,4 +1,4 @@
-import { xdr } from 'soroban-client';
+import { xdr } from 'stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 

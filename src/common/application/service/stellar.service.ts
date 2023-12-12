@@ -12,10 +12,10 @@ import {
   ContractSpec,
   Keypair,
   Networks,
-  Server,
+  SorobanRpc,
   TransactionBuilder,
   xdr,
-} from 'soroban-client';
+} from 'stellar-sdk';
 
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 
@@ -31,11 +31,11 @@ export interface IGeneratedMethod {
 @Injectable()
 export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
-  private server: Server;
+  private server: SorobanRpc.Server;
   constructor(
     @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
   ) {
-    this.server = new Server('https://rpc-futurenet.stellar.org');
+    this.server = new SorobanRpc.Server('https://rpc-futurenet.stellar.org');
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
       1: 'SC_SPEC_TYPE_BOOL',
@@ -228,7 +228,6 @@ export class StellarService implements IContractService {
   )
   async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
     const account = await this.server.getAccount(publicKey);
-
     const contract = new Contract(contractId);
 
     const maxRetries = 7;
@@ -267,7 +266,7 @@ export class StellarService implements IContractService {
 
     let transaction: any = new TransactionBuilder(account, {
       fee: BASE_FEE,
-      networkPassphrase: Networks.TESTNET,
+      networkPassphrase: Networks.FUTURENET,
     })
       .addOperation(contract.call(selectedMethod.name, ...scArgs))
       .setTimeout(60)
