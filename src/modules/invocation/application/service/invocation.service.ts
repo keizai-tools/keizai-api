@@ -25,7 +25,6 @@ import {
   MethodService,
 } from '@/modules/method/application/service/method.service';
 
-import { Invocation } from '../../domain/invocation.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
