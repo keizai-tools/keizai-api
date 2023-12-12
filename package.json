@@ -60,8 +60,8 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "soroban-client": "^1.0.0-beta.3",
     "sqlite3": "^5.1.4",
+    "stellar-sdk": "^11.0.1",
     "typeorm": "^0.3.17",
     "typeorm-naming-strategies": "^4.1.0"
   },
