@@ -259,7 +259,6 @@ export class StellarService implements IContractService {
         (input) => input.name === param.name,
       );
       const isU32 = paramValue?.type.includes('U32');
-      console.log(isU32);
       return {
         ...acc,
         [param.name]: isU32 ? parseInt(param.value) : param.value,
