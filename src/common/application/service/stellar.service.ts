@@ -254,13 +254,17 @@ export class StellarService implements IContractService {
 
     const contractSpec = new ContractSpec(specEntries);
 
-    const params = selectedMethod.params.reduce(
-      (acc, param) => ({
+    const params = selectedMethod.params.reduce((acc, param) => {
+      const paramValue = selectedMethod.inputs.find(
+        (input) => input.name === param.name,
+      );
+      const isU32 = paramValue?.type.includes('U32');
+      console.log(isU32);
+      return {
         ...acc,
-        [param.name]: param.value,
-      }),
-      {},
-    );
+        [param.name]: isU32 ? parseInt(param.value) : param.value,
+      };
+    }, {});
     const scArgs = contractSpec.funcArgsToScVals(selectedMethod.name, params);
 
     let transaction: any = new TransactionBuilder(account, {
