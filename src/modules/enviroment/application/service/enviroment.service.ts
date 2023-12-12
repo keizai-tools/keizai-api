@@ -91,7 +91,7 @@ export class EnviromentService {
     );
     if (!enviroments)
       throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
     return enviroments.map((enviroment) =>
       this.enviromentMapper.fromEntityToDto(enviroment),
