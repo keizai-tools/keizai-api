@@ -95,6 +95,14 @@ export class EnviromentService {
     return this.enviromentMapper.fromEntityToDto(enviroment);
   }
 
+  async findByNames(names: string[], collectionId: string) {
+    const envs = await this.enviromentRepository.findByNames(
+      names,
+      collectionId,
+    );
+    return envs;
+  }
+
   async update(
     updateEnviromentDto: UpdateEnviromentDto,
     user: IUserResponse,

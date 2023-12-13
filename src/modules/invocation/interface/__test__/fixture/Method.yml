@@ -43,9 +43,9 @@ items:
   method4:
     id: 'method4'
     name: 'method4'
-    inputs: []
+    inputs: [{name: 'name', type: 'string'}]
     outputs: []
-    params: [{ name: 'name', value: 'user' }]
+    params: [{ name: 'name', value: 'string' }]
     docs: 'docs1'
     user: '@user0'
     invocation: '@invocation2'

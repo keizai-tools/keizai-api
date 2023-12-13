@@ -16,7 +16,7 @@ export interface IContractService {
     publicKey: string,
     secretKey: string,
     contractId: string,
-    method: Method,
+    method: Partial<Method>,
   );
 }
 

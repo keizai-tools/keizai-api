@@ -11,6 +11,7 @@ import {
   IContractService,
 } from '@/common/application/repository/contract.interface.service';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import {
   FOLDER_REPOSITORY,
   IFolderRepository,
@@ -24,8 +25,8 @@ import {
   IMethodValues,
   MethodService,
 } from '@/modules/method/application/service/method.service';
+import { Method } from '@/modules/method/domain/method.domain';
 
-import { Invocation } from '../../domain/invocation.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
@@ -47,14 +48,10 @@ export interface IInvocationValues {
   userId: string;
 }
 
-interface IPreInvocationValue {
-  response: string;
-  statusCode: number;
-}
-
 export interface IUpdateInvocationValues extends Partial<IInvocationValues> {
   id: string;
   selectedMethodId?: string;
+  selectedMethod?: IMethodValues;
 }
 
 @Injectable()
@@ -74,6 +71,7 @@ export class InvocationService {
     private readonly contractService: IContractService,
     private readonly methodService: MethodService,
     private readonly invocationException: InvocationException,
+    private readonly enviromentService: EnviromentService,
   ) {}
 
   async runInvocation(user: IUserResponse, id: string) {
@@ -81,6 +79,7 @@ export class InvocationService {
       id,
       user.id,
     );
+
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
@@ -94,13 +93,44 @@ export class InvocationService {
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }
+    const paramsMapped = await Promise.all(
+      invocation.selectedMethod?.params.map(async (param) => {
+        const envsNames = invocation.selectedMethod.getParamValue(param.value);
+        const envsByName =
+          envsNames &&
+          (await this.enviromentService.findByNames(
+            envsNames,
+            invocation.folder.collectionId,
+          ));
+
+        const envsValues: { name: string; value: string }[] =
+          envsByName &&
+          envsByName?.map((env) => {
+            return {
+              name: env.name,
+              value: env.value,
+            };
+          });
+        if (envsValues.length > 0) {
+          param.value = invocation.selectedMethod.replaceParamValue(
+            envsValues,
+            param.value,
+          );
+        }
+        return param;
+      }),
+    );
+    const selectedMethodMapped: Partial<Method> = {
+      ...invocation.selectedMethod,
+      params: paramsMapped,
+    };
 
     try {
       const invocationResult = await this.contractService.runInvocation(
         invocation.publicKey,
         invocation.secretKey,
         invocation.contractId,
-        invocation.selectedMethod,
+        selectedMethodMapped,
       );
       return invocationResult;
     } catch (error) {

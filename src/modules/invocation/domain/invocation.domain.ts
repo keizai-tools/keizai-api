@@ -26,6 +26,7 @@ export class Invocation extends Base {
     userId: string,
     selectedMethodId?: string,
     id?: string,
+    selectedMethod?: Method,
   ) {
     super();
     this.name = name;
@@ -37,5 +38,6 @@ export class Invocation extends Base {
     this.userId = userId;
     this.selectedMethodId = selectedMethodId;
     this.id = id;
+    this.selectedMethod = selectedMethod;
   }
 }

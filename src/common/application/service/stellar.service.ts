@@ -254,14 +254,16 @@ export class StellarService implements IContractService {
 
     const contractSpec = new ContractSpec(specEntries);
 
-    const params = selectedMethod.params.reduce(
-      (acc, param) => ({
+    const params = selectedMethod.params.reduce((acc, param) => {
+      const paramValue = selectedMethod.inputs.find(
+        (input) => input.name === param.name,
+      );
+      const isU32 = paramValue?.type.includes('U32');
+      return {
         ...acc,
-        [param.name]: param.value,
-      }),
-      {},
-    );
-
+        [param.name]: isU32 ? parseInt(param.value) : param.value,
+      };
+    }, {});
     const scArgs = contractSpec.funcArgsToScVals(selectedMethod.name, params);
 
     let transaction: any = new TransactionBuilder(account, {
@@ -285,6 +287,7 @@ export class StellarService implements IContractService {
 
       while (newresponse.status === 'NOT_FOUND') {
         newresponse = await this.server.getTransaction(response.hash);
+
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
@@ -295,7 +298,6 @@ export class StellarService implements IContractService {
           status: newresponse.status,
         };
       }
-
       const rawResponse = await this.server._getTransaction(response.hash);
       return {
         STATUS: rawResponse.status,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { IEnviromentRepository } from '../../application/repository/enviroment.repository';
 import { Enviroment } from '../../domain/enviroment.domain';
@@ -41,6 +41,13 @@ export class EnviromentRepository implements IEnviromentRepository {
         userId,
       },
     });
+  }
+
+  async findByNames(
+    names: string[],
+    collectionId: string,
+  ): Promise<Enviroment[]> {
+    return this.repository.find({ where: { name: In(names), collectionId } });
   }
 
   async update(enviroment: Enviroment): Promise<Enviroment> {
