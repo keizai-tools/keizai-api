@@ -110,6 +110,20 @@ describe('Collection - [/collection]', () => {
         ]),
       );
     });
+    it('should get enviroments by collections id', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection0/environments')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+          }),
+        ]),
+      );
+    });
   });
 
   describe('Get one  - [GET /collection/:id]', () => {

@@ -14,6 +14,7 @@ import {
   IUserResponse,
 } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
@@ -58,6 +59,15 @@ export class CollectionController {
     @Param('id') id: string,
   ): Promise<FolderResponseDto[]> {
     return this.collectionService.findFoldersByCollectionId(id, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:id/environments')
+  async findEnvironmentsByCollection(
+    @AuthUser() user: IUserResponse,
+    @Param('id') id: string,
+  ): Promise<EnviromentResponseDto[]> {
+    return this.collectionService.findEnvironmentsByCollectionId(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
