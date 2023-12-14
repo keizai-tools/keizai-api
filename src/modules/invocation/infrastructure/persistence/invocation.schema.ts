@@ -21,7 +21,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       nullable: true,
     },
     preInvocation: {
-      type: 'varchar',
+      type: 'text',
       nullable: true,
     },
     contractId: {
