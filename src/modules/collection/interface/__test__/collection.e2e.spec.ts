@@ -169,9 +169,10 @@ describe('Collection - [/collection]', () => {
   });
 
   describe('Delete one  - [DELETE /collection/:id]', () => {
+    const collectionId = 'collection0';
     it('should delete one collection associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/collection/collection0')
+        .delete(`/collection/${collectionId}`)
         .expect(HttpStatus.OK);
 
       expect(response.body).toEqual({});
@@ -186,5 +187,13 @@ describe('Collection - [/collection]', () => {
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
       );
     });
+  });
+  it('should delete all environments associated with a collection', async () => {
+    const collectionId = 'collection1';
+    const response = await request(app.getHttpServer())
+      .delete(`/collection/${collectionId}/environments`)
+      .expect(HttpStatus.OK);
+
+    expect(response.body).toEqual({});
   });
 });

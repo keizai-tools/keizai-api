@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DeleteResult, In, Repository } from 'typeorm';
 
 import { IEnviromentRepository } from '../../application/repository/enviroment.repository';
 import { Enviroment } from '../../domain/enviroment.domain';
@@ -61,5 +61,11 @@ export class EnviromentRepository implements IEnviromentRepository {
       return true;
     }
     return false;
+  }
+
+  async deleteAll(ids: string[]): Promise<DeleteResult> {
+    return await this.repository.delete({
+      id: In(ids),
+    });
   }
 }
