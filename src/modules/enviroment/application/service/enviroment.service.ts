@@ -3,11 +3,13 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
+import { Enviroment } from '../../domain/enviroment.domain';
 import { CreateEnviromentDto } from '../dto/create-enviroment.dto';
 import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
@@ -36,7 +38,7 @@ export class EnviromentService {
     private readonly enviromentMapper: EnviromentMapper,
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
-    @Inject(CollectionService)
+    @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
   ) {}
 
@@ -178,5 +180,15 @@ export class EnviromentService {
         ENVIROMENT_RESPONSE.ENVIROMENT_FAILED_DELETED,
       );
     return enviromentDeleted;
+  }
+
+  async deleteAll(environments: Enviroment[]): Promise<boolean> {
+    if (!environments) {
+      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENTS_NOT_DELETED);
+    }
+    await this.enviromentRepository.deleteAll(
+      environments.map((environments) => environments.id),
+    );
+    return true;
   }
 }

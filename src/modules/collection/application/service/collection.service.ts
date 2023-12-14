@@ -3,10 +3,12 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../dto/collection-response.dto';
@@ -31,10 +33,11 @@ export interface IUpdateCollectionValues extends ICollectionValues {
 @Injectable()
 export class CollectionService {
   constructor(
-    @Inject(CollectionMapper)
     private readonly collectionMapper: CollectionMapper,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
+    @Inject(forwardRef(() => EnviromentService))
+    private readonly environmentService: EnviromentService,
   ) {}
 
   async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
@@ -168,5 +171,15 @@ export class CollectionService {
       );
     }
     return collectionDeleted;
+  }
+
+  async deleteAllEnvironments(collectionId: string): Promise<boolean> {
+    const collection = await this.collectionRepository.findOne(collectionId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+      );
+    }
+    return await this.environmentService.deleteAll(collection.enviroments);
   }
 }
