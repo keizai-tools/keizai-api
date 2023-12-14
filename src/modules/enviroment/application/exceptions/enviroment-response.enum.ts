@@ -5,4 +5,5 @@ export enum ENVIROMENT_RESPONSE {
   ENVIROMENT_FAILED_SAVE = 'Could not save variable, please try again',
   ENVIROMENT_FAILED_DELETED = 'Could not deleted variable, please try again',
   ENVIROMENT_FAILED_UPDATED = 'Could not updated variable, please try again',
+  ENVIRONMENT_EXISTS = 'The variable already exists',
 }

@@ -54,6 +54,15 @@ export class EnviromentService {
         ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
 
+    const enviromentExists = await this.enviromentRepository.findByNames(
+      [createEnviromentDto.name],
+      collection.id,
+    );
+
+    if (enviromentExists.length > 0) {
+      throw new BadRequestException(ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS);
+    }
+
     const enviromentValues: IEnviromentValues = {
       name: createEnviromentDto.name,
       value: createEnviromentDto.value,
@@ -61,6 +70,7 @@ export class EnviromentService {
       userId: user.id,
     };
     const enviroment = this.enviromentMapper.fromDtoToEntity(enviromentValues);
+
     const enviromentSaved = await this.enviromentRepository.save(enviroment);
 
     if (!enviromentSaved)
