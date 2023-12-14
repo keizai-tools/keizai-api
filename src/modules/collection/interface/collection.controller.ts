@@ -88,7 +88,6 @@ export class CollectionController {
   @UseGuards(JwtAuthGuard)
   @Delete('/:id/environments')
   async deleteAll(@Param('id') id: string) {
-    console.log(id);
     return this.collectionService.deleteAllEnvironments(id);
   }
 }
