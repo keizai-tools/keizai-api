@@ -191,4 +191,19 @@ export class EnviromentService {
     );
     return true;
   }
+
+  async deleteByName(name: string, collectionId: string) {
+    const environment = await this.enviromentRepository.findOneByName(
+      name,
+      collectionId,
+    );
+
+    if (!environment) {
+      throw new NotFoundException(
+        ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_EXISTS_BY_NAME_AND_COLLECTION,
+      );
+    }
+
+    return await this.enviromentRepository.delete(environment.id);
+  }
 }
