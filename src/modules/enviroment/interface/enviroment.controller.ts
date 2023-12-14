@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -57,5 +58,14 @@ export class EnviromentController {
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.enviromentService.delete(user, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/')
+  deleteByName(
+    @Query('name') name: string,
+    @Query('collectionId') collectionId: string,
+  ) {
+    return this.enviromentService.deleteByName(name, collectionId);
   }
 }

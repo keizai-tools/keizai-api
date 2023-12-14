@@ -7,4 +7,5 @@ export enum ENVIROMENT_RESPONSE {
   ENVIROMENT_FAILED_UPDATED = 'Could not updated variable, please try again',
   ENVIRONMENT_EXISTS = 'The variable already exists',
   ENVIRONMENTS_NOT_DELETED = 'Could not deleted variables, please try again',
+  ENVIRONMENT_NOT_EXISTS_BY_NAME_AND_COLLECTION = 'The variable does not exist',
 }
