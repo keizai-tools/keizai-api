@@ -168,6 +168,18 @@ describe('Environment - [/environment]', () => {
       expect(response.body).toEqual({});
     });
 
+    it('should delete on environment searched by name and collection', async () => {
+      const response = await request(app.getHttpServer())
+        .delete('/environment')
+        .query({
+          name: 'enviroment1',
+          collectionId: 'collection1',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({});
+    });
+
     it('should throw error when try to delete one environment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
         .delete('/environment/enviroment1')
