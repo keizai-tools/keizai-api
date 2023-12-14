@@ -34,6 +34,15 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
+  async findOneByName(name: string, collectionId: string): Promise<Enviroment> {
+    return await this.repository.findOne({
+      where: {
+        name,
+        collectionId,
+      },
+    });
+  }
+
   async findOneByIds(id: string, userId: string): Promise<Enviroment> {
     return await this.repository.findOne({
       where: {
