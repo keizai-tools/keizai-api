@@ -76,6 +76,48 @@ describe('Collection - [/collection]', () => {
     });
   });
 
+  describe('Create all - [POST /collection/:id]', () => {
+    it('Should save many environments at once', async () => {
+      const environments = [
+        {
+          name: 'inc4',
+          value: '4',
+        },
+        {
+          name: 'inc5',
+          value: '5',
+        },
+        {
+          name: 'inc6',
+          value: '6',
+        },
+      ];
+
+      const response = await request(app.getHttpServer())
+        .post('/collection/collection0/environments')
+        .send(environments)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual([
+        {
+          name: 'inc4',
+          value: '4',
+          id: expect.any(String),
+        },
+        {
+          name: 'inc5',
+          value: '5',
+          id: expect.any(String),
+        },
+        {
+          name: 'inc6',
+          value: '6',
+          id: expect.any(String),
+        },
+      ]);
+    });
+  });
+
   describe('Get all  - [GET /collection]', () => {
     it('should get all collections associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
