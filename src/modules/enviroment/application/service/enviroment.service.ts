@@ -62,12 +62,12 @@ export class EnviromentService {
     );
 
     if (enviromentExists[0]) {
-      const environmentsValues = {
+      const enviromentValues = {
         id: enviromentExists[0].id,
         value: createEnviromentDto.value,
       };
       const environmentMapped =
-        this.enviromentMapper.fromUpdateDtoToEntity(environmentsValues);
+        this.enviromentMapper.fromUpdateDtoToEntity(enviromentValues);
 
       const environmentUpdated = await this.enviromentRepository.update(
         environmentMapped,
