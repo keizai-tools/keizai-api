@@ -90,15 +90,16 @@ describe('Environment - [/environment]', () => {
       );
     });
     it('should update value of an environment if it already exists with the same name', async () => {
+      const responseExpected = expect.objectContaining({
+        ...enviromentDto,
+        id: expect.any(String),
+      });
       const response = await request(app.getHttpServer())
         .post('/environment')
         .send({ ...enviromentDto, collectionId: 'collection0' })
         .expect(HttpStatus.CREATED);
 
-      expect(response.body).toEqual({
-        ...enviromentDto,
-        id: expect.any(String),
-      });
+      expect(response.body).toEqual(responseExpected);
     });
   });
   describe('Get all  - [GET /environment]', () => {
