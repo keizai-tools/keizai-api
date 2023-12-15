@@ -17,6 +17,10 @@ export class EnviromentRepository implements IEnviromentRepository {
     return this.repository.save(enviroment);
   }
 
+  async saveAll(environment: Enviroment[]): Promise<Enviroment[]> {
+    return this.repository.save(environment);
+  }
+
   async findAll(userId: string): Promise<Enviroment[]> {
     return await this.repository.find({
       where: {
