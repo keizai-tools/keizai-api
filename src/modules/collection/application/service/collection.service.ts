@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
@@ -116,6 +117,24 @@ export class CollectionService {
     } catch (error) {
       throw new BadRequestException(COLLECTION_RESPONSE.COLLECTION_FAILED_SAVE);
     }
+  }
+
+  async createAllEnvironments(
+    collectionId: string,
+    createEnvironmentsDto: CreateEnvironmentsDto[],
+    userId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    const collection = await this.findOneByIds(collectionId, userId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+    return await this.environmentService.createAll(
+      createEnvironmentsDto,
+      collectionId,
+      userId,
+    );
   }
 
   async update(

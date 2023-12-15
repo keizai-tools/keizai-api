@@ -10,6 +10,7 @@ import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.dec
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { Enviroment } from '../../domain/enviroment.domain';
+import { CreateEnvironmentsDto } from '../dto/create-all-environments.dto';
 import { CreateEnviromentDto } from '../dto/create-enviroment.dto';
 import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
@@ -89,6 +90,35 @@ export class EnviromentService {
       throw new BadRequestException(ENVIROMENT_RESPONSE.ENVIROMENT_FAILED_SAVE);
 
     return this.enviromentMapper.fromEntityToDto(enviromentSaved);
+  }
+
+  async createAll(
+    createEnvironmentsDto: CreateEnvironmentsDto[],
+    collectionId: string,
+    userId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    const environmentsToSave: Enviroment[] = createEnvironmentsDto.map(
+      (environment) => {
+        const environmentValue = {
+          name: environment.name,
+          value: environment.value,
+          collectionId,
+          userId,
+        };
+        return this.enviromentMapper.fromDtoToEntity(environmentValue);
+      },
+    );
+
+    const environmentsSaved = await this.enviromentRepository.saveAll(
+      environmentsToSave,
+    );
+
+    if (!environmentsSaved)
+      throw new BadRequestException(ENVIROMENT_RESPONSE.ENVIROMENT_FAILED_SAVE);
+
+    return environmentsSaved.map((environment) =>
+      this.enviromentMapper.fromEntityToDto(environment),
+    );
   }
 
   async findAll(user: IUserResponse): Promise<EnviromentResponseDto[]> {
