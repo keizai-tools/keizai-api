@@ -61,8 +61,18 @@ export class EnviromentService {
       collection.id,
     );
 
-    if (enviromentExists.length > 0) {
-      throw new BadRequestException(ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS);
+    if (enviromentExists[0]) {
+      const environmentsValues = {
+        id: enviromentExists[0].id,
+        value: createEnviromentDto.value,
+      };
+      const environmentMapped =
+        this.enviromentMapper.fromUpdateDtoToEntity(environmentsValues);
+
+      const environmentUpdated = await this.enviromentRepository.update(
+        environmentMapped,
+      );
+      return await this.enviromentRepository.save(environmentUpdated);
     }
 
     const enviromentValues: IEnviromentValues = {

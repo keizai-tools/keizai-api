@@ -89,6 +89,17 @@ describe('Environment - [/environment]', () => {
         ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
     });
+    it('should update value of an environment if it already exists with the same name', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/environment')
+        .send({ ...enviromentDto, collectionId: 'collection0' })
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual({
+        ...enviromentDto,
+        id: expect.any(String),
+      });
+    });
   });
   describe('Get all  - [GET /environment]', () => {
     it('should get all environments associated with a collection', async () => {
