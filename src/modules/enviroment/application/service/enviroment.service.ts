@@ -56,14 +56,14 @@ export class EnviromentService {
         ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
       );
 
-    const enviromentExists = await this.enviromentRepository.findByNames(
+    const environments = await this.enviromentRepository.findByNames(
       [createEnviromentDto.name],
       collection.id,
     );
 
-    if (enviromentExists[0]) {
+    if (environments[0]) {
       const enviromentValues = {
-        id: enviromentExists[0].id,
+        id: environments[0].id,
         value: createEnviromentDto.value,
       };
       const environmentMapped =
