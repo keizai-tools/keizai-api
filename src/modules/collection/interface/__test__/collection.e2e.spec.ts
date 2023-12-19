@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
 
@@ -164,6 +165,34 @@ describe('Collection - [/collection]', () => {
             name: expect.any(String),
           }),
         ]),
+      );
+    });
+
+    it('should get environment by collections id and environment name', async () => {
+      const environmentName = 'enviroment0';
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection0/environment')
+        .query({ name: environmentName })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          name: environmentName,
+          value: expect.any(String),
+        }),
+      );
+    });
+
+    it('should throw error when try to get environment that not exists', async () => {
+      const environmentName = 'enviroment33';
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection0/environment')
+        .query({ name: environmentName })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS,
       );
     });
   });
