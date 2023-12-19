@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -83,6 +84,18 @@ export class CollectionController {
     @Param('id') id: string,
   ): Promise<EnviromentResponseDto[]> {
     return this.collectionService.findEnvironmentsByCollectionId(id, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:id/environment')
+  findEvironmentByCollection(
+    @Param('id') id: string,
+    @Query('name') environmentName: string,
+  ) {
+    return this.collectionService.findEnvironmentByCollectionId(
+      id,
+      environmentName,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

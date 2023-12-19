@@ -88,6 +88,22 @@ export class CollectionService {
     return collection.enviroments;
   }
 
+  async findEnvironmentByCollectionId(
+    collectionId: string,
+    environmentName: string,
+  ) {
+    const environment = await this.environmentService.findByNames(
+      [environmentName],
+      collectionId,
+    );
+    if (!environment) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+    return environment[0];
+  }
+
   async findFoldersByCollectionId(
     id: string,
     userId: string,
