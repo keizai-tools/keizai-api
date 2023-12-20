@@ -43,6 +43,7 @@ export interface IInvocationValues {
   secretKey: string;
   publicKey: string;
   preInvocation: string;
+  postInvocation: string;
   contractId: string;
   folderId: string;
   userId: string;
@@ -162,6 +163,7 @@ export class InvocationService {
       secretKey: createFolderDto.secretKey,
       publicKey: createFolderDto.publicKey,
       preInvocation: createFolderDto.preInvocation,
+      postInvocation: createFolderDto.postInvocation,
       contractId: createFolderDto.contractId,
       folderId: createFolderDto.folderId,
       userId: user.id,
@@ -213,7 +215,6 @@ export class InvocationService {
       updateInvocationDto.id,
       user.id,
     );
-
     this.invocationException.validateInvocation(
       invocation,
       updateInvocationDto,
@@ -261,12 +262,14 @@ export class InvocationService {
       secretKey: updateInvocationDto.secretKey,
       publicKey: updateInvocationDto.publicKey,
       preInvocation: updateInvocationDto.preInvocation,
+      postInvocation: updateInvocationDto.postInvocation,
       contractId: updateInvocationDto.contractId,
       folderId: updateInvocationDto.folderId,
       selectedMethodId: updateInvocationDto.selectedMethodId,
       userId: user.id,
       id: updateInvocationDto.id,
     };
+
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
     const invocationUpdated = await this.invocationRepository.update(
