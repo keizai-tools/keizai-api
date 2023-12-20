@@ -336,6 +336,19 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body.preInvocation).toEqual(preInvocationValue);
     });
+
+    it('should update post invocation code', async () => {
+      const postInvocationValue = 'console.log("post invocation")';
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          preInvocation: postInvocationValue,
+          id: 'invocation2',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.preInvocation).toEqual(postInvocationValue);
+    });
   });
 
   describe('Run all - [GET /invocation/run]', () => {

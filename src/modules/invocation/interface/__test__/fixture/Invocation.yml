@@ -43,4 +43,5 @@ items:
     publicKey: 'publicKey5'
     secretKey: 'secretKey5'
     preInvocation: 'const a = () => "a"; a();'
+    postInvocation: 'const a = () => "a"; a();'
     selectedMethod: '@method4'
