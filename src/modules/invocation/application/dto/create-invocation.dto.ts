@@ -19,6 +19,10 @@ export class CreateInvocationDto {
 
   @IsOptional()
   @IsString()
+  postInvocation: string;
+
+  @IsOptional()
+  @IsString()
   contractId: string;
 
   @IsNotEmpty()

@@ -8,6 +8,7 @@ export class Invocation extends Base {
   secretKey: string;
   publicKey: string;
   preInvocation: string;
+  postInvocation: string;
   contractId: string;
   folderId: string;
   userId: string;
@@ -21,6 +22,7 @@ export class Invocation extends Base {
     secretKey: string,
     publicKey: string,
     preInvocation: string,
+    postInvocation: string,
     contractId: string,
     folderId: string,
     userId: string,
@@ -33,6 +35,7 @@ export class Invocation extends Base {
     this.secretKey = secretKey;
     this.publicKey = publicKey;
     this.preInvocation = preInvocation;
+    this.postInvocation = postInvocation;
     this.contractId = contractId;
     this.folderId = folderId;
     this.userId = userId;
