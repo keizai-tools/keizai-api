@@ -9,6 +9,7 @@ import {
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
@@ -86,6 +87,20 @@ export class CollectionService {
       );
     }
     return collection.enviroments;
+  }
+
+  async findEnvironmentByCollectionId(
+    collectionId: string,
+    environmentName: string,
+  ) {
+    const environment = await this.environmentService.findByNames(
+      [environmentName],
+      collectionId,
+    );
+    if (!environment || environment.length === 0) {
+      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS);
+    }
+    return environment[0];
   }
 
   async findFoldersByCollectionId(
