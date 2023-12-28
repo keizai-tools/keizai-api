@@ -3,12 +3,14 @@ import { xdr } from 'stellar-sdk';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { IGeneratedMethod } from '../service/stellar.service';
+import { EventResponse } from '../types/contract-events';
 
 export interface IContractService {
   getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry>;
   getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer>;
   decodeContractSpecBuffer(buffer);
   extractFunctionInfo(decodedSection, SCSpecTypeMap);
+  getContractEvents(contractId: string): Promise<EventResponse[]>;
   generateMethodsFromContractId(
     contractId: string,
   ): Promise<IGeneratedMethod[]>;

@@ -19,7 +19,9 @@ import {
 
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 
+import { encodeEventToDisplayEvent } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
+import { EventResponse } from '../types/contract-events';
 
 export interface IGeneratedMethod {
   name: string;
@@ -155,7 +157,6 @@ export class StellarService implements IContractService {
           durability: xdr.ContractDataDurability.persistent(),
         }),
       );
-
       const response = await this.server.getLedgerEntries(instanceKey);
       const dataEntry = response.entries[0].val.contractData();
       return dataEntry;
@@ -171,7 +172,6 @@ export class StellarService implements IContractService {
           hash: instance.executable().wasmHash(),
         }),
       );
-
       const response = await this.server.getLedgerEntries(codeKey);
       const wasmCode = response.entries[0].val.contractCode().code();
       return wasmCode;
@@ -186,19 +186,33 @@ export class StellarService implements IContractService {
       const contractCode = await this.getWasmCode(
         instanceValue.val().instance(),
       );
-
       const wasmModule = new WebAssembly.Module(contractCode);
-
       const buffer = WebAssembly.Module.customSections(
         wasmModule,
         'contractspecv0',
       )[0];
-
       const decodedSections = await this.decodeContractSpecBuffer(buffer);
       return decodedSections;
     } catch (error) {
       throw new Error(error);
     }
+  }
+
+  async getContractEvents(contractId: string): Promise<EventResponse[]> {
+    const oneDayEarlierLedger = 9999;
+    const { sequence } = await this.server.getLatestLedger();
+    const newStartLedger = sequence - oneDayEarlierLedger;
+
+    const { events } = await this.server.getEvents({
+      startLedger: newStartLedger,
+      filters: [
+        {
+          contractIds: [contractId],
+        },
+      ],
+      limit: 100,
+    });
+    return events.reverse();
   }
 
   async generateMethodsFromContractId(contractId: string) {
@@ -292,10 +306,12 @@ export class StellarService implements IContractService {
       }
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
       if (newresponse.status === 'SUCCESS') {
+        const events = await this.getContractEvents(contractId);
         return {
           method: methodMapped,
           response: newresponse.returnValue.value(),
           status: newresponse.status,
+          events: encodeEventToDisplayEvent(events),
         };
       }
       const rawResponse = await this.server._getTransaction(response.hash);
