@@ -38,6 +38,9 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     userId: {
       type: String,
     },
+    network: {
+      type: String,
+    },
     selectedMethodId: {
       type: String,
       nullable: true,
