@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.gu
 
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
 import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
+import { UpdateNetworkDto } from '../application/dto/update-network.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
 @Controller('invocation')
@@ -66,6 +67,15 @@ export class InvocationController {
     @AuthUser() user: IUserResponse,
   ) {
     return this.invocationService.update(updateInvocationDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/:id/network')
+  async updateNetwork(
+    @AuthUser() user: IUserResponse,
+    @Body() updateNetworkDto: UpdateNetworkDto,
+  ) {
+    return this.invocationService.updateNetwork(updateNetworkDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
