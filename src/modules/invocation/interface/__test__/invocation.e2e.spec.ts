@@ -24,6 +24,7 @@ const mockedJwtStrategy = {
 
 const mockedContractService = {
   runInvocation: jest.fn(),
+  changeNetwork: jest.fn(),
   generateMethodsFromContractId: jest.fn(),
 };
 
@@ -80,6 +81,7 @@ describe('Invocation - [/invocation]', () => {
         secretKey: expect.any(String),
         publicKey: expect.any(String),
         contractId: expect.any(String),
+        network: expect.any(String),
       });
       const response = await request(app.getHttpServer())
         .post('/invocation')
@@ -348,6 +350,46 @@ describe('Invocation - [/invocation]', () => {
         .expect(HttpStatus.OK);
 
       expect(response.body.preInvocation).toEqual(postInvocationValue);
+    });
+  });
+
+  describe('Update one - [PUT /invocation/:id/network]', () => {
+    let spy;
+    beforeEach(() => {
+      spy = jest.spyOn(mockedContractService, 'changeNetwork');
+    });
+    afterEach(() => {
+      spy.mockClear();
+    });
+    it('should throw error when the invocation id is incorrect', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/invocation/invocation/network')
+        .send({ network: 'TESTNET', invocationId: 'invocation' })
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
+    it('should change to TESTNET network', async () => {
+      spy.mockResolvedValue({ network: 'TESTNET' });
+
+      await request(app.getHttpServer())
+        .patch('/invocation/invocation0/network')
+        .send({ network: 'TESTNET', invocationId: 'invocation0' })
+        .expect(HttpStatus.OK);
+
+      expect(spy.mock.calls).toHaveLength(1);
+    });
+    it('should change to FUTURENET network', async () => {
+      spy.mockResolvedValue({ network: 'FUTURENET' });
+
+      await request(app.getHttpServer())
+        .patch('/invocation/invocation0/network')
+        .send({ network: 'FUTURENET', invocationId: 'invocation0' })
+        .expect(HttpStatus.OK);
+
+      expect(spy.mock.calls).toHaveLength(1);
     });
   });
 
