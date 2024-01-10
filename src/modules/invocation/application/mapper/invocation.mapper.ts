@@ -28,6 +28,7 @@ export class InvocationMapper {
       contractId,
       folderId,
       userId,
+      network,
     } = createInvocationDto;
     return new Invocation(
       name,
@@ -38,6 +39,7 @@ export class InvocationMapper {
       contractId,
       folderId,
       userId,
+      network,
     );
   }
 
@@ -51,6 +53,7 @@ export class InvocationMapper {
       contractId,
       folder,
       id,
+      network,
       methods,
       selectedMethod,
     } = invocation;
@@ -71,6 +74,7 @@ export class InvocationMapper {
       preInvocation,
       postInvocation,
       contractId,
+      network,
       folderMapped,
       methodsMapped,
       selectedMethodMapped,
@@ -88,6 +92,7 @@ export class InvocationMapper {
       preInvocation,
       postInvocation,
       contractId,
+      network,
       folderId,
       selectedMethodId,
       id,
@@ -102,6 +107,7 @@ export class InvocationMapper {
       contractId,
       folderId,
       userId,
+      network,
       selectedMethodId,
       id,
     );

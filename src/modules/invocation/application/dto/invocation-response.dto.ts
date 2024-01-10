@@ -30,6 +30,10 @@ export class InvocationResponseDto extends Base {
   contractId: string;
 
   @IsNotEmpty()
+  @IsString()
+  network: string;
+
+  @IsNotEmpty()
   folder: FolderResponseDto;
 
   @IsOptional()
@@ -45,6 +49,7 @@ export class InvocationResponseDto extends Base {
     preInvocation: string,
     postInvocation: string,
     contractId: string,
+    network: string,
     folder: FolderResponseDto,
     methods?: MethodResponseDto[],
     selectedMethod?: MethodResponseDto,
@@ -57,6 +62,7 @@ export class InvocationResponseDto extends Base {
     this.preInvocation = preInvocation;
     this.postInvocation = postInvocation;
     this.contractId = contractId;
+    this.network = network;
     this.id = id;
     this.folder = folder;
     this.methods = methods;

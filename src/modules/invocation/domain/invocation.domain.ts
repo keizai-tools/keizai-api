@@ -12,6 +12,7 @@ export class Invocation extends Base {
   contractId: string;
   folderId: string;
   userId: string;
+  network: string;
   selectedMethodId?: string;
   folder?: Folder;
   user?: User;
@@ -26,6 +27,7 @@ export class Invocation extends Base {
     contractId: string,
     folderId: string,
     userId: string,
+    network: string,
     selectedMethodId?: string,
     id?: string,
     selectedMethod?: Method,
@@ -39,6 +41,7 @@ export class Invocation extends Base {
     this.contractId = contractId;
     this.folderId = folderId;
     this.userId = userId;
+    this.network = network;
     this.selectedMethodId = selectedMethodId;
     this.id = id;
     this.selectedMethod = selectedMethod;
