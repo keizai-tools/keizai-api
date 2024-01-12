@@ -31,7 +31,6 @@ import { Method } from '@/modules/method/domain/method.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
-import { UpdateNetworkDto } from '../dto/update-network.dto';
 import { INVOCATION_RESPONSE } from '../exceptions/invocation-response.enum.dto';
 import { InvocationException } from '../exceptions/invocation.exceptions';
 import { InvocationMapper } from '../mapper/invocation.mapper';
@@ -211,9 +210,12 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocation);
   }
 
-  async updateNetwork(updateNetworkDto: UpdateNetworkDto, user: IUserResponse) {
+  async updateNetwork(
+    updateNetworkDto: UpdateInvocationDto,
+    user: IUserResponse,
+  ) {
     const invocation = await this.invocationRepository.findOneByIds(
-      updateNetworkDto.invocationId,
+      updateNetworkDto.id,
       user.id,
     );
     if (!invocation) {
