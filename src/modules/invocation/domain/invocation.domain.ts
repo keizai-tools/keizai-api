@@ -43,4 +43,10 @@ export class Invocation extends Base {
     this.id = id;
     this.selectedMethod = selectedMethod;
   }
+
+  getContractIdValue = (inputString: string): string => {
+    const regex = /{{(.*?)}}/g;
+    const contractId = inputString.replace(regex, (match, text) => text);
+    return contractId;
+  };
 }

@@ -222,6 +222,17 @@ export class InvocationService {
 
     if (updateInvocationDto.contractId) {
       try {
+        const contractIdValue = invocation.getContractIdValue(
+          updateInvocationDto.contractId,
+        );
+        const environment = await this.enviromentService.findOneByName(
+          contractIdValue,
+          invocation.folder.collectionId,
+        );
+        updateInvocationDto.contractId = environment
+          ? environment.value
+          : contractIdValue;
+
         const generatedMethods =
           await this.contractService.generateMethodsFromContractId(
             updateInvocationDto.contractId,
