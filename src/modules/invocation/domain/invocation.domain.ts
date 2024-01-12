@@ -45,6 +45,7 @@ export class Invocation extends Base {
   }
 
   getContractIdValue = (inputString: string): string => {
+    // this regex outputs the {{ }} if the contract comes as an environment
     const regex = /{{(.*?)}}/g;
     const contractId = inputString.replace(regex, (match, text) => text);
     return contractId;
