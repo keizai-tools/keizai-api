@@ -364,7 +364,7 @@ describe('Invocation - [/invocation]', () => {
     it('should throw error when the invocation id is incorrect', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation/invocation/network')
-        .send({ network: 'TESTNET', invocationId: 'invocation' })
+        .send({ network: 'TESTNET', id: 'invocation' })
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
@@ -376,7 +376,7 @@ describe('Invocation - [/invocation]', () => {
 
       await request(app.getHttpServer())
         .patch('/invocation/invocation0/network')
-        .send({ network: 'TESTNET', invocationId: 'invocation0' })
+        .send({ network: 'TESTNET', id: 'invocation0' })
         .expect(HttpStatus.OK);
 
       expect(spy.mock.calls).toHaveLength(1);
