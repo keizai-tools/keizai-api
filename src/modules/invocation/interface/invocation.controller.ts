@@ -69,15 +69,6 @@ export class InvocationController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('/:id/network')
-  async updateNetwork(
-    @AuthUser() user: IUserResponse,
-    @Body() updateNetworkDto: UpdateInvocationDto,
-  ) {
-    return this.invocationService.updateNetwork(updateNetworkDto, user);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.invocationService.delete(user, id);
