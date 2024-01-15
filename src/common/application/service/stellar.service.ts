@@ -22,6 +22,7 @@ import { MethodMapper } from '@/modules/method/application/mapper/method.mapper'
 import { encodeEventToDisplayEvent } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
 import { EventResponse } from '../types/contract-events';
+import { NETWORK, SOROBAN_SERVER } from '../types/soroban.enum';
 
 export interface IGeneratedMethod {
   name: string;
@@ -34,10 +35,12 @@ export interface IGeneratedMethod {
 export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
   private server: SorobanRpc.Server;
+  private networkPassphrase: string;
   constructor(
     @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
   ) {
-    this.server = new SorobanRpc.Server('https://rpc-futurenet.stellar.org');
+    this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
+    this.networkPassphrase = Networks.FUTURENET;
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
       1: 'SC_SPEC_TYPE_BOOL',
@@ -65,6 +68,22 @@ export class StellarService implements IContractService {
       1006: 'SC_SPEC_TYPE_BYTES_N',
       2000: 'SC_SPEC_TYPE_UDT',
     };
+  }
+
+  changeNetwork(selectedNetwork: string): void {
+    switch (selectedNetwork) {
+      case NETWORK.SOROBAN_FUTURENET:
+        this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
+        this.networkPassphrase = Networks.FUTURENET;
+        break;
+      case NETWORK.SOROBAN_TESTNET:
+        this.server = new SorobanRpc.Server(SOROBAN_SERVER.TESTNET);
+        this.networkPassphrase = Networks.TESTNET;
+        break;
+      default:
+        this.server;
+        this.networkPassphrase;
+    }
   }
 
   async decodeContractSpecBuffer(buffer) {
@@ -282,7 +301,7 @@ export class StellarService implements IContractService {
 
     let transaction: any = new TransactionBuilder(account, {
       fee: BASE_FEE,
-      networkPassphrase: Networks.FUTURENET,
+      networkPassphrase: this.networkPassphrase,
     })
       .addOperation(contract.call(selectedMethod.name, ...scArgs))
       .setTimeout(60)

@@ -10,6 +10,7 @@ import {
   CONTRACT_SERVICE,
   IContractService,
 } from '@/common/application/repository/contract.interface.service';
+import { NETWORK } from '@/common/application/types/soroban.enum';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import {
@@ -47,6 +48,7 @@ export interface IInvocationValues {
   contractId: string;
   folderId: string;
   userId: string;
+  network: string;
 }
 
 export interface IUpdateInvocationValues extends Partial<IInvocationValues> {
@@ -167,6 +169,7 @@ export class InvocationService {
       contractId: createFolderDto.contractId,
       folderId: createFolderDto.folderId,
       userId: user.id,
+      network: createFolderDto.network || NETWORK.SOROBAN_FUTURENET,
     };
 
     const invocation = this.invocationMapper.fromDtoToEntity(invocationValues);
@@ -257,6 +260,10 @@ export class InvocationService {
       }
     }
 
+    if (updateInvocationDto.network) {
+      this.contractService.changeNetwork(updateInvocationDto.network);
+    }
+
     const invocationValues: IUpdateInvocationValues = {
       name: updateInvocationDto.name,
       secretKey: updateInvocationDto.secretKey,
@@ -264,6 +271,7 @@ export class InvocationService {
       preInvocation: updateInvocationDto.preInvocation,
       postInvocation: updateInvocationDto.postInvocation,
       contractId: updateInvocationDto.contractId,
+      network: updateInvocationDto.network,
       folderId: updateInvocationDto.folderId,
       selectedMethodId: updateInvocationDto.selectedMethodId,
       userId: user.id,

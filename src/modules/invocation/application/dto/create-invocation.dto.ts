@@ -31,5 +31,9 @@ export class CreateInvocationDto {
 
   @IsOptional()
   @IsString()
+  network: string;
+
+  @IsOptional()
+  @IsString()
   selectedMethodId?: string;
 }

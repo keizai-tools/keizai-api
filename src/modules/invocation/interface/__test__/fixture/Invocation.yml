@@ -5,18 +5,21 @@ items:
     name: 'invocation0'
     user: '@user0'
     folder: '@folder0'
+    network: 'FUTURENET'
 
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
     user: '@user1'
     folder: '@folder1'
+    network: 'FUTURENET'
 
   invocation2:
     id: 'invocation2'
     name: 'invocation2'
     user: '@user0'
     folder: '@folder0'
+    network: 'FUTURENET'
     publicKey: 'publicKey2'
 
   invocation3:
@@ -24,6 +27,7 @@ items:
     name: 'invocation3'
     user: '@user0'
     folder: '@folder1'
+    network: 'FUTURENET'
     publicKey: 'publicKey3'
     secretKey: 'secretKey3'
     preInvocation: 'a'
@@ -34,12 +38,14 @@ items:
     name: 'invocation4'
     user: '@user0'
     folder: '@folder0'
+    network: 'FUTURENET'
 
   invocation5:
     id: 'invocation5'
     name: 'invocation5'
     user: '@user0'
     folder: '@folder1'
+    network: 'FUTURENET'
     publicKey: 'publicKey5'
     secretKey: 'secretKey5'
     preInvocation: 'const a = () => "a"; a();'

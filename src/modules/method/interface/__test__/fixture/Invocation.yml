@@ -5,9 +5,11 @@ items:
     name: 'invocation0'
     folder: '@folder0'
     user: '@user0'
+    network: 'FUTURENET'
 
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
     folder: '@folder0'
     user: '@user1'
+    network: 'FUTURENET'

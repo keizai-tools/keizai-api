@@ -6,6 +6,7 @@ import { IGeneratedMethod } from '../service/stellar.service';
 import { EventResponse } from '../types/contract-events';
 
 export interface IContractService {
+  changeNetwork(selectedNetwork: string): void;
   getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry>;
   getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer>;
   decodeContractSpecBuffer(buffer);
