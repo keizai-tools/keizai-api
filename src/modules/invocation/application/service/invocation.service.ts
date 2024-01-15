@@ -210,38 +210,6 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocation);
   }
 
-  async updateNetwork(
-    updateNetworkDto: UpdateInvocationDto,
-    user: IUserResponse,
-  ) {
-    const invocation = await this.invocationRepository.findOneByIds(
-      updateNetworkDto.id,
-      user.id,
-    );
-    if (!invocation) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-      );
-    }
-
-    const invocationUpdated = await this.invocationRepository.update({
-      ...invocation,
-      network: updateNetworkDto.network,
-    });
-
-    if (!invocationUpdated) {
-      throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_UPDATED);
-    }
-    const invocationSaved = await this.invocationRepository.save(
-      invocationUpdated,
-    );
-    if (!invocationSaved) {
-      throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
-    }
-
-    return this.contractService.changeNetwork(updateNetworkDto.network);
-  }
-
   async update(
     updateInvocationDto: UpdateInvocationDto,
     user: IUserResponse,
@@ -290,6 +258,10 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
       }
+    }
+
+    if (updateInvocationDto.network) {
+      this.contractService.changeNetwork(updateInvocationDto.network);
     }
 
     const invocationValues: IUpdateInvocationValues = {
