@@ -299,7 +299,7 @@ export class InvocationService {
       preInvocation: updateInvocationDto.preInvocation,
       postInvocation: updateInvocationDto.postInvocation,
       contractId: updateInvocationDto.contractId,
-      network: updateInvocationDto.network || NETWORK.SOROBAN_FUTURENET,
+      network: updateInvocationDto.network,
       folderId: updateInvocationDto.folderId,
       selectedMethodId: updateInvocationDto.selectedMethodId,
       userId: user.id,
