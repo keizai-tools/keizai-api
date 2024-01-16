@@ -312,6 +312,20 @@ describe('Invocation - [/invocation]', () => {
 
       expect(response.body.contractId).toEqual('new test contract');
     });
+    it('should update contract id with a environment', async () => {
+      jest
+        .spyOn(mockedContractService, 'generateMethodsFromContractId')
+        .mockResolvedValue([]);
+      const response = await request(app.getHttpServer())
+        .patch('/invocation')
+        .send({
+          id: 'invocation0',
+          contractId: '{{contract_id}}',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.contractId).toEqual('contract_id');
+    });
     it('should update secretKey without removing publicKey', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation')
