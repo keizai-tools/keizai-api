@@ -28,6 +28,7 @@ import {
 } from '@/modules/method/application/service/method.service';
 import { Method } from '@/modules/method/domain/method.domain';
 
+import { Invocation } from '../../domain/invocation.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
@@ -76,6 +77,15 @@ export class InvocationService {
     private readonly invocationException: InvocationException,
     private readonly enviromentService: EnviromentService,
   ) {}
+
+  async getContractAddress(invocation: Invocation, contractId: string) {
+    const contractIdValue = invocation.getContractIdValue(contractId);
+    const environment = await this.enviromentService.findOneByName(
+      contractIdValue,
+      invocation.folder.collectionId,
+    );
+    return environment ? environment.value : contractIdValue;
+  }
 
   async runInvocation(user: IUserResponse, id: string) {
     const invocation = await this.invocationRepository.findOneByIds(
@@ -127,12 +137,16 @@ export class InvocationService {
       ...invocation.selectedMethod,
       params: paramsMapped,
     };
+    const contractId = await this.getContractAddress(
+      invocation,
+      invocation.contractId,
+    );
 
     try {
       const invocationResult = await this.contractService.runInvocation(
         invocation.publicKey,
         invocation.secretKey,
-        invocation.contractId,
+        contractId,
         selectedMethodMapped,
       );
       return invocationResult;
@@ -225,21 +239,12 @@ export class InvocationService {
 
     if (updateInvocationDto.contractId) {
       try {
-        const contractIdValue = invocation.getContractIdValue(
+        const contractId = await this.getContractAddress(
+          invocation,
           updateInvocationDto.contractId,
         );
-        const environment = await this.enviromentService.findOneByName(
-          contractIdValue,
-          invocation.folder.collectionId,
-        );
-        updateInvocationDto.contractId = environment
-          ? environment.value
-          : contractIdValue;
-
         const generatedMethods =
-          await this.contractService.generateMethodsFromContractId(
-            updateInvocationDto.contractId,
-          );
+          await this.contractService.generateMethodsFromContractId(contractId);
 
         const methodsToRemove =
           await this.methodRepository.findAllByInvocationId(
