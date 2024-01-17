@@ -272,22 +272,22 @@ export class InvocationService {
     }
 
     if (updateInvocationDto.network) {
-      this.contractService.changeNetwork(updateInvocationDto.network);
+      try {
+        this.contractService.changeNetwork(updateInvocationDto.network);
+        const methodIds = invocation.methods.map((method) => method.id);
+        await this.methodRepository.deleteAll(methodIds);
+      } catch (error) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_FAIL_DELETE_ALL_METHODS,
+        );
+      }
     }
 
-    const invocationValues: IUpdateInvocationValues = {
-      name: updateInvocationDto.name,
-      secretKey: updateInvocationDto.secretKey,
-      publicKey: updateInvocationDto.publicKey,
-      preInvocation: updateInvocationDto.preInvocation,
-      postInvocation: updateInvocationDto.postInvocation,
-      contractId: updateInvocationDto.contractId,
-      network: updateInvocationDto.network,
-      folderId: updateInvocationDto.folderId,
-      selectedMethodId: updateInvocationDto.selectedMethodId,
-      userId: user.id,
-      id: updateInvocationDto.id,
-    };
+    const invocationValues: IUpdateInvocationValues =
+      this.invocationMapper.fromUpdateDtoToInvocationValues(
+        updateInvocationDto,
+        user.id,
+      );
 
     const invocationMapped =
       this.invocationMapper.fromUpdateDtoToEntity(invocationValues);

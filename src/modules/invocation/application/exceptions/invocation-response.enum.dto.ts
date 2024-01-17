@@ -8,6 +8,7 @@ export enum INVOCATION_RESPONSE {
   Invocation_NOT_UPDATED = 'Unable to update invocation',
   INVOCATION_FOLDER_NOT_EXISTS = 'Folder does not exist or does not belong to you',
   INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID = 'Methods cannot be generated with the provided contract ID',
+  INVOCATION_FAIL_DELETE_ALL_METHODS = 'The methods could not be removed. Please check if the IDs are valid',
   INVOCATION_FAIL_RUN_INVOCATION = 'Invocation execution failed',
   INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD = 'Cannot set a new contract and method simultaneously',
   INVOCATION_FAIL_SELECTING_METHOD_WITHOUT_CONTRACT = 'Method selection requires a loaded contract',
