@@ -298,7 +298,7 @@ describe('Invocation - [/invocation]', () => {
         .expect(HttpStatus.NOT_FOUND);
     });
     it('should update contract id with a selected method', async () => {
-      const spy = jest
+      jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
       const response = await request(app.getHttpServer())
@@ -316,15 +316,16 @@ describe('Invocation - [/invocation]', () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
+      const contractId = '{{contract_id}}';
       const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({
           id: 'invocation0',
-          contractId: '{{contract_id}}',
+          contractId,
         })
         .expect(HttpStatus.OK);
 
-      expect(response.body.contractId).toEqual('contract_id');
+      expect(response.body.contractId).toEqual(contractId);
     });
     it('should update secretKey without removing publicKey', async () => {
       const response = await request(app.getHttpServer())

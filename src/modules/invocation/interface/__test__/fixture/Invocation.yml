@@ -46,6 +46,7 @@ items:
     user: '@user0'
     folder: '@folder1'
     network: 'FUTURENET'
+    contractId: 'contractId'
     publicKey: 'publicKey5'
     secretKey: 'secretKey5'
     preInvocation: 'const a = () => "a"; a();'
