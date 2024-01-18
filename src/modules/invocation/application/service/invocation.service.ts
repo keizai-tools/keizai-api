@@ -142,6 +142,7 @@ export class InvocationService {
       invocation.contractId,
     );
 
+    this.contractService.verifyNetwork(invocation.network);
     try {
       const invocationResult = await this.contractService.runInvocation(
         invocation.publicKey,
@@ -243,6 +244,8 @@ export class InvocationService {
           invocation,
           updateInvocationDto.contractId,
         );
+        this.contractService.verifyNetwork(invocation.network);
+
         const generatedMethods =
           await this.contractService.generateMethodsFromContractId(contractId);
 
