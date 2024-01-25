@@ -389,22 +389,48 @@ describe('Invocation - [/invocation]', () => {
     it('should change to TESTNET network', async () => {
       spy.mockResolvedValue({ network: 'TESTNET' });
 
-      await request(app.getHttpServer())
+      const responseExpected = expect.objectContaining({
+        secretKey: null,
+        publicKey: null,
+        preInvocation: null,
+        postInvocation: null,
+        contractId: null,
+        network: 'TESTNET',
+        id: 'invocation0',
+        methods: [],
+        selectedMethod: null,
+      });
+
+      const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({ network: 'TESTNET', id: 'invocation0' })
         .expect(HttpStatus.OK);
 
       expect(spy.mock.calls).toHaveLength(1);
+      expect(response.body).toEqual(responseExpected);
     });
     it('should change to FUTURENET network', async () => {
       spy.mockResolvedValue({ network: 'FUTURENET' });
 
-      await request(app.getHttpServer())
+      const responseExpected = expect.objectContaining({
+        secretKey: null,
+        publicKey: null,
+        preInvocation: null,
+        postInvocation: null,
+        contractId: null,
+        network: 'FUTURENET',
+        id: 'invocation0',
+        methods: [],
+        selectedMethod: null,
+      });
+
+      const response = await request(app.getHttpServer())
         .patch('/invocation')
         .send({ network: 'FUTURENET', id: 'invocation0' })
         .expect(HttpStatus.OK);
 
       expect(spy.mock.calls).toHaveLength(1);
+      expect(response.body).toEqual(responseExpected);
     });
   });
 
