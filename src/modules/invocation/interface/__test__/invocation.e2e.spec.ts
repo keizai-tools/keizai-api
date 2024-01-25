@@ -24,6 +24,7 @@ const mockedJwtStrategy = {
 
 const mockedContractService = {
   runInvocation: jest.fn(),
+  verifyNetwork: jest.fn(),
   changeNetwork: jest.fn(),
   generateMethodsFromContractId: jest.fn(),
 };

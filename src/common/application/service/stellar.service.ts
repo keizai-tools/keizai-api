@@ -36,11 +36,13 @@ export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
   private server: SorobanRpc.Server;
   private networkPassphrase: string;
+  private currentNetwork: string;
   constructor(
     @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
   ) {
     this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
     this.networkPassphrase = Networks.FUTURENET;
+    this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
       1: 'SC_SPEC_TYPE_BOOL',
@@ -70,19 +72,28 @@ export class StellarService implements IContractService {
     };
   }
 
+  verifyNetwork(selectedNetwork: string): void {
+    if (selectedNetwork === this.currentNetwork) {
+      this.server;
+      this.networkPassphrase;
+      this.currentNetwork;
+    } else {
+      this.changeNetwork(selectedNetwork);
+    }
+  }
+
   changeNetwork(selectedNetwork: string): void {
     switch (selectedNetwork) {
       case NETWORK.SOROBAN_FUTURENET:
         this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
         this.networkPassphrase = Networks.FUTURENET;
+        this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
         break;
       case NETWORK.SOROBAN_TESTNET:
         this.server = new SorobanRpc.Server(SOROBAN_SERVER.TESTNET);
         this.networkPassphrase = Networks.TESTNET;
+        this.currentNetwork = NETWORK.SOROBAN_TESTNET;
         break;
-      default:
-        this.server;
-        this.networkPassphrase;
     }
   }
 
