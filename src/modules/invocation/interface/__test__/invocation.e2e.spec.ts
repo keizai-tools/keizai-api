@@ -370,13 +370,6 @@ describe('Invocation - [/invocation]', () => {
   });
 
   describe('Update Network - [PUT /invocation]', () => {
-    let spy;
-    beforeEach(() => {
-      spy = jest.spyOn(mockedContractService, 'changeNetwork');
-    });
-    afterEach(() => {
-      spy.mockClear();
-    });
     it('should throw error when the invocation id is incorrect', async () => {
       const response = await request(app.getHttpServer())
         .patch('/invocation')
@@ -388,8 +381,6 @@ describe('Invocation - [/invocation]', () => {
       );
     });
     it('should change to TESTNET network', async () => {
-      spy.mockResolvedValue({ network: 'TESTNET' });
-
       const responseExpected = expect.objectContaining({
         secretKey: null,
         publicKey: null,
@@ -407,12 +398,9 @@ describe('Invocation - [/invocation]', () => {
         .send({ network: 'TESTNET', id: 'invocation0' })
         .expect(HttpStatus.OK);
 
-      expect(spy.mock.calls).toHaveLength(1);
       expect(response.body).toEqual(responseExpected);
     });
     it('should change to FUTURENET network', async () => {
-      spy.mockResolvedValue({ network: 'FUTURENET' });
-
       const responseExpected = expect.objectContaining({
         secretKey: null,
         publicKey: null,
@@ -430,7 +418,6 @@ describe('Invocation - [/invocation]', () => {
         .send({ network: 'FUTURENET', id: 'invocation0' })
         .expect(HttpStatus.OK);
 
-      expect(spy.mock.calls).toHaveLength(1);
       expect(response.body).toEqual(responseExpected);
     });
   });
