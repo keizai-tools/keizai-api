@@ -281,7 +281,6 @@ export class InvocationService {
 
     if (updateInvocationDto.network) {
       try {
-        this.contractService.changeNetwork(updateInvocationDto.network);
         const methodIds = invocation.methods.map((method) => method.id);
         await this.methodRepository.deleteAll(methodIds);
       } catch (error) {
