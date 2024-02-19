@@ -15,6 +15,7 @@ import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
 import { FolderModule } from './modules/folder/folder.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
+import { TeamModule } from './modules/team/team.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { InvocationModule } from './modules/invocation/invocation.module';
     InvocationModule,
     CommonModule,
     EnviromentModule,
+    TeamModule,
   ],
   controllers: [],
   providers: [],
