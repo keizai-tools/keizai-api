@@ -31,6 +31,7 @@ import { CollectionController } from './interface/collection.controller';
       useClass: CollectionRepository,
     },
     CollectionService,
+    CollectionMapper,
   ],
 })
 export class CollectionModule {}
