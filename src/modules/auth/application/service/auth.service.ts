@@ -56,4 +56,8 @@ export class AuthService {
 
     return userResponse;
   }
+
+  async findOneByEmail(email: string) {
+    return await this.userRepository.findOneByEmail(email);
+  }
 }

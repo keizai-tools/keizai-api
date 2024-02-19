@@ -32,4 +32,12 @@ export class UserRepository implements IUserRepository {
       },
     });
   }
+
+  async findOneByEmail(email: string): Promise<User> {
+    return await this.repository.findOne({
+      where: {
+        email,
+      },
+    });
+  }
 }
