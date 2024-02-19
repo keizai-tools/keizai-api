@@ -1,0 +1,11 @@
+entity: Collection
+items:
+  collection0:
+    id: "collection0"
+    name: 'collection0'
+    user: '@user0'
+
+  collection1:
+    id: "collection1"
+    name: 'collection1'
+    user: '@user1'
