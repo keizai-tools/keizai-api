@@ -60,4 +60,8 @@ export class AuthService {
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneByEmail(email);
   }
+
+  async findAllByEmails(emails: string[]) {
+    return await this.userRepository.findAllByEmails(emails);
+  }
 }
