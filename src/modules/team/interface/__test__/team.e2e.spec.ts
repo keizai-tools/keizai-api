@@ -69,7 +69,7 @@ describe('Team - [/team]', () => {
         .post('/team')
         .send({
           name: 'test',
-          users: [],
+          usersEmails: [],
         })
         .expect(HttpStatus.CREATED);
 
@@ -134,7 +134,7 @@ describe('Team - [/team]', () => {
         .send({
           name: 'team updated',
           id: 'team0',
-          users: ['user1'],
+          usersEmails: ['user1'],
         })
         .expect(HttpStatus.OK);
 
