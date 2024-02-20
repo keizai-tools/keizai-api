@@ -68,16 +68,10 @@ export class TeamService {
     return this.teamMapper.fromEntityToDto(team);
   }
 
-  async findAllByEmails(emails: string[]): Promise<User[]> {
-    const usersPromises = emails.map((email) =>
-      this.userService.findOneByEmail(email),
-    );
-    const users = await Promise.all(usersPromises);
-    return users;
-  }
-
   async create(createTeamDto: CreateTeamDto, user: IUserResponse) {
-    const users = await this.findAllByEmails(createTeamDto.users);
+    const users = await this.userService.findAllByEmails(
+      createTeamDto.usersEmails,
+    );
 
     const teamData: ITeamData = {
       name: createTeamDto.name,
@@ -102,7 +96,9 @@ export class TeamService {
       throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID);
     }
 
-    const users = await this.findAllByEmails(updateTeamDto.users);
+    const users = await this.userService.findAllByEmails(
+      updateTeamDto.usersEmails,
+    );
 
     const teamData: IUpdateTeamData = {
       name: updateTeamDto.name,

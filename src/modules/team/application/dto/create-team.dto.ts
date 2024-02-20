@@ -6,5 +6,5 @@ export class CreateTeamDto {
   name: string;
 
   @IsArray()
-  users: string[];
+  usersEmails: string[];
 }
