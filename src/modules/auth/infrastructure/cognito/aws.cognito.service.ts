@@ -53,7 +53,10 @@ export class CognitoService implements ICognitoService {
         },
       );
 
-      if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
+      if (
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
+        process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
+      ) {
         this.confirmAccount(email, signUpResult);
       }
 
