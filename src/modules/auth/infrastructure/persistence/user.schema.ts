@@ -33,5 +33,10 @@ export const UserSchema = new EntitySchema<User>({
         name: 'user_id',
       },
     },
+    invitationsReceived: {
+      target: 'Invitation',
+      type: 'one-to-many',
+      inverseSide: 'toUser',
+    },
   },
 });

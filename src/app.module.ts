@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
 import { FolderModule } from './modules/folder/folder.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
 
 @Module({
@@ -39,6 +40,7 @@ import { InvocationModule } from './modules/invocation/invocation.module';
     InvocationModule,
     CommonModule,
     EnviromentModule,
+    InvitationModule,
   ],
   controllers: [],
   providers: [],
