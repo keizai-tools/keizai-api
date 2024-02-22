@@ -39,5 +39,10 @@ export const UserSchema = new EntitySchema<User>({
       inverseSide: 'users',
       onDelete: 'CASCADE',
     },
+    invitationsReceived: {
+      target: 'Invitation',
+      type: 'one-to-many',
+      inverseSide: 'toUser',
+    },
   },
 });

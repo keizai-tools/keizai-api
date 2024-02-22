@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
 import { FolderModule } from './modules/folder/folder.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
 import { TeamModule } from './modules/team/team.module';
 
@@ -41,6 +42,7 @@ import { TeamModule } from './modules/team/team.module';
     CommonModule,
     EnviromentModule,
     TeamModule,
+    InvitationModule,
   ],
   controllers: [],
   providers: [],

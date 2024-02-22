@@ -4,8 +4,10 @@ import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
+  ISignUpResult,
 } from 'amazon-cognito-identity-js';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 
 import {
   ICognitoService,
@@ -19,6 +21,10 @@ interface IRegisterResult {
 
 dotenv.config();
 
+enum ENVIRONMENT {
+  DEVELOPMENT = 'development',
+}
+
 @Injectable()
 export class CognitoService implements ICognitoService {
   private userPool: CognitoUserPool;
@@ -30,19 +36,55 @@ export class CognitoService implements ICognitoService {
       endpoint: configService.get('AWS_COGNITO_ENDPOINT'),
     });
   }
-  registerAccount(email: string, password: string): Promise<IRegisterResult> {
-    return new Promise((resolve, reject) => {
-      this.userPool.signUp(email, password, null, null, (error, result) => {
-        if (!result) {
-          reject(error);
-        } else {
-          resolve({
-            externalId: result.userSub,
-            username: result.user.getUsername(),
+  async registerAccount(
+    email: string,
+    password: string,
+  ): Promise<IRegisterResult> {
+    try {
+      const signUpResult: ISignUpResult = await new Promise(
+        (resolve, reject) => {
+          this.userPool.signUp(email, password, null, null, (err, result) => {
+            if (!result) {
+              reject(err);
+            } else {
+              resolve(result);
+            }
           });
-        }
-      });
-    });
+        },
+      );
+
+      if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
+        this.confirmAccount(email, signUpResult);
+      }
+
+      return {
+        externalId: signUpResult.userSub,
+        username: email,
+      };
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async confirmAccount(
+    email: string,
+    signUpResult: ISignUpResult,
+  ): Promise<void> {
+    const userConfirmationCode = await this.getConfirmationCodeFromLocalPool(
+      email,
+    );
+    if (userConfirmationCode) {
+      signUpResult.user.confirmRegistration(
+        userConfirmationCode,
+        false,
+        function (err, result) {
+          if (err) {
+            throw err;
+          }
+          return result;
+        },
+      );
+    }
   }
 
   loginAccount(email: string, password: string): Promise<ILoginResult> {
@@ -73,5 +115,22 @@ export class CognitoService implements ICognitoService {
         },
       });
     });
+  }
+
+  private async getConfirmationCodeFromLocalPool(
+    email: string,
+  ): Promise<string | undefined> {
+    try {
+      const data: string = fs.readFileSync(
+        process.env.COGNITO_LOCAL_PATH,
+        'utf-8',
+      );
+      const jsonData: any = JSON.parse(data);
+      const code: string | undefined =
+        jsonData.Users?.[email]?.ConfirmationCode;
+      return code;
+    } catch (err) {
+      throw err;
+    }
   }
 }
