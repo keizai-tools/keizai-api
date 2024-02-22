@@ -9,7 +9,6 @@ import {
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
-import { ENVIRONMENT } from '../../../../configuration/orm.configuration.js';
 import {
   ICognitoService,
   ILoginResult,
@@ -21,6 +20,10 @@ interface IRegisterResult {
 }
 
 dotenv.config();
+
+enum ENVIRONMENT {
+  DEVELOPMENT = 'development',
+}
 
 @Injectable()
 export class CognitoService implements ICognitoService {
