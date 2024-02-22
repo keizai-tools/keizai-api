@@ -31,7 +31,7 @@ export class TeamController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.teamService.findOne(id);
   }
 
