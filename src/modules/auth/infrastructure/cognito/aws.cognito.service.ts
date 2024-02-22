@@ -42,7 +42,7 @@ export class CognitoService implements ICognitoService {
         (resolve, reject) => {
           this.userPool.signUp(email, password, null, null, (err, result) => {
             if (!result) {
-              reject(err.message);
+              reject(err);
             } else {
               resolve(result);
             }
