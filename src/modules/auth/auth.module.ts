@@ -31,5 +31,6 @@ import { AuthController } from './interface/auth.controller';
     AuthMapper,
     JwtStrategy,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -25,6 +25,14 @@ export const CollectionSchema = new EntitySchema<Collection>({
       },
       onDelete: 'CASCADE',
     },
+    team: {
+      target: 'Team',
+      type: 'many-to-one',
+      joinColumn: {
+        name: 'team_id',
+      },
+      onDelete: 'CASCADE',
+    },
     folders: {
       target: 'Folder',
       type: 'one-to-many',
