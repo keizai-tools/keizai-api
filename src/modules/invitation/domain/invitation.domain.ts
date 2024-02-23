@@ -1,5 +1,6 @@
 import { Base } from '@/common/domain/base.domain';
 import { User } from '@/modules/auth/domain/user.domain';
+import { Team } from '@/modules/team/domain/team.domain';
 
 export class Invitation extends Base {
   teamId: string;
@@ -7,6 +8,7 @@ export class Invitation extends Base {
   toUserId: string;
   status: string;
   id?: string;
+  team: Team;
   fromUser: User;
   toUser: User;
   constructor(

@@ -23,6 +23,14 @@ export const InvitationSchema = new EntitySchema<Invitation>({
     },
   },
   relations: {
+    team: {
+      target: 'Team',
+      type: 'many-to-one',
+      joinColumn: {
+        name: 'team_id',
+      },
+      onDelete: 'CASCADE',
+    },
     fromUser: {
       target: 'User',
       type: 'many-to-one',

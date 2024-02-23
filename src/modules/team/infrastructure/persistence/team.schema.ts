@@ -33,6 +33,14 @@ export const TeamSchema = new EntitySchema<Team>({
       inverseSide: 'teams',
       onDelete: 'CASCADE',
     },
+    invitations: {
+      target: 'Invitation',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'team_id',
+      },
+      inverseSide: 'team',
+    },
     collections: {
       target: 'Collection',
       type: 'one-to-many',
