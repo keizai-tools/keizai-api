@@ -16,5 +16,6 @@ import { InvitationController } from './interface/invitation.controller';
     InvitationMapper,
     { provide: INVITATION_REPOSITORY, useClass: InvitationRepository },
   ],
+  exports: [InvitationService, InvitationMapper],
 })
 export class InvitationModule {}
