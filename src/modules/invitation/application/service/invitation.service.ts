@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { Invitation } from '../../domain/invitation.domain';
 import { CreateInvitationDto } from '../dto/create-invitation.dto';
 import { ResponseInvitationDto } from '../dto/response-invitation.dto';
 import { UpdateInvitationDto } from '../dto/update-invitation.dto';
@@ -59,6 +60,24 @@ export class InvitationService {
       console.log(error);
       throw new BadRequestException(INVITATION_RESPONSE.INVITATION_FAILED_SAVE);
     }
+  }
+
+  async createAll(invitationsDto: CreateInvitationDto[]) {
+    const invitationsToSave: Invitation[] = invitationsDto.map((invitation) => {
+      return this.invitationMapper.fromDtoToEntity(invitation);
+    });
+
+    const invitationsSaved = await this.invitationRepository.saveAll(
+      invitationsToSave,
+    );
+
+    if (!invitationsSaved) {
+      throw new BadRequestException(INVITATION_RESPONSE.INVITATION_FAILED_SAVE);
+    }
+
+    return invitationsSaved.map((invitation) =>
+      this.invitationMapper.fromEntityToDto(invitation),
+    );
   }
 
   async update(
