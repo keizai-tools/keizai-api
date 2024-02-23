@@ -75,6 +75,20 @@ describe('Collection - [/collection]', () => {
 
       expect(response.body).toEqual({ name: 'test', id: expect.any(String) });
     });
+    it('It should create a new collection with a team id', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/collection')
+        .send({
+          name: 'team test',
+          teamId: 'team1',
+        })
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual({
+        name: 'team test',
+        id: expect.any(String),
+      });
+    });
   });
 
   describe('Create all - [POST /collection/:id]', () => {
@@ -211,13 +225,26 @@ describe('Collection - [/collection]', () => {
       );
     });
 
+    it('should get one collection associated with a team', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection2')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 'collection2',
+          name: 'collection2',
+        }),
+      );
+    });
+
     it('should throw error when try to get one collection not associated with a user', async () => {
       const response = await request(app.getHttpServer())
         .get('/collection/2')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     });
   });
@@ -235,6 +262,21 @@ describe('Collection - [/collection]', () => {
       expect(response.body).toEqual({
         id: 'collection0',
         name: 'collection updated',
+      });
+    });
+    it('should update one collection associated with a team', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/collection')
+        .send({
+          name: 'team collection updated',
+          id: 'collection2',
+          teamId: 'team1',
+        })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({
+        id: 'collection2',
+        name: 'team collection updated',
       });
     });
   });
@@ -255,7 +297,7 @@ describe('Collection - [/collection]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     });
   });
