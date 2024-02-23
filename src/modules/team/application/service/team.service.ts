@@ -9,6 +9,7 @@ import {
 import { AuthService } from '@/modules/auth/application/service/auth.service';
 import { User } from '@/modules/auth/domain/user.domain';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { CreateTeamDto } from '../dto/create-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
@@ -35,6 +36,8 @@ export class TeamService {
     private readonly teamMapper: TeamMapper,
     @Inject(TEAM_REPOSITORY)
     private readonly teamRepository: ITeamRepository,
+    @Inject(forwardRef(() => CollectionService))
+    private readonly collectionService: CollectionService,
     @Inject(forwardRef(() => AuthService))
     private readonly userService: AuthService,
   ) {}
@@ -66,6 +69,10 @@ export class TeamService {
     }
 
     return this.teamMapper.fromEntityToDto(team);
+  }
+
+  async findCollectionsByTeam(teamId: string) {
+    return await this.collectionService.findAllByTeam(teamId);
   }
 
   async create(createTeamDto: CreateTeamDto, user: IUserResponse) {
