@@ -93,12 +93,16 @@ describe('Team - [/team]', () => {
           adminId: 'user0',
           id: expect.any(String),
         }),
+        expect.objectContaining({
+          adminId: 'user1',
+          id: expect.any(String),
+        }),
       ]);
       const response = await request(app.getHttpServer())
         .get('/team')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(3);
       expect(response.body).toEqual(responseExpected);
     });
   });

@@ -1,0 +1,15 @@
+entity: Invitation
+items:
+  invitation0:
+    id: 'invitation0'
+    teamId: '@team0'
+    fromUserId: '@user0'
+    toUserId: '@user1'
+    status: 'PENDING'
+
+  invitation1:
+    id: 'invitation1'
+    teamId: '@team1'
+    fromUserId: '@user1'
+    toUserId: '@user0'
+    status: 'PENDING'
