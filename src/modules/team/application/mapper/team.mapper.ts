@@ -1,6 +1,7 @@
 import { Inject } from '@nestjs/common';
 
 import { CollectionMapper } from '@/modules/collection/application/mapper/collection.mapper';
+import { InvitationMapper } from '@/modules/invitation/application/mapper/invitation.mapper';
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
@@ -10,6 +11,8 @@ export class TeamMapper {
   constructor(
     @Inject(CollectionMapper)
     private readonly collectionMapper: CollectionMapper,
+    @Inject(InvitationMapper)
+    private readonly invitationMapper: InvitationMapper,
   ) {}
 
   fromDtoToEntity(teamData: ITeamData): Team {
@@ -23,12 +26,23 @@ export class TeamMapper {
   }
 
   fromEntityToDto(team: Team): TeamResponseDto {
-    const { name, adminId, id, users, collections } = team;
+    const { name, adminId, id, users, invitations, collections } = team;
 
     const collectionsMapped = collections?.map((collection) => {
       return this.collectionMapper.fromEntityToDto(collection);
     });
 
-    return new TeamResponseDto(name, adminId, id, users, collectionsMapped);
+    const invitationsMapped = invitations?.map((invitation) => {
+      return this.invitationMapper.fromEntityToDto(invitation);
+    });
+
+    return new TeamResponseDto(
+      name,
+      adminId,
+      id,
+      users,
+      invitationsMapped,
+      collectionsMapped,
+    );
   }
 }
