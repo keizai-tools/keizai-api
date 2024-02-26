@@ -13,7 +13,12 @@ export const CollectionSchema = new EntitySchema<Collection>({
       type: 'varchar',
     },
     userId: {
-      type: String,
+      type: 'varchar',
+      nullable: true,
+    },
+    teamId: {
+      type: 'varchar',
+      nullable: true,
     },
   },
   relations: {

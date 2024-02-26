@@ -127,6 +127,21 @@ describe('Team - [/team]', () => {
     });
   });
 
+  describe('GET all collections - [GET /team/:id/collections]', () => {
+    it('should get collections associated with a team', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/team/team0/collections')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual([
+        expect.objectContaining({
+          id: 'collection0',
+          name: 'collection0',
+        }),
+      ]);
+    });
+  });
+
   describe('Update one - [PATCH /team]', () => {
     it('should update one team associated with a user', async () => {
       const response = await request(app.getHttpServer())
