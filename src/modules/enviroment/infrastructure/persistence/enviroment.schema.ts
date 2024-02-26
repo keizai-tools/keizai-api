@@ -10,7 +10,6 @@ export const EnviromentSchema = new EntitySchema<Enviroment>({
   columns: {
     ...baseColumnSchemas,
     name: {
-      unique: true,
       type: String,
     },
     value: {
