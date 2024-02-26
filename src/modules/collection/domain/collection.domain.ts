@@ -6,14 +6,14 @@ import { Team } from '@/modules/team/domain/team.domain';
 
 export class Collection extends Base {
   name: string;
-  userId: string;
-  teamId: string;
+  userId?: string;
+  teamId?: string;
   id?: string;
   user?: User;
   team?: Team;
   folders?: Folder[];
   enviroments?: Enviroment[];
-  constructor(name: string, userId: string, teamId?: string, id?: string) {
+  constructor(name: string, userId?: string, teamId?: string, id?: string) {
     super();
     this.name = name;
     this.userId = userId;
