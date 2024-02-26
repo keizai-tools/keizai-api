@@ -14,9 +14,6 @@ export class CreateTeamsTable1708091879696 implements MigrationInterface {
       `ALTER TABLE \`collection\` ADD \`team_id\` varchar(36) NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE \`enviroment\` ADD UNIQUE INDEX \`IDX_559fc3801cf1e98ca7b9be88cc\` (\`name\`)`,
-    );
-    await queryRunner.query(
       `ALTER TABLE \`collection\` ADD CONSTRAINT \`FK_f8d2f64cb606c9329510b6f5944\` FOREIGN KEY (\`team_id\`) REFERENCES \`team\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
