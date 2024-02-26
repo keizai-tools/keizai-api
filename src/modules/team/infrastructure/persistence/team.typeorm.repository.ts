@@ -18,14 +18,14 @@ export class TeamRepository implements ITeamRepository {
   async findAllByUser(userId: string): Promise<Team[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
-      relations: { users: true, collections: true },
+      relations: { users: true, collections: true, invitations: true },
       where: [{ adminId: userId }, { users: { id: userId } }],
     });
   }
 
   async findOne(id: string): Promise<Team> {
     return await this.repository.findOne({
-      relations: { users: true, collections: true },
+      relations: { users: true, collections: true, invitations: true },
       where: {
         id,
       },

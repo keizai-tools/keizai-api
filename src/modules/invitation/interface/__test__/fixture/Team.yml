@@ -10,4 +10,4 @@ items:
     id: 'team1'
     name: 'team1'
     adminId: 'user1'
-    users: ['@user0']
+    users: ['user0']

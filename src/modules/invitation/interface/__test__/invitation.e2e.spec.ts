@@ -68,7 +68,7 @@ describe('Invitation - [/invitation]', () => {
       const response = await request(app.getHttpServer())
         .post('/invitation')
         .send({
-          teamId: 'team',
+          teamId: 'team1',
           fromUserId: 'user0',
           toUserId: 'user1',
           status: 'PENDING',
@@ -77,7 +77,7 @@ describe('Invitation - [/invitation]', () => {
 
       expect(response.body).toEqual({
         id: expect.any(String),
-        teamId: 'team',
+        teamId: 'team1',
         fromUserId: 'user0',
         toUserId: 'user1',
         status: 'PENDING',
@@ -90,7 +90,7 @@ describe('Invitation - [/invitation]', () => {
       const expectedResponse = [
         {
           id: 'invitation1',
-          teamId: 'team',
+          teamId: 'team1',
           fromUserId: 'user1',
           toUserId: 'user0',
           status: 'PENDING',
@@ -113,7 +113,7 @@ describe('Invitation - [/invitation]', () => {
 
       expect(response.body).toEqual({
         id: 'invitation0',
-        teamId: 'team',
+        teamId: 'team0',
         fromUserId: 'user0',
         toUserId: 'user1',
         status: 'PENDING',
@@ -136,7 +136,7 @@ describe('Invitation - [/invitation]', () => {
         .patch('/invitation')
         .send({
           id: 'invitation0',
-          teamId: 'team updated',
+          teamId: 'team0',
           fromUserId: 'user0',
           toUserId: 'user1',
           status: 'ACCEPT',
@@ -145,7 +145,7 @@ describe('Invitation - [/invitation]', () => {
 
       expect(response.body).toEqual({
         id: 'invitation0',
-        teamId: 'team updated',
+        teamId: 'team0',
         fromUserId: 'user0',
         toUserId: 'user1',
         status: 'ACCEPT',

@@ -9,6 +9,8 @@ import {
 import { AuthService } from '@/modules/auth/application/service/auth.service';
 import { User } from '@/modules/auth/domain/user.domain';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
+import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { CreateTeamDto } from '../dto/create-team.dto';
@@ -40,6 +42,8 @@ export class TeamService {
     private readonly collectionService: CollectionService,
     @Inject(forwardRef(() => AuthService))
     private readonly userService: AuthService,
+    @Inject(forwardRef(() => InvitationService))
+    private readonly invitationService: InvitationService,
   ) {}
 
   async findAllByUser(userId: string) {
@@ -90,13 +94,42 @@ export class TeamService {
 
     try {
       const teamSaved = await this.teamRepository.save(team);
+
+      await this.createAllInvitations(
+        teamSaved.users,
+        teamSaved.id,
+        teamSaved.adminId,
+      );
+
       return this.teamMapper.fromEntityToDto(teamSaved);
     } catch (error) {
       throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_SAVE);
     }
   }
 
+  async createAllInvitations(
+    users: User[],
+    teamId: string,
+    fromUserId: string,
+  ): Promise<ResponseInvitationDto[]> {
+    const invitationsToSave = users.map((user) => {
+      return {
+        teamId,
+        fromUserId,
+        toUserId: user.id,
+        status: 'PENDING',
+      };
+    });
+    return await this.invitationService.createAll(invitationsToSave);
+  }
+
   async update(updateTeamDto: UpdateTeamDto, adminId: string) {
+    const teamData: IUpdateTeamData = {
+      name: updateTeamDto.name,
+      id: updateTeamDto.id,
+      adminId,
+    };
+
     const team = await this.findOneByIds(updateTeamDto.id, adminId);
 
     if (!team) {
@@ -107,12 +140,10 @@ export class TeamService {
       updateTeamDto.usersEmails,
     );
 
-    const teamData: IUpdateTeamData = {
-      name: updateTeamDto.name,
-      id: updateTeamDto.id,
-      adminId,
-      users,
-    };
+    if (users.length !== 0) {
+      await this.createAllInvitations(users, teamData.id, adminId);
+      teamData.users = users;
+    }
 
     const teamMapped = this.teamMapper.fromUpdateDtoToEntity(teamData);
     const teamUpdated = await this.teamRepository.update(teamMapped);
@@ -122,10 +153,10 @@ export class TeamService {
     }
 
     const teamSaved = await this.teamRepository.save(teamUpdated);
-
     if (!teamSaved) {
       throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_SAVE);
     }
+
     return this.teamMapper.fromEntityToDto(teamSaved);
   }
 

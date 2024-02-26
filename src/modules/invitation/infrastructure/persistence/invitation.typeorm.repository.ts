@@ -35,6 +35,10 @@ export class InvitationRepository implements IInvitationRepository {
     return this.repository.save(invitation);
   }
 
+  async saveAll(invitation: Invitation[]): Promise<Invitation[]> {
+    return this.repository.save(invitation);
+  }
+
   async update(invitation: Invitation): Promise<Invitation> {
     return await this.repository.preload(invitation);
   }
