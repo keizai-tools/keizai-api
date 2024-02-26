@@ -53,6 +53,15 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
+  async findAllByTeam(teamId: string): Promise<Collection[]> {
+    return await this.repository.find({
+      order: { createdAt: 'DESC' },
+      where: {
+        teamId,
+      },
+    });
+  }
+
   async update(collection: Collection): Promise<Collection> {
     return await this.repository.preload(collection);
   }

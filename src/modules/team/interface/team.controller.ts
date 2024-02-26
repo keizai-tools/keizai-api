@@ -36,6 +36,12 @@ export class TeamController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/:id/collections')
+  async findCollectionsByTeam(@Param('id') id: string) {
+    return this.teamService.findCollectionsByTeam(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('/')
   async create(
     @Body() createTeamDto: CreateTeamDto,

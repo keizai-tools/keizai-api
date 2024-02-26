@@ -18,12 +18,12 @@ export class CollectionMapper {
     private readonly enviromentMapper: EnviromentMapper,
   ) {}
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
-    const { name, userId } = collectionData;
-    return new Collection(name, userId);
+    const { name, userId, teamId } = collectionData;
+    return new Collection(name, userId, teamId);
   }
   fromUpdateDtoToEntity(collectionData: IUpdateCollectionValues): Collection {
-    const { name, userId, id } = collectionData;
-    return new Collection(name, userId, id);
+    const { name, userId, teamId, id } = collectionData;
+    return new Collection(name, userId, teamId, id);
   }
   fromEntityToDto(collection: Collection): CollectionResponseDto {
     const { name, id, folders, enviroments } = collection;

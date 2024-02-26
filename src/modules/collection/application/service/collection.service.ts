@@ -25,7 +25,8 @@ import {
 
 export interface ICollectionValues {
   name: string;
-  userId: string;
+  userId?: string;
+  teamId?: string;
 }
 
 export interface IUpdateCollectionValues extends ICollectionValues {
@@ -44,6 +45,18 @@ export class CollectionService {
 
   async findAllByUser(id: string): Promise<CollectionResponseDto[]> {
     const collections = await this.collectionRepository.findAllByUser(id);
+    if (!collections) {
+      throw new NotFoundException(COLLECTION_RESPONSE.COLLECTIONS_NOT_FOUND);
+    }
+
+    return collections.map((collection) =>
+      this.collectionMapper.fromEntityToDto(collection),
+    );
+  }
+
+  async findAllByTeam(teamId: string): Promise<CollectionResponseDto[]> {
+    const collections = await this.collectionRepository.findAllByTeam(teamId);
+
     if (!collections) {
       throw new NotFoundException(COLLECTION_RESPONSE.COLLECTIONS_NOT_FOUND);
     }
@@ -123,8 +136,10 @@ export class CollectionService {
   ): Promise<CollectionResponseDto> {
     const collectionData: ICollectionValues = {
       name: collectionDto.name,
-      userId: user.id,
+      userId: collectionDto.teamId ? null : user.id,
+      teamId: collectionDto.teamId ?? null,
     };
+
     const collection = this.collectionMapper.fromDtoToEntity(collectionData);
     try {
       const collectionSaved = await this.collectionRepository.save(collection);
@@ -158,13 +173,13 @@ export class CollectionService {
   ): Promise<CollectionResponseDto> {
     const collectionData: IUpdateCollectionValues = {
       name: collectionDto.name,
-      userId,
+      userId: collectionDto.teamId ? null : userId,
+      teamId: collectionDto.teamId ?? null,
       id: collectionDto.id,
     };
-    const collection = await this.findOneByIds(
-      collectionData.id,
-      collectionData.userId,
-    );
+
+    const collection = await this.findOne(collectionData.id);
+
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
@@ -191,11 +206,11 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collectionSaved);
   }
 
-  async delete(id: string, userId: string): Promise<boolean> {
-    const collection = await this.findOneByIds(id, userId);
+  async delete(id: string): Promise<boolean> {
+    const collection = await this.findOne(id);
     if (!collection) {
       throw new NotFoundException(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     }
     const collectionDeleted = await this.collectionRepository.delete(id);
