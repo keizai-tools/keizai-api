@@ -13,4 +13,14 @@ items:
   collection2:
     id: 'collection2'
     name: 'collection2'
+    teamId: '@team0'
+
+  collection3:
+    id: 'collection3'
+    name: 'collection3'
+    user: '@user0'
+
+  collection4:
+    id: 'collection4'
+    name: 'collection4'
     teamId: '@team1'

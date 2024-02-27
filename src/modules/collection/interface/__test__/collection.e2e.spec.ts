@@ -143,7 +143,7 @@ describe('Collection - [/collection]', () => {
         .get('/collection')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(3);
       expect(response.body).toEqual(responseExpected);
     });
     it('should only get collections associated with a user', async () => {
@@ -151,7 +151,7 @@ describe('Collection - [/collection]', () => {
         .get('/collection')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(3);
     });
     it('should get folders by collections id', async () => {
       const response = await request(app.getHttpServer())
@@ -237,14 +237,31 @@ describe('Collection - [/collection]', () => {
         }),
       );
     });
-
-    it('should throw error when try to get one collection not associated with a user', async () => {
+    it('should throw an error when trying to get a collection that does not exist', async () => {
       const response = await request(app.getHttpServer())
-        .get('/collection/2')
+        .get('/collection/collection')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+      );
+    });
+    it('should throw error when try to get one collection not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection1')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
+    it('should throw an error when trying to get a collection where the team admin does not match the user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/collection/collection4')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM_AND_ID,
       );
     });
   });
@@ -301,12 +318,24 @@ describe('Collection - [/collection]', () => {
       );
     });
   });
-  it('should delete all environments associated with a collection', async () => {
-    const collectionId = 'collection1';
-    const response = await request(app.getHttpServer())
-      .delete(`/collection/${collectionId}/environments`)
-      .expect(HttpStatus.OK);
 
-    expect(response.body).toEqual({});
+  describe('Delete All environments - [DELETE - /:id/environments]', () => {
+    it('should delete all environments associated with a collection and user', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`/collection/collection3/environments`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({});
+    });
+
+    it('should throw error when try to delete all environments in the collection not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`/collection/collection1/environments`)
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
   });
 });
