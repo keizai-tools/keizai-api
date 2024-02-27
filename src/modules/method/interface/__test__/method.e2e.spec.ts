@@ -90,7 +90,7 @@ describe('Parameter - [/param]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+        METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND,
       );
     });
   });
