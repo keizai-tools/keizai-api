@@ -15,9 +15,6 @@ export const MethodSchema = new EntitySchema<Method>({
     invocationId: {
       type: String,
     },
-    userId: {
-      type: String,
-    },
     inputs: {
       type: 'json',
     },
@@ -38,14 +35,6 @@ export const MethodSchema = new EntitySchema<Method>({
       type: 'many-to-one',
       joinColumn: {
         name: 'invocation_id',
-      },
-      onDelete: 'CASCADE',
-    },
-    user: {
-      target: 'User',
-      type: 'many-to-one',
-      joinColumn: {
-        name: 'user_id',
       },
       onDelete: 'CASCADE',
     },
