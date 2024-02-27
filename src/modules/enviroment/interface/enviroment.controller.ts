@@ -26,11 +26,8 @@ export class EnviromentController {
 
   @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(
-    @Body() createEnviromentDto: CreateEnviromentDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.enviromentService.create(createEnviromentDto, user);
+  async create(@Body() createEnviromentDto: CreateEnviromentDto) {
+    return this.enviromentService.create(createEnviromentDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,23 +38,20 @@ export class EnviromentController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.enviromentService.findOneByIds(user, id);
+  findOne(@Param('id') id: string) {
+    return this.enviromentService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch()
-  update(
-    @Body() updateEnviromentDto: UpdateEnviromentDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.enviromentService.update(updateEnviromentDto, user);
+  update(@Body() updateEnviromentDto: UpdateEnviromentDto) {
+    return this.enviromentService.update(updateEnviromentDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.enviromentService.delete(user, id);
+  delete(@Param('id') id: string) {
+    return this.enviromentService.delete(id);
   }
 
   @UseGuards(JwtAuthGuard)
