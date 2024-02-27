@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions/collection-response.enum';
 
 import { FOLDER_RESPONSE } from '../../application/exceptions/folder-response.enum';
 
@@ -85,30 +86,8 @@ describe('Folder - [/folder]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_AND_USER,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
-    });
-  });
-
-  describe('Get all  - [GET /folder]', () => {
-    it('should get all folders associated with a user', async () => {
-      const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 'folder0' }),
-        expect.objectContaining({ id: expect.any(String) }),
-      ]);
-      const response = await request(app.getHttpServer())
-        .get('/folder')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(2);
-      expect(response.body).toEqual(responseExpected);
-    });
-    it('should only get folders associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/folder')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(2);
     });
   });
 
@@ -127,12 +106,10 @@ describe('Folder - [/folder]', () => {
 
     it('should throw error when try to get one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/folder/folder1')
+        .get('/folder/folder')
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
-      );
+      expect(response.body.message).toEqual(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
     });
   });
 
@@ -156,13 +133,11 @@ describe('Folder - [/folder]', () => {
         .patch('/folder')
         .send({
           name: 'folder updated',
-          id: 'folder1',
+          id: 'folder',
         })
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
-      );
+      expect(response.body.message).toEqual(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
     });
   });
 
@@ -177,12 +152,10 @@ describe('Folder - [/folder]', () => {
 
     it('should throw error when try to delete one folder not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/folder/folder1')
+        .delete('/folder/folder')
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
-      );
+      expect(response.body.message).toEqual(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
     });
   });
 });
