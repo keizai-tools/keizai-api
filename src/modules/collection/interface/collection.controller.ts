@@ -61,8 +61,11 @@ export class CollectionController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async findOne(@Param('id') id: string): Promise<CollectionResponseDto> {
-    return this.collectionService.findOne(id);
+  async findOne(
+    @AuthUser() user: IUserResponse,
+    @Param('id') id: string,
+  ): Promise<CollectionResponseDto> {
+    return this.collectionService.findOneByIds(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -106,13 +109,13 @@ export class CollectionController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  async delete(@Param('id') id: string) {
-    return this.collectionService.delete(id);
+  async delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.collectionService.delete(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id/environments')
-  async deleteAll(@Param('id') id: string) {
-    return this.collectionService.deleteAllEnvironments(id);
+  async deleteAll(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.collectionService.deleteAllEnvironments(id, user.id);
   }
 }
