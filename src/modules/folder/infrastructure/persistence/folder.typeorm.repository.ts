@@ -17,22 +17,19 @@ export class FolderRepository implements IFolderRepository {
     return this.repository.save(folder);
   }
 
-  async findAll(userId: string): Promise<Folder[]> {
+  async findAll(collectionId: string): Promise<Folder[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
         invocations: { selectedMethod: true },
       },
       where: {
-        userId,
+        collectionId,
       },
     });
   }
 
-  async findAllByCollectionId(
-    collectionId: string,
-    userId: string,
-  ): Promise<Folder[]> {
+  async findAllByCollectionId(collectionId: string): Promise<Folder[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
@@ -40,28 +37,29 @@ export class FolderRepository implements IFolderRepository {
       },
       where: {
         collectionId,
-        userId,
       },
     });
   }
 
   async findOne(id: string): Promise<Folder> {
     return await this.repository.findOne({
-      relations: { user: true },
+      relations: {
+        invocations: { selectedMethod: false },
+      },
       where: {
         id,
       },
     });
   }
 
-  async findOneByIds(id: string, userId: string): Promise<Folder> {
+  async findOneByIds(id: string, collectionId: string): Promise<Folder> {
     return await this.repository.findOne({
       relations: {
         invocations: { selectedMethod: true },
       },
       where: {
         id,
-        userId,
+        collectionId,
       },
     });
   }
