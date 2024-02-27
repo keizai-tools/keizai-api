@@ -169,12 +169,6 @@ export class InvocationService {
       );
     }
 
-    if (folder?.userId !== user?.id) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-      );
-    }
-
     const invocationValues: IInvocationValues = {
       name: createFolderDto.name,
       secretKey: createFolderDto.secretKey,
