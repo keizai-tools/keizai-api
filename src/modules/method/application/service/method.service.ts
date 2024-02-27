@@ -60,12 +60,6 @@ export class MethodService {
       createParamDto.invocationId,
     );
 
-    if (invocation?.userId !== user.id) {
-      throw new NotFoundException(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
-    }
-
     const methodValues: IMethodValues = {
       name: createParamDto.name,
       inputs: createParamDto.inputs,
