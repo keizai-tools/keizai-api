@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions/collection-response.enum';
 
 import { ENVIROMENT_RESPONSE } from '../../application/exceptions/enviroment-response.enum';
 
@@ -86,7 +87,7 @@ describe('Environment - [/environment]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     });
     it('should update value of an environment if it already exists with the same name', async () => {

@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions/collection-response.enum';
 
 import { FOLDER_RESPONSE } from '../../application/exceptions/folder-response.enum';
 
@@ -85,7 +86,7 @@ describe('Folder - [/folder]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_AND_USER,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     });
   });
