@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 
 @Injectable()
 export class ResendService {
-  private readonly server;
+  private readonly server: Resend;
   constructor() {
     this.server = new Resend(process.env.RESEND_API_KEY);
   }
