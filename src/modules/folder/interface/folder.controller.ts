@@ -25,11 +25,8 @@ export class FolderController {
 
   @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(
-    @Body() createFolderDto: CreateFolderDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.folderService.create(createFolderDto, user);
+  async create(@Body() createFolderDto: CreateFolderDto) {
+    return this.folderService.create(createFolderDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -40,22 +37,19 @@ export class FolderController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.folderService.findOneByIds(user, id);
+  findOne(@Param('id') id: string) {
+    return this.folderService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch()
-  update(
-    @Body() updateFoldertDto: UpdateFolderDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.folderService.update(updateFoldertDto, user);
+  update(@Body() updateFoldertDto: UpdateFolderDto) {
+    return this.folderService.update(updateFoldertDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.folderService.delete(user, id);
+  delete(@Param('id') id: string) {
+    return this.folderService.delete(id);
   }
 }
