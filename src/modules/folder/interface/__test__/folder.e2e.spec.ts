@@ -103,13 +103,41 @@ describe('Folder - [/folder]', () => {
         invocations: expect.any(Array),
       });
     });
+    it('should get one folder associated with a team', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/folder/folder2')
+        .expect(HttpStatus.OK);
 
-    it('should throw error when try to get one folder not associated with a user', async () => {
+      expect(response.body).toEqual({
+        id: 'folder2',
+        name: 'folder2',
+        invocations: expect.any(Array),
+      });
+    });
+    it('should throw error when try to get one folder not exist', async () => {
       const response = await request(app.getHttpServer())
         .get('/folder/folder')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
+    });
+    it('should throw error when try to get one folder not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/folder/folder1')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_ID,
+      );
+    });
+    it('should throw an error when trying to get a folder where the team admin does not match the user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/folder/folder3')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID,
+      );
     });
   });
 
