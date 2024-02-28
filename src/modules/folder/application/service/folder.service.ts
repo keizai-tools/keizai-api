@@ -8,6 +8,7 @@ import {
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
+import { Folder } from '../../domain/folder.domain';
 import { CreateFolderDto } from '../dto/create-folder.dto';
 import { FolderResponseDto } from '../dto/folder-response.dto';
 import { UpdateFolderDto } from '../dto/update-folder.dto';
@@ -77,11 +78,17 @@ export class FolderService {
     return this.folderMapper.fromEntityToDto(folder);
   }
 
-  async update(updateFolderDto: UpdateFolderDto): Promise<FolderResponseDto> {
-    const folder = await this.folderRepository.findOne(updateFolderDto.id);
-    if (!folder) {
-      throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
-    }
+  async findOneByIds(id: string, userId: string) {
+    const folder = await this.folderRepository.findOne(id);
+    await this.validateFolderByUser(folder, userId);
+    return this.folderMapper.fromEntityToDto(folder);
+  }
+
+  async update(
+    updateFolderDto: UpdateFolderDto,
+    userId: string,
+  ): Promise<FolderResponseDto> {
+    await this.findOneByIds(updateFolderDto.id, userId);
 
     if (updateFolderDto.collectionId) {
       const collection = await this.collectionService.findOne(
@@ -113,16 +120,34 @@ export class FolderService {
     return this.folderMapper.fromEntityToDto(folderSaved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const folder = await this.folderRepository.findOne(id);
-    if (!folder) {
-      throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
-    }
+  async delete(id: string, userId: string): Promise<boolean> {
+    await this.findOneByIds(id, userId);
+
     const folderDeleted = this.folderRepository.delete(id);
     if (!folderDeleted) {
       throw new BadRequestException(FOLDER_RESPONSE.FOLDER_FAILED_DELETED);
     }
 
     return folderDeleted;
+  }
+
+  async validateFolderByUser(folder: Folder, userId: string) {
+    if (!folder) {
+      throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND);
+    }
+
+    const { collection } = folder;
+
+    if (collection.team && collection.team.adminId !== userId) {
+      throw new BadRequestException(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID,
+      );
+    }
+
+    if (collection.user && collection.user.id !== userId) {
+      throw new BadRequestException(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_COLLECTION_ID,
+      );
+    }
   }
 }

@@ -37,19 +37,22 @@ export class FolderController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@Param('id') id: string) {
-    return this.folderService.findOne(id);
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.folderService.findOneByIds(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch()
-  update(@Body() updateFoldertDto: UpdateFolderDto) {
-    return this.folderService.update(updateFoldertDto);
+  update(
+    @AuthUser() user: IUserResponse,
+    @Body() updateFoldertDto: UpdateFolderDto,
+  ) {
+    return this.folderService.update(updateFoldertDto, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@Param('id') id: string) {
-    return this.folderService.delete(id);
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.folderService.delete(id, user.id);
   }
 }
