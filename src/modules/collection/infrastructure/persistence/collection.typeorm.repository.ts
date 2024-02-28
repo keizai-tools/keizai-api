@@ -19,7 +19,12 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOne(id: string): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { user: true, enviroments: true },
+      relations: {
+        team: true,
+        user: true,
+        folders: { invocations: true },
+        enviroments: true,
+      },
       where: {
         id,
       },
@@ -28,10 +33,14 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOneByIds(id: string, userId: string): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { folders: { invocations: true }, enviroments: true },
+      relations: {
+        team: true,
+        user: true,
+        folders: { invocations: true },
+        enviroments: true,
+      },
       where: {
         id,
-        userId,
       },
     });
   }
@@ -56,6 +65,12 @@ export class CollectionRepository implements ICollectionRepository {
   async findAllByTeam(teamId: string): Promise<Collection[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
+      relations: {
+        enviroments: true,
+        folders: {
+          invocations: { methods: true, selectedMethod: true },
+        },
+      },
       where: {
         teamId,
       },

@@ -44,6 +44,7 @@ export class FolderRepository implements IFolderRepository {
   async findOne(id: string): Promise<Folder> {
     return await this.repository.findOne({
       relations: {
+        collection: { team: true, user: true },
         invocations: { selectedMethod: false },
       },
       where: {
@@ -55,6 +56,7 @@ export class FolderRepository implements IFolderRepository {
   async findOneByIds(id: string, collectionId: string): Promise<Folder> {
     return await this.repository.findOne({
       relations: {
+        collection: { team: true, user: true },
         invocations: { selectedMethod: true },
       },
       where: {
