@@ -1,0 +1,13 @@
+entity: UserRoleToTeam
+items:
+  role0:
+    id: 'role0'
+    teamId: '@team0'
+    userId: '@user0'
+    role: 'ADMIN'
+
+  role1:
+    id: 'role1'
+    teamId: '@team1'
+    userId: '@user1'
+    role: 'ADMIN'
