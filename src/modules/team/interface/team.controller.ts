@@ -13,6 +13,8 @@ import {
   AuthUser,
   IUserResponse,
 } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { AuthTeamGuard } from '@/modules/auth/infrastructure/guard/auth-team.guard';
+import { OwnerRoleGuard } from '@/modules/auth/infrastructure/guard/owner-role.guard';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 
 import { CreateTeamDto } from '../application/dto/create-team.dto';
@@ -20,28 +22,27 @@ import { UpdateTeamDto } from '../application/dto/update-team.dto';
 import { TeamService } from '../application/service/team.service';
 
 @Controller('team')
+@UseGuards(JwtAuthGuard)
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
   async findAllByUser(@AuthUser() user: IUserResponse) {
     return this.teamService.findAllByUser(user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('/:id')
-  async findOne(@Param('id') id: string) {
-    return this.teamService.findOne(id);
+  @UseGuards(AuthTeamGuard)
+  @Get('/:teamId')
+  async findOne(@Param('teamId') teamId: string) {
+    return this.teamService.findOne(teamId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('/:id/collections')
-  async findCollectionsByTeam(@Param('id') id: string) {
-    return this.teamService.findCollectionsByTeam(id);
+  @UseGuards(AuthTeamGuard)
+  @Get('/:teamId/collections')
+  async findCollectionsByTeam(@Param('teamId') teamId: string) {
+    return this.teamService.findCollectionsByTeam(teamId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
   async create(
     @Body() createTeamDto: CreateTeamDto,
@@ -50,7 +51,6 @@ export class TeamController {
     return this.teamService.create(createTeamDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/')
   async update(
     @AuthUser() user: IUserResponse,
@@ -59,9 +59,12 @@ export class TeamController {
     return this.teamService.update(updateTeamDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete('/:id')
-  async delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.teamService.delete(id, user.id);
+  @UseGuards(OwnerRoleGuard)
+  @Delete('/:teamId')
+  async delete(
+    @AuthUser() user: IUserResponse,
+    @Param('teamId') teamId: string,
+  ) {
+    return this.teamService.delete(teamId, user.id);
   }
 }
