@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { CreateUserRoleToTeamDto } from '../dto/create-user-role.dto';
+import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
 import { UpdateUserRoleToTeamDto } from '../dto/update-user-role.dto';
 import { ROLE_RESPONSE } from '../exceptions/role-response.enum';
 import { UserRoleToTeamMapper } from '../mapper/role.mapper';
@@ -89,6 +90,26 @@ export class UserRoleOnTeamService {
     } catch (error) {
       throw new BadRequestException(ROLE_RESPONSE.ROLE_FAILED_SAVED);
     }
+  }
+
+  async createAll(
+    userRoleToTeamData: UserRoleToTeamData[],
+  ): Promise<ResponseUserRoletoTeamDto[]> {
+    const usersRoleToSave = userRoleToTeamData.map((userRole) => {
+      return this.userRoleToTeamMapper.fromDtoToEntity(userRole);
+    });
+
+    const usersRoleSaved = await this.userRoleToTeamRepository.saveAll(
+      usersRoleToSave,
+    );
+
+    if (!usersRoleSaved) {
+      throw new BadRequestException(ROLE_RESPONSE.ROLE_FAILED_SAVED);
+    }
+
+    return usersRoleSaved.map((userRole) =>
+      this.userRoleToTeamMapper.fromEntityToDto(userRole),
+    );
   }
 
   async update(updateDto: UpdateUserRoleToTeamDto, userId: string) {
