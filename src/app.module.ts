@@ -16,6 +16,7 @@ import { EnviromentModule } from './modules/enviroment/enviroment.module';
 import { FolderModule } from './modules/folder/folder.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
+import { UserRoleToTeamModule } from './modules/role/role.module';
 import { TeamModule } from './modules/team/team.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { TeamModule } from './modules/team/team.module';
     EnviromentModule,
     TeamModule,
     InvitationModule,
+    UserRoleToTeamModule,
   ],
   controllers: [],
   providers: [],
