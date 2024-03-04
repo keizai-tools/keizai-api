@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { CollectionModule } from '../collection/collection.module';
 import { InvitationModule } from '../invitation/invitation.module';
+import { UserRoleToTeamModule } from '../role/role.module';
 import { TeamMapper } from './application/mapper/team.mapper';
 import { TEAM_REPOSITORY } from './application/repository/team.repository';
 import { TeamService } from './application/service/team.service';
@@ -17,6 +18,7 @@ import { TeamController } from './interface/team.controller';
     forwardRef(() => CollectionModule),
     forwardRef(() => AuthModule),
     forwardRef(() => InvitationModule),
+    forwardRef(() => UserRoleToTeamModule),
   ],
   controllers: [TeamController],
   providers: [

@@ -19,5 +19,6 @@ import { UserRoleToTeamController } from './interface/role.controller';
       useClass: UserRoleToTeamRepository,
     },
   ],
+  exports: [UserRoleOnTeamService, UserRoleToTeamMapper],
 })
 export class UserRoleToTeamModule {}
