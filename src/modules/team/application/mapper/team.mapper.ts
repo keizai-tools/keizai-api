@@ -2,6 +2,7 @@ import { Inject } from '@nestjs/common';
 
 import { CollectionMapper } from '@/modules/collection/application/mapper/collection.mapper';
 import { InvitationMapper } from '@/modules/invitation/application/mapper/invitation.mapper';
+import { UserRoleToTeamMapper } from '@/modules/role/application/mapper/role.mapper';
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
@@ -13,20 +14,26 @@ export class TeamMapper {
     private readonly collectionMapper: CollectionMapper,
     @Inject(InvitationMapper)
     private readonly invitationMapper: InvitationMapper,
+    @Inject(UserRoleToTeamMapper)
+    private readonly userRoleToTeamMapper: UserRoleToTeamMapper,
   ) {}
 
   fromDtoToEntity(teamData: ITeamData): Team {
-    const { name, adminId, users } = teamData;
-    return new Team(name, adminId, users);
+    const { name, adminId } = teamData;
+    return new Team(name, adminId);
   }
 
   fromUpdateDtoToEntity(teamData: IUpdateTeamData): Team {
-    const { name, id, adminId, users } = teamData;
-    return new Team(name, adminId, users, id);
+    const { name, id, adminId } = teamData;
+    return new Team(name, adminId, id);
   }
 
   fromEntityToDto(team: Team): TeamResponseDto {
-    const { name, adminId, id, users, invitations, collections } = team;
+    const { name, adminId, id, invitations, collections, userMembers } = team;
+
+    const userMembersMapped = userMembers?.map((userMember) => {
+      return this.userRoleToTeamMapper.fromEntityToDto(userMember);
+    });
 
     const collectionsMapped = collections?.map((collection) => {
       return this.collectionMapper.fromEntityToDto(collection);
@@ -40,7 +47,7 @@ export class TeamMapper {
       name,
       adminId,
       id,
-      users,
+      userMembersMapped,
       invitationsMapped,
       collectionsMapped,
     );

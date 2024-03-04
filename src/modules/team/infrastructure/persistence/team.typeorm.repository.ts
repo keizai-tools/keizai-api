@@ -18,14 +18,14 @@ export class TeamRepository implements ITeamRepository {
   async findAllByUser(userId: string): Promise<Team[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
-      relations: { users: true, collections: true, invitations: true },
-      where: [{ adminId: userId }, { users: { id: userId } }],
+      relations: { userMembers: true, collections: true, invitations: true },
+      where: [{ adminId: userId }, { userMembers: { id: userId } }],
     });
   }
 
   async findOne(id: string): Promise<Team> {
     return await this.repository.findOne({
-      relations: { users: true, collections: true, invitations: true },
+      relations: { userMembers: true, collections: true, invitations: true },
       where: {
         id,
       },
@@ -34,7 +34,7 @@ export class TeamRepository implements ITeamRepository {
 
   async findOneByIds(id: string, adminId: string): Promise<Team> {
     return await this.repository.findOne({
-      relations: { users: true, collections: true },
+      relations: { userMembers: true, collections: true },
       where: {
         id,
         adminId,
