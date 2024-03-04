@@ -6,6 +6,7 @@ import * as request from 'supertest';
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
+import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
@@ -113,7 +114,6 @@ describe('Team - [/team]', () => {
           id: 'team0',
           name: 'team0',
           adminId: 'user0',
-          userMembers: [],
         }),
       );
     });
@@ -123,6 +123,13 @@ describe('Team - [/team]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+    });
+    it('should throw error when try to get one team with a user not associated a team', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/team/team3')
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      expect(response.body.message).toEqual(AUTH_RESPONSE.USER_NOT_MEMBER_TEAM);
     });
   });
 
@@ -138,6 +145,13 @@ describe('Team - [/team]', () => {
           name: 'collection0',
         }),
       ]);
+    });
+    it('should throw error when try to get collections with a team not associated a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/team/team3/collections')
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      expect(response.body.message).toEqual(AUTH_RESPONSE.USER_NOT_MEMBER_TEAM);
     });
   });
 
@@ -181,13 +195,20 @@ describe('Team - [/team]', () => {
 
       expect(response.body).toEqual({});
     });
-    it('should throw error when try to delete one team not associated with a user ', async () => {
+    it('should throw error when try to delete one team not associated with a user', async () => {
       const response = await request(app.getHttpServer())
         .delete('/team/2')
         .expect(HttpStatus.NOT_FOUND);
 
+      expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+    });
+    it('should throw error when try to delete one team with a user without the owner role', async () => {
+      const response = await request(app.getHttpServer())
+        .delete('/team/team1')
+        .expect(HttpStatus.UNAUTHORIZED);
+
       expect(response.body.message).toEqual(
-        TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID,
+        AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
       );
     });
   });
