@@ -9,10 +9,12 @@ import {
 import { AuthService } from '@/modules/auth/application/service/auth.service';
 import { User } from '@/modules/auth/domain/user.domain';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
-import { CollectionService } from '@/modules/collection/application/service/collection.service';
+import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
 
+import { Team } from '../../domain/team.domain';
 import { CreateTeamDto } from '../dto/create-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
@@ -44,6 +46,8 @@ export class TeamService {
     private readonly userService: AuthService,
     @Inject(forwardRef(() => InvitationService))
     private readonly invitationService: InvitationService,
+    @Inject(forwardRef(() => UserRoleOnTeamService))
+    private readonly userRoleOnTeamService: UserRoleOnTeamService,
   ) {}
 
   async findAllByUser(userId: string) {
@@ -95,11 +99,8 @@ export class TeamService {
     try {
       const teamSaved = await this.teamRepository.save(team);
 
-      await this.createAllInvitations(
-        teamSaved.users,
-        teamSaved.id,
-        teamSaved.adminId,
-      );
+      await this.createAllInvitations(users, teamSaved.id, teamSaved.adminId);
+      await this.createAllUserRole(users, teamSaved);
 
       return this.teamMapper.fromEntityToDto(teamSaved);
     } catch (error) {
@@ -123,6 +124,26 @@ export class TeamService {
     return await this.invitationService.createAll(invitationsToSave);
   }
 
+  async createAllUserRole(users: User[], team: Team | IUpdateTeamData) {
+    const userRoleToSave = users.map((user) => {
+      return {
+        teamId: team.id,
+        userId: user.id,
+        role: 'ADMIN',
+      };
+    });
+
+    if (team instanceof Team && team.adminId) {
+      userRoleToSave.push({
+        teamId: team.id,
+        userId: team.adminId,
+        role: 'OWNER',
+      });
+    }
+
+    return await this.userRoleOnTeamService.createAll(userRoleToSave);
+  }
+
   async update(updateTeamDto: UpdateTeamDto, adminId: string) {
     const teamData: IUpdateTeamData = {
       name: updateTeamDto.name,
@@ -142,7 +163,7 @@ export class TeamService {
 
     if (users.length !== 0) {
       await this.createAllInvitations(users, teamData.id, adminId);
-      teamData.users = users;
+      await this.createAllUserRole(users, teamData);
     }
 
     const teamMapped = this.teamMapper.fromUpdateDtoToEntity(teamData);
