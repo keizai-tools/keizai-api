@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from '@/modules/auth/application/service/auth.service';
+import { Role } from '@/modules/auth/domain/role.enum';
 import { User } from '@/modules/auth/domain/user.domain';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
@@ -129,7 +130,7 @@ export class TeamService {
       return {
         teamId: team.id,
         userId: user.id,
-        role: 'ADMIN',
+        role: Role.ADMIN,
       };
     });
 
@@ -137,7 +138,7 @@ export class TeamService {
       userRoleToSave.push({
         teamId: team.id,
         userId: team.adminId,
-        role: 'OWNER',
+        role: Role.OWNER,
       });
     }
 
