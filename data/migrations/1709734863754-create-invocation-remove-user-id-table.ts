@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InvocationsRemoveUserId1709045674766
+export class CreateInvocationRemoveUserIdTable1709734863754
   implements MigrationInterface
 {
-  name = 'InvocationsRemoveUserId1709045674766';
+  name = 'CreateInvocationRemoveUserIdTable1709734863754';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -12,15 +12,9 @@ export class InvocationsRemoveUserId1709045674766
     await queryRunner.query(
       `ALTER TABLE \`invocation\` DROP COLUMN \`user_id\``,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`invitation\` ADD CONSTRAINT \`FK_e252ae8906b8e70c59c65e4dcbe\` FOREIGN KEY (\`team_id\`) REFERENCES \`team\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE \`invitation\` DROP FOREIGN KEY \`FK_e252ae8906b8e70c59c65e4dcbe\``,
-    );
     await queryRunner.query(
       `ALTER TABLE \`invocation\` ADD \`user_id\` varchar(255) NOT NULL`,
     );
