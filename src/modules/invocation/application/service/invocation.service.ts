@@ -251,7 +251,6 @@ export class InvocationService {
         });
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
-        console.log(error.message);
         throw new NotFoundException(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
