@@ -48,7 +48,6 @@ export interface IInvocationValues {
   postInvocation: string;
   contractId: string;
   folderId: string;
-  userId: string;
   network: string;
 }
 
@@ -87,11 +86,8 @@ export class InvocationService {
     return environment ? environment.value : contractIdValue;
   }
 
-  async runInvocation(user: IUserResponse, id: string) {
-    const invocation = await this.invocationRepository.findOneByIds(
-      id,
-      user.id,
-    );
+  async runInvocation(id: string) {
+    const invocation = await this.invocationRepository.findOne(id);
 
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
@@ -158,7 +154,6 @@ export class InvocationService {
 
   async create(
     createFolderDto: CreateInvocationDto,
-    user: IUserResponse,
   ): Promise<InvocationResponseDto> {
     const folder = await this.folderRepository.findOne(
       createFolderDto.folderId,
@@ -177,7 +172,6 @@ export class InvocationService {
       postInvocation: createFolderDto.postInvocation,
       contractId: createFolderDto.contractId,
       folderId: createFolderDto.folderId,
-      userId: user.id,
       network: createFolderDto.network || NETWORK.SOROBAN_FUTURENET,
     };
 
@@ -203,18 +197,10 @@ export class InvocationService {
     });
   }
 
-  async findOneByIds(
-    user: IUserResponse,
-    id: string,
-  ): Promise<InvocationResponseDto> {
-    const invocation = await this.invocationRepository.findOneByIds(
-      id,
-      user.id,
-    );
+  async findOne(id: string): Promise<InvocationResponseDto> {
+    const invocation = await this.invocationRepository.findOne(id);
     if (!invocation) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-      );
+      throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
     }
     return this.invocationMapper.fromEntityToDto(invocation);
   }
@@ -223,9 +209,8 @@ export class InvocationService {
     updateInvocationDto: UpdateInvocationDto,
     user: IUserResponse,
   ): Promise<InvocationResponseDto> {
-    const invocation = await this.invocationRepository.findOneByIds(
+    const invocation = await this.invocationRepository.findOne(
       updateInvocationDto.id,
-      user.id,
     );
     this.invocationException.validateInvocation(
       invocation,
@@ -260,13 +245,11 @@ export class InvocationService {
             outputs: method.outputs,
             docs: method.docs,
             invocationId: invocation.id,
-            userId: user.id,
           };
           return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
         });
         await this.methodRepository.saveAll(methodsMapped);
       } catch (error) {
-        console.log(error.message);
         throw new NotFoundException(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
@@ -287,7 +270,6 @@ export class InvocationService {
     const invocationValues: IUpdateInvocationValues =
       this.invocationMapper.fromUpdateDtoToInvocationValues(
         updateInvocationDto,
-        user.id,
       );
 
     const invocationMapped =
@@ -307,15 +289,10 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
 
-  async delete(user: IUserResponse, id: string): Promise<boolean> {
-    const invocation = await this.invocationRepository.findOneByIds(
-      id,
-      user.id,
-    );
+  async delete(id: string): Promise<boolean> {
+    const invocation = await this.invocationRepository.findOne(id);
     if (!invocation) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-      );
+      throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
     }
     return this.invocationRepository.delete(id);
   }

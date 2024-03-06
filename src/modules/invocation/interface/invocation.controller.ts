@@ -27,11 +27,8 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(
-    @Body() createInvocationDto: CreateInvocationDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.invocationService.create(createInvocationDto, user);
+  async create(@Body() createInvocationDto: CreateInvocationDto) {
+    return this.invocationService.create(createInvocationDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -42,14 +39,14 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.findOneByIds(user, id);
+  findOne(@Param('id') id: string) {
+    return this.invocationService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id/run')
-  runInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.runInvocation(user, id);
+  runInvocation(@Param('id') id: string) {
+    return this.invocationService.runInvocation(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -70,7 +67,7 @@ export class InvocationController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.delete(user, id);
+  delete(@Param('id') id: string) {
+    return this.invocationService.delete(id);
   }
 }

@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions/collection-response.enum';
 
 import { ENVIROMENT_RESPONSE } from '../../application/exceptions/enviroment-response.enum';
 
@@ -86,7 +87,7 @@ describe('Environment - [/environment]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     });
     it('should update value of an environment if it already exists with the same name', async () => {
@@ -99,20 +100,6 @@ describe('Environment - [/environment]', () => {
         .send({ ...enviromentDto, collectionId: 'collection0' })
         .expect(HttpStatus.CREATED);
 
-      expect(response.body).toEqual(responseExpected);
-    });
-  });
-  describe('Get all  - [GET /environment]', () => {
-    it('should get all environments associated with a collection', async () => {
-      const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 'enviroment0' }),
-        expect.objectContaining({ id: expect.any(String) }),
-      ]);
-      const response = await request(app.getHttpServer())
-        .get('/environment')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(2);
       expect(response.body).toEqual(responseExpected);
     });
   });
@@ -131,11 +118,11 @@ describe('Environment - [/environment]', () => {
     });
     it('should throw error when try to get one environment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/environment/enviroment1')
+        .get('/environment/enviroment')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND,
       );
     });
   });
@@ -161,12 +148,12 @@ describe('Environment - [/environment]', () => {
         .patch('/environment')
         .send({
           name: 'enviroment updated',
-          id: 'enviroment1',
+          id: 'enviroment',
         })
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND,
       );
     });
   });
@@ -194,11 +181,11 @@ describe('Environment - [/environment]', () => {
 
     it('should throw error when try to delete one environment not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/environment/enviroment1')
+        .delete('/environment/enviroment')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND,
       );
     });
   });

@@ -35,9 +35,6 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     folderId: {
       type: String,
     },
-    userId: {
-      type: String,
-    },
     network: {
       type: String,
     },
@@ -52,14 +49,6 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       type: 'many-to-one',
       joinColumn: {
         name: 'folder_id',
-      },
-      onDelete: 'CASCADE',
-    },
-    user: {
-      target: 'User',
-      type: 'many-to-one',
-      joinColumn: {
-        name: 'user_id',
       },
       onDelete: 'CASCADE',
     },

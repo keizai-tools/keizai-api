@@ -25,11 +25,8 @@ export class MethodController {
 
   @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(
-    @Body() createMethodDto: CreateMethodDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.methodService.create(createMethodDto, user);
+  async create(@Body() createMethodDto: CreateMethodDto) {
+    return this.methodService.create(createMethodDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -40,22 +37,19 @@ export class MethodController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.methodService.findOneByIds(user, id);
+  findOne(@Param('id') id: string) {
+    return this.methodService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch()
-  update(
-    @Body() updateMethodDto: UpdateMethodDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.methodService.update(updateMethodDto, user);
+  update(@Body() updateMethodDto: UpdateMethodDto) {
+    return this.methodService.update(updateMethodDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.methodService.delete(user, id);
+  delete(@Param('id') id: string) {
+    return this.methodService.delete(id);
   }
 }

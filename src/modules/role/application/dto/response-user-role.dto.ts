@@ -9,26 +9,18 @@ export class ResponseUserRoletoTeamDto {
   @IsNotEmpty()
   teamId: string;
 
+  @IsString()
   @IsNotEmpty()
-  user: {
-    id: string;
-    email: string;
-    role: string;
-  };
+  userId: string;
 
-  constructor(
-    id: string,
-    teamId: string,
-    userId: string,
-    userEmail: string,
-    role: string,
-  ) {
+  @IsString()
+  @IsNotEmpty()
+  role: string;
+
+  constructor(id: string, teamId: string, userId: string, role: string) {
     this.id = id;
     this.teamId = teamId;
-    this.user = {
-      id: userId,
-      email: userEmail,
-      role: role,
-    };
+    this.userId = userId;
+    this.role = role;
   }
 }

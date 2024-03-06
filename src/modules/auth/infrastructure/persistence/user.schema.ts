@@ -33,11 +33,10 @@ export const UserSchema = new EntitySchema<User>({
         name: 'user_id',
       },
     },
-    teams: {
-      target: 'Team',
-      type: 'many-to-many',
-      inverseSide: 'users',
-      onDelete: 'CASCADE',
+    memberTeams: {
+      target: 'UserRoleToTeam',
+      type: 'one-to-many',
+      inverseSide: 'user',
     },
     invitationsReceived: {
       target: 'Invitation',

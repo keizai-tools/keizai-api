@@ -1,8 +1,8 @@
 import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
-import { User } from '@/modules/auth/domain/user.domain';
 import { CollectionResponseDto } from '@/modules/collection/application/dto/collection-response.dto';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
+import { ResponseUserRoletoTeamDto } from '@/modules/role/application/dto/response-user-role.dto';
 
 export class TeamResponseDto {
   @IsString()
@@ -19,7 +19,7 @@ export class TeamResponseDto {
 
   @IsNotEmpty()
   @IsArray()
-  users: User[];
+  userMembers: ResponseUserRoletoTeamDto[];
 
   @IsNotEmpty()
   @IsArray()
@@ -33,14 +33,14 @@ export class TeamResponseDto {
     name: string,
     adminId: string,
     id: string,
-    users: User[],
+    userMembers: ResponseUserRoletoTeamDto[],
     invitations: ResponseInvitationDto[],
     collections: CollectionResponseDto[],
   ) {
     this.name = name;
     this.adminId = adminId;
     this.id = id;
-    this.users = users;
+    this.userMembers = userMembers;
     this.invitations = invitations;
     this.collections = collections;
   }

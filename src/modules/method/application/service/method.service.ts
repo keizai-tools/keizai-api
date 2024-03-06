@@ -32,7 +32,6 @@ export interface IMethodValues {
   params?: { name: string; value: string }[];
   docs: string;
   invocationId: string;
-  userId: string;
 }
 
 export interface IUpdateMethodValues extends Partial<IMethodValues> {
@@ -52,18 +51,13 @@ export class MethodService {
     private readonly invocationRepository: IInvocationRepository,
   ) {}
 
-  async create(
-    createParamDto: CreateMethodDto,
-    user: IUserResponse,
-  ): Promise<MethodResponseDto> {
+  async create(createParamDto: CreateMethodDto): Promise<MethodResponseDto> {
     const invocation = await this.invocationRepository.findOne(
       createParamDto.invocationId,
     );
 
-    if (invocation?.userId !== user.id) {
-      throw new NotFoundException(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+    if (!invocation) {
+      throw new NotFoundException(METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND);
     }
 
     const methodValues: IMethodValues = {
@@ -73,7 +67,6 @@ export class MethodService {
       params: createParamDto.params,
       docs: createParamDto.docs,
       invocationId: createParamDto.invocationId,
-      userId: user.id,
     };
 
     const method = this.methodMapper.fromDtoToEntity(methodValues);
@@ -105,32 +98,19 @@ export class MethodService {
     return methods.map((param) => this.methodMapper.fromEntityToDto(param));
   }
 
-  async findOneByIds(
-    user: IUserResponse,
-    id: string,
-  ): Promise<MethodResponseDto> {
-    const method = await this.methodRepository.findOneByIds(id, user.id);
+  async findOne(id: string): Promise<MethodResponseDto> {
+    const method = await this.methodRepository.findOne(id);
     if (!method) {
-      throw new NotFoundException(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
     }
     return this.methodMapper.fromEntityToDto(method);
   }
 
-  async update(
-    updateMethodDto: UpdateMethodDto,
-    user: IUserResponse,
-  ): Promise<MethodResponseDto> {
-    const method = await this.methodRepository.findOneByIds(
-      updateMethodDto.id,
-      user.id,
-    );
+  async update(updateMethodDto: UpdateMethodDto): Promise<MethodResponseDto> {
+    const method = await this.methodRepository.findOne(updateMethodDto.id);
 
     if (!method) {
-      throw new NotFoundException(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
     }
 
     const invocation = await this.invocationRepository.findOne(
@@ -144,7 +124,6 @@ export class MethodService {
       name: updateMethodDto.name,
       invocationId: updateMethodDto.invocationId,
       params: updateMethodDto.params,
-      userId: user.id,
       id: updateMethodDto.id,
     };
     const methodMapped = this.methodMapper.fromUpdateDtoToEntity(methodValues);
@@ -159,12 +138,10 @@ export class MethodService {
     return this.methodMapper.fromEntityToDto(methodSaved);
   }
 
-  async delete(user: IUserResponse, id: string): Promise<boolean> {
-    const method = await this.methodRepository.findOneByIds(id, user.id);
+  async delete(id: string): Promise<boolean> {
+    const method = await this.methodRepository.findOne(id);
     if (!method) {
-      throw new NotFoundException(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
     }
     return this.methodRepository.delete(id);
   }

@@ -25,7 +25,6 @@ export interface IEnviromentValues {
   name: string;
   value: string;
   collectionId: string;
-  userId: string;
 }
 
 export interface IUpdateEnviromentValues extends Partial<IEnviromentValues> {
@@ -45,16 +44,14 @@ export class EnviromentService {
 
   async create(
     createEnviromentDto: CreateEnviromentDto,
-    user: IUserResponse,
   ): Promise<EnviromentResponseDto> {
-    const collection = await this.collectionService.findOneByIds(
+    const collection = await this.collectionService.findOne(
       createEnviromentDto.collectionId,
-      user.id,
     );
 
     if (!collection)
       throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER,
+        ENVIROMENT_RESPONSE.ENVIROMENT_COLLECTION_NOT_FOUND,
       );
 
     const environments = await this.enviromentRepository.findByNames(
@@ -80,7 +77,6 @@ export class EnviromentService {
       name: createEnviromentDto.name,
       value: createEnviromentDto.value,
       collectionId: createEnviromentDto.collectionId,
-      userId: user.id,
     };
     const enviroment = this.enviromentMapper.fromDtoToEntity(enviromentValues);
 
@@ -95,7 +91,6 @@ export class EnviromentService {
   async createAll(
     createEnvironmentsDto: CreateEnvironmentsDto[],
     collectionId: string,
-    userId: string,
   ): Promise<EnviromentResponseDto[]> {
     const environmentsToSave: Enviroment[] = createEnvironmentsDto.map(
       (environment) => {
@@ -103,7 +98,6 @@ export class EnviromentService {
           name: environment.name,
           value: environment.value,
           collectionId,
-          userId,
         };
         return this.enviromentMapper.fromDtoToEntity(environmentValue);
       },
@@ -132,18 +126,10 @@ export class EnviromentService {
     );
   }
 
-  async findOneByIds(
-    user: IUserResponse,
-    id: string,
-  ): Promise<EnviromentResponseDto> {
-    const enviroment = await this.enviromentRepository.findOneByIds(
-      id,
-      user.id,
-    );
+  async findOne(id: string): Promise<EnviromentResponseDto> {
+    const enviroment = await this.enviromentRepository.findOne(id);
     if (!enviroment)
-      throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
-      );
+      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
     return this.enviromentMapper.fromEntityToDto(enviroment);
   }
 
@@ -161,21 +147,16 @@ export class EnviromentService {
 
   async update(
     updateEnviromentDto: UpdateEnviromentDto,
-    user: IUserResponse,
   ): Promise<EnviromentResponseDto> {
-    const enviroment = await this.enviromentRepository.findOneByIds(
+    const enviroment = await this.enviromentRepository.findOne(
       updateEnviromentDto.id,
-      user.id,
     );
     if (!enviroment)
-      throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
-      );
+      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
 
     if (updateEnviromentDto.collectionId) {
-      const collection = await this.collectionService.findOneByIds(
+      const collection = await this.collectionService.findOne(
         updateEnviromentDto.collectionId,
-        user.id,
       );
       if (!collection)
         throw new NotFoundException(
@@ -187,7 +168,6 @@ export class EnviromentService {
       name: updateEnviromentDto.name,
       value: updateEnviromentDto.value,
       collectionId: updateEnviromentDto.collectionId,
-      userId: user.id,
       id: updateEnviromentDto.id,
     };
     const enviromentMapped =
@@ -209,15 +189,10 @@ export class EnviromentService {
     return this.enviromentMapper.fromEntityToDto(enviromentSaved);
   }
 
-  async delete(user: IUserResponse, id: string): Promise<boolean> {
-    const enviroment = await this.enviromentRepository.findOneByIds(
-      id,
-      user.id,
-    );
+  async delete(id: string): Promise<boolean> {
+    const enviroment = await this.enviromentRepository.findOne(id);
     if (!enviroment)
-      throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
-      );
+      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
     const enviromentDeleted = this.enviromentRepository.delete(id);
     if (!enviromentDeleted)
       throw new BadRequestException(

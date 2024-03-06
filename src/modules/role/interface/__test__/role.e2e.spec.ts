@@ -101,20 +101,14 @@ describe('UserRoleToTeam - [/role]', () => {
         expect.objectContaining({
           id: expect.any(String),
           teamId: 'team0',
-          user: {
-            id: 'user0',
-            email: 'user0',
-            role: 'ADMIN',
-          },
+          userId: 'user0',
+          role: 'ADMIN',
         }),
         expect.objectContaining({
           id: expect.any(String),
           teamId: 'team0',
-          user: {
-            id: 'user0',
-            email: 'user0',
-            role: 'ADMIN',
-          },
+          userId: 'user0',
+          role: 'ADMIN',
         }),
       ]);
 
@@ -135,11 +129,8 @@ describe('UserRoleToTeam - [/role]', () => {
       expect(response.body).toEqual({
         id: 'role0',
         teamId: 'team0',
-        user: {
-          id: 'user0',
-          email: 'user0',
-          role: 'ADMIN',
-        },
+        userId: 'user0',
+        role: 'ADMIN',
       });
     });
     it('should throw error when try to get one user role not associated with a user', async () => {

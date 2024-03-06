@@ -15,10 +15,10 @@ export class InvocationRepository implements IInvocationRepository {
 
   async save(invocation: Invocation): Promise<Invocation> {
     await this.repository.save(invocation);
-    return this.findOneByIds(invocation.id, invocation.userId);
+    return this.findOne(invocation.id);
   }
 
-  async findAll(userId: string): Promise<Invocation[]> {
+  async findAll(folderId: string): Promise<Invocation[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
@@ -27,23 +27,12 @@ export class InvocationRepository implements IInvocationRepository {
         methods: true,
       },
       where: {
-        userId,
+        folderId,
       },
     });
   }
 
   async findOne(id: string): Promise<Invocation> {
-    return await this.repository.findOne({
-      relations: {
-        methods: true,
-      },
-      where: {
-        id,
-      },
-    });
-  }
-
-  async findOneByIds(id: string, userId: string): Promise<Invocation> {
     return await this.repository.findOne({
       relations: {
         folder: true,
@@ -52,7 +41,20 @@ export class InvocationRepository implements IInvocationRepository {
       },
       where: {
         id,
-        userId,
+      },
+    });
+  }
+
+  async findOneByIds(id: string, folderId: string): Promise<Invocation> {
+    return await this.repository.findOne({
+      relations: {
+        folder: true,
+        selectedMethod: true,
+        methods: true,
+      },
+      where: {
+        id,
+        folderId,
       },
     });
   }

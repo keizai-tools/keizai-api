@@ -1,4 +1,5 @@
 export enum ENVIROMENT_RESPONSE {
+  ENVIRONMENT_NOT_FOUND = 'Variable not found',
   ENVIROMENT_NOT_FOUND_BY_COLLECTION_AND_USER = 'The user of the collection and the logged in user do not match',
   ENVIROMENT_NOT_FOUND_BY_USER_ID = 'The user id does not match',
   ENVIROMENT_COLLECTION_NOT_FOUND = 'The collection does not exist',

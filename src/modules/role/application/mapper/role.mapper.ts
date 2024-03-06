@@ -18,7 +18,7 @@ export class UserRoleToTeamMapper {
     return new UserRoleToTeam(teamId, userId, role, id);
   }
   fromEntityToDto(userRole: UserRoleToTeam): ResponseUserRoletoTeamDto {
-    const { id, teamId, userId, user, role } = userRole;
-    return new ResponseUserRoletoTeamDto(id, teamId, userId, user.email, role);
+    const { id, teamId, userId, role } = userRole;
+    return new ResponseUserRoletoTeamDto(id, teamId, userId, role);
   }
 }

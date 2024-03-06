@@ -18,20 +18,10 @@ export const TeamSchema = new EntitySchema<Team>({
     },
   },
   relations: {
-    users: {
-      target: 'User',
-      type: 'many-to-many',
-      joinTable: {
-        name: 'team_user',
-        joinColumn: {
-          name: 'team_id',
-        },
-        inverseJoinColumn: {
-          name: 'user_id',
-        },
-      },
-      inverseSide: 'teams',
-      onDelete: 'CASCADE',
+    userMembers: {
+      target: 'UserRoleToTeam',
+      type: 'one-to-many',
+      inverseSide: 'team',
     },
     invitations: {
       target: 'Invitation',

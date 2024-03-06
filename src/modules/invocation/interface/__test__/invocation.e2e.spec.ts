@@ -115,28 +115,6 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Get all  - [GET /invocation]', () => {
-    it('should get all invocations associated with a user', async () => {
-      const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: 'invocation0' }),
-        expect.objectContaining({ id: expect.any(String) }),
-      ]);
-      const response = await request(app.getHttpServer())
-        .get('/invocation')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(6);
-      expect(response.body).toEqual(responseExpected);
-    });
-    it('should only get invocations associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(6);
-    });
-  });
-
   describe('Get one  - [GET /invocation/:id]', () => {
     it('should get one invocation associated with a user', async () => {
       const responseExpected = expect.objectContaining({
@@ -156,11 +134,11 @@ describe('Invocation - [/invocation]', () => {
 
     it('should throw error when try to get one invocation not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation/invocation1')
+        .get('/invocation/invocation')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
   });
@@ -442,11 +420,11 @@ describe('Invocation - [/invocation]', () => {
 
     it('should throw error when try to delete one invocation not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/invocation/invocation1')
+        .delete('/invocation/invocation')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
   });
