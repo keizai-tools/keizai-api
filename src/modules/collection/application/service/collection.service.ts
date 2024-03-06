@@ -163,7 +163,6 @@ export class CollectionService {
     return await this.environmentService.createAll(
       createEnvironmentsDto,
       collectionId,
-      userId,
     );
   }
 

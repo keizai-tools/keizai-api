@@ -18,9 +18,6 @@ export const EnviromentSchema = new EntitySchema<Enviroment>({
     collectionId: {
       type: String,
     },
-    userId: {
-      type: String,
-    },
   },
   relations: {
     collection: {
@@ -28,14 +25,6 @@ export const EnviromentSchema = new EntitySchema<Enviroment>({
       type: 'many-to-one',
       joinColumn: {
         name: 'collection_id',
-      },
-      onDelete: 'CASCADE',
-    },
-    user: {
-      target: 'User',
-      type: 'many-to-one',
-      joinColumn: {
-        name: 'user_id',
       },
       onDelete: 'CASCADE',
     },

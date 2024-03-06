@@ -7,8 +7,8 @@ import {
 
 export class EnviromentMapper {
   fromDtoToEntity(createEnviromentDto: IEnviromentValues): Enviroment {
-    const { name, value, collectionId, userId } = createEnviromentDto;
-    return new Enviroment(name, value, userId, collectionId);
+    const { name, value, collectionId } = createEnviromentDto;
+    return new Enviroment(name, value, collectionId);
   }
 
   fromEntityToDto(enviroment: Enviroment): EnviromentResponseDto {
@@ -19,7 +19,7 @@ export class EnviromentMapper {
   fromUpdateDtoToEntity(
     updateEnviromentDto: IUpdateEnviromentValues,
   ): Enviroment {
-    const { name, value, collectionId, userId, id } = updateEnviromentDto;
-    return new Enviroment(name, value, userId, collectionId, id);
+    const { name, value, collectionId, id } = updateEnviromentDto;
+    return new Enviroment(name, value, collectionId, id);
   }
 }
