@@ -37,12 +37,6 @@ export class TeamController {
     return this.teamService.findOne(teamId);
   }
 
-  @UseGuards(AuthTeamGuard)
-  @Get('/:teamId/collections')
-  async findCollectionsByTeam(@Param('teamId') teamId: string) {
-    return this.teamService.findCollectionsByTeam(teamId);
-  }
-
   @Post('/')
   async create(
     @Body() createTeamDto: CreateTeamDto,
