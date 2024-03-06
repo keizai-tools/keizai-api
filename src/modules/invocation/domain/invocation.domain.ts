@@ -1,5 +1,4 @@
 import { Base } from '@/common/domain/base.domain';
-import { User } from '@/modules/auth/domain/user.domain';
 import { Folder } from '@/modules/folder/domain/folder.domain';
 import { Method } from '@/modules/method/domain/method.domain';
 
@@ -11,11 +10,9 @@ export class Invocation extends Base {
   postInvocation: string;
   contractId: string;
   folderId: string;
-  userId: string;
   network: string;
   selectedMethodId?: string;
   folder?: Folder;
-  user?: User;
   methods?: Method[];
   selectedMethod?: Method;
   constructor(
@@ -26,7 +23,6 @@ export class Invocation extends Base {
     postInvocation: string,
     contractId: string,
     folderId: string,
-    userId: string,
     network: string,
     selectedMethodId?: string,
     id?: string,
@@ -40,7 +36,6 @@ export class Invocation extends Base {
     this.postInvocation = postInvocation;
     this.contractId = contractId;
     this.folderId = folderId;
-    this.userId = userId;
     this.network = network;
     this.selectedMethodId = selectedMethodId;
     this.id = id;

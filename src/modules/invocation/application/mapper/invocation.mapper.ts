@@ -28,7 +28,6 @@ export class InvocationMapper {
       postInvocation,
       contractId,
       folderId,
-      userId,
       network,
     } = createInvocationDto;
     return new Invocation(
@@ -39,7 +38,6 @@ export class InvocationMapper {
       postInvocation,
       contractId,
       folderId,
-      userId,
       network,
     );
   }
@@ -97,7 +95,6 @@ export class InvocationMapper {
       folderId,
       selectedMethodId,
       id,
-      userId,
     } = updateInvocationDto;
     return new Invocation(
       name,
@@ -107,7 +104,6 @@ export class InvocationMapper {
       postInvocation,
       contractId,
       folderId,
-      userId,
       network,
       selectedMethodId,
       id,
@@ -115,7 +111,6 @@ export class InvocationMapper {
   }
   fromUpdateDtoToInvocationValues(
     updateInvocationDto: UpdateInvocationDto,
-    userId: string,
   ): IUpdateInvocationValues {
     const {
       name,
@@ -139,7 +134,6 @@ export class InvocationMapper {
       network,
       folderId,
       selectedMethodId,
-      userId,
       id,
     };
   }
