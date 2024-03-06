@@ -266,7 +266,6 @@ export class InvocationService {
             outputs: method.outputs,
             docs: method.docs,
             invocationId: invocation.id,
-            userId: user.id,
           };
           return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
         });

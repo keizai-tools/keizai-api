@@ -90,31 +90,11 @@ describe('Parameter - [/param]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+        METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND,
       );
     });
   });
-  describe('Get all - [GET /method]', () => {
-    it('Should get all parameters associated with a user', async () => {
-      const responseExpected = expect.arrayContaining([
-        expect.objectContaining({ id: expect.any(String) }),
-        expect.objectContaining({ id: 'method0' }),
-      ]);
-      const response = await request(app.getHttpServer())
-        .get('/method')
-        .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
-      expect(response.body).toEqual(responseExpected);
-    });
-    it('Should only get parameters associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/method')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toHaveLength(2);
-    });
-  });
   describe('Get one - [GET /method/:id]', () => {
     it('Should get one method associated with a user', async () => {
       const responseExpected = expect.objectContaining({
@@ -130,14 +110,13 @@ describe('Parameter - [/param]', () => {
     });
     it('Should throw error when try to get one parameter not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/method/method1')
+        .get('/method/method')
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      expect(response.body.message).toEqual(METHOD_RESPONSE.METHOD_NOT_FOUND);
     });
   });
+
   describe('Update one  - [PUT /method/:id]', () => {
     it('Should update one method associated with a user', async () => {
       const responseExpected = expect.objectContaining({
@@ -163,9 +142,7 @@ describe('Parameter - [/param]', () => {
         })
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      expect(response.body.message).toEqual(METHOD_RESPONSE.METHOD_NOT_FOUND);
     });
   });
 
@@ -180,12 +157,10 @@ describe('Parameter - [/param]', () => {
 
     it('Should throw error when try to delete one param not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .delete('/method/method1')
+        .delete('/method/method')
         .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
-        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
-      );
+      expect(response.body.message).toEqual(METHOD_RESPONSE.METHOD_NOT_FOUND);
     });
   });
 });
