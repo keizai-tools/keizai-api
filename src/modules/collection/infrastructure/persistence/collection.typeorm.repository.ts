@@ -31,7 +31,7 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
-  async findOneByIds(id: string, userId: string): Promise<Collection> {
+  async findOneByIds(id: string): Promise<Collection> {
     return await this.repository.findOne({
       relations: {
         team: true,
