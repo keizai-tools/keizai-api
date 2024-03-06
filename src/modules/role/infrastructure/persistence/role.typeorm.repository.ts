@@ -55,6 +55,10 @@ export class UserRoleToTeamRepository implements IUserRoleToTeamRepository {
     return this.repository.save(entity);
   }
 
+  async saveAll(entities: UserRoleToTeam[]): Promise<UserRoleToTeam[]> {
+    return this.repository.save(entities);
+  }
+
   async update(userRoleToTeam: UserRoleToTeam): Promise<UserRoleToTeam> {
     return await this.repository.preload(userRoleToTeam);
   }

@@ -30,6 +30,7 @@ export const UserRoleToTeamSchema = new EntitySchema<UserRoleToTeam>({
       type: 'many-to-one',
       target: 'Team',
       inverseSide: 'userRoleToTeam',
+      onDelete: 'CASCADE',
     },
   },
 });

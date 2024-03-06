@@ -7,6 +7,7 @@ export interface IUserRoleToTeamRepository
   findAllByTeamId(teamId: string): Promise<UserRoleToTeam[]>;
   findAllByUserId(userId: string): Promise<UserRoleToTeam[]>;
   findOneByIds(id: string, userId: string): Promise<UserRoleToTeam>;
+  saveAll(entities: UserRoleToTeam[]): Promise<UserRoleToTeam[]>;
   update(team: UserRoleToTeam): Promise<UserRoleToTeam>;
   delete(id: string): Promise<boolean>;
 }
