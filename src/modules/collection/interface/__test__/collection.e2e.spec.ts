@@ -6,6 +6,7 @@ import * as request from 'supertest';
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
+import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
@@ -74,20 +75,6 @@ describe('Collection - [/collection]', () => {
         .expect(HttpStatus.CREATED);
 
       expect(response.body).toEqual({ name: 'test', id: expect.any(String) });
-    });
-    it('It should create a new collection with a team id', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/collection')
-        .send({
-          name: 'team test',
-          teamId: 'team1',
-        })
-        .expect(HttpStatus.CREATED);
-
-      expect(response.body).toEqual({
-        name: 'team test',
-        id: expect.any(String),
-      });
     });
   });
 
@@ -225,26 +212,13 @@ describe('Collection - [/collection]', () => {
       );
     });
 
-    it('should get one collection associated with a team', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/collection/collection2')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          id: 'collection2',
-          name: 'collection2',
-        }),
-      );
-    });
-
     it('should throw error when try to get one collection not associated with a user', async () => {
       const response = await request(app.getHttpServer())
         .get('/collection/2')
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
       );
     });
   });
@@ -262,21 +236,6 @@ describe('Collection - [/collection]', () => {
       expect(response.body).toEqual({
         id: 'collection0',
         name: 'collection updated',
-      });
-    });
-    it('should update one collection associated with a team', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/collection')
-        .send({
-          name: 'team collection updated',
-          id: 'collection2',
-          teamId: 'team1',
-        })
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toEqual({
-        id: 'collection2',
-        name: 'team collection updated',
       });
     });
   });
@@ -308,5 +267,113 @@ describe('Collection - [/collection]', () => {
       .expect(HttpStatus.OK);
 
     expect(response.body).toEqual({});
+  });
+  describe('by Team - [/team/:teamId/collection]', () => {
+    const team0Route = '/team/team0';
+    describe('Create one  - [POST /collection]', () => {
+      it('should create a new collection with a team id', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/collection')
+          .send({
+            name: 'team test',
+            teamId: 'team0',
+          })
+          .expect(HttpStatus.CREATED);
+
+        expect(response.body).toEqual({
+          name: 'team test',
+          id: expect.any(String),
+        });
+      });
+    });
+    describe('Get all - [GET - /collection]', () => {
+      it('should get all collections associated with a team', async () => {
+        const responseExpected = expect.arrayContaining([
+          expect.objectContaining({ id: 'collection3' }),
+          expect.objectContaining({ id: expect.any(String) }),
+        ]);
+        const response = await request(app.getHttpServer())
+          .get(`${team0Route}/collection`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toHaveLength(2);
+        expect(response.body).toEqual(responseExpected);
+      });
+      it('should throw error when try to get collections with a team not associated a user', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/team/team2/collection')
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(response.body.message).toEqual(
+          AUTH_RESPONSE.USER_NOT_MEMBER_TEAM,
+        );
+      });
+    });
+    describe('Get one - [GET /:id]', () => {
+      it('should get one collection associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${team0Route}/collection/collection3`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.objectContaining({
+            id: 'collection3',
+            name: 'collection3',
+          }),
+        );
+      });
+      it('should throw error when try to get one collection not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/team/team1/collection/collection3`)
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+        );
+      });
+    });
+    describe('Update one - [GET /:id]', () => {
+      it('should update one collection associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`${team0Route}/collection`)
+          .send({
+            name: 'collection3 updated',
+            id: 'collection3',
+          })
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual({
+          name: 'collection3 updated',
+          id: 'collection3',
+        });
+      });
+      it('should throw error when try to update one collection not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/team/team1/collection/collection3`)
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+        );
+      });
+    });
+    describe('Delete one - [Delete /:id]', () => {
+      it('should delete one collection associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${team0Route}/collection/collection3`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual({});
+      });
+      it('should throw error when try to delete one collection not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .delete('/team/team1/collection/collection3')
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+        );
+      });
+    });
   });
 });

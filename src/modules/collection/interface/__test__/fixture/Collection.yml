@@ -14,3 +14,8 @@ items:
     id: 'collection2'
     name: 'collection2'
     teamId: '@team1'
+
+  collection3:
+    id: 'collection3'
+    name: 'collection3'
+    teamId: '@team0'
