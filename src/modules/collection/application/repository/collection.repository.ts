@@ -6,6 +6,7 @@ export interface ICollectionRepository extends IBaseRepository<Collection> {
   findAllByUser(userId: string): Promise<Collection[]>;
   findAllByTeam(teamId: string): Promise<Collection[]>;
   findOneByIds(id: string, userId: string): Promise<Collection>;
+  findOneByTeamId(id: string, teamId: string): Promise<Collection>;
   update(collection: Collection): Promise<Collection>;
   delete(id: string): Promise<boolean>;
 }

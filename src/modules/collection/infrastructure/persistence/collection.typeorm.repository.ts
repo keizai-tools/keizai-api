@@ -36,6 +36,16 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
+  async findOneByTeamId(id: string, teamId: string): Promise<Collection> {
+    return await this.repository.findOne({
+      relations: { folders: { invocations: true }, enviroments: true },
+      where: {
+        id,
+        teamId,
+      },
+    });
+  }
+
   async findAllByUser(userId: string): Promise<Collection[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
@@ -56,6 +66,12 @@ export class CollectionRepository implements ICollectionRepository {
   async findAllByTeam(teamId: string): Promise<Collection[]> {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
+      relations: {
+        enviroments: true,
+        folders: {
+          invocations: { methods: true, selectedMethod: true },
+        },
+      },
       where: {
         teamId,
       },
