@@ -13,6 +13,7 @@ import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
+import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
 import { CreateCollectionDto } from '../dto/create-collection.dto';
 import { UpdateCollectionDto } from '../dto/update-collection.dto';
@@ -76,6 +77,22 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collection);
   }
 
+  async findOneByTeamId(
+    id: string,
+    teamId: string,
+  ): Promise<CollectionResponseDto> {
+    const collection = await this.collectionRepository.findOneByTeamId(
+      id,
+      teamId,
+    );
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+      );
+    }
+    return this.collectionMapper.fromEntityToDto(collection);
+  }
+
   async findOneByIds(
     id: string,
     userId: string,
@@ -89,7 +106,7 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collection);
   }
 
-  async findEnvironmentsByCollectionId(
+  async findEnvironmentsByCollectionUserId(
     collectionId: string,
     userId: string,
   ): Promise<EnviromentResponseDto[]> {
@@ -97,6 +114,19 @@ export class CollectionService {
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+    return collection.enviroments;
+  }
+
+  async findEnvironmentsByCollectionTeamId(
+    collectionId: string,
+    teamId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    const collection = await this.findOneByTeamId(collectionId, teamId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
       );
     }
     return collection.enviroments;
@@ -116,7 +146,7 @@ export class CollectionService {
     return environment[0];
   }
 
-  async findFoldersByCollectionId(
+  async findFoldersByCollectionUserId(
     id: string,
     userId: string,
   ): Promise<FolderResponseDto[]> {
@@ -124,6 +154,20 @@ export class CollectionService {
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+
+    return collection.folders;
+  }
+
+  async findFoldersByCollectionTeamId(
+    collectionId: string,
+    teamId: string,
+  ): Promise<FolderResponseDto[]> {
+    const collection = await this.findOneByTeamId(collectionId, teamId);
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
       );
     }
 
@@ -166,18 +210,20 @@ export class CollectionService {
     );
   }
 
-  async update(
+  async updateCollectionUser(
     collectionDto: UpdateCollectionDto,
     userId: string,
-  ): Promise<CollectionResponseDto> {
+  ) {
     const collectionData: IUpdateCollectionValues = {
       name: collectionDto.name,
-      userId: collectionDto.teamId ? null : userId,
-      teamId: collectionDto.teamId ?? null,
+      userId,
       id: collectionDto.id,
     };
 
-    const collection = await this.findOne(collectionData.id);
+    const collection = await this.collectionRepository.findOneByIds(
+      collectionData.id,
+      userId,
+    );
 
     if (!collection) {
       throw new NotFoundException(
@@ -188,6 +234,37 @@ export class CollectionService {
     const collectionMapped =
       this.collectionMapper.fromUpdateDtoToEntity(collectionData);
 
+    return await this.update(collectionMapped);
+  }
+
+  async updateCollectionTeam(
+    collectionDto: UpdateCollectionDto,
+    teamId: string,
+  ) {
+    const collectionData: IUpdateCollectionValues = {
+      name: collectionDto.name,
+      teamId,
+      id: collectionDto.id,
+    };
+
+    const collection = await this.collectionRepository.findOneByTeamId(
+      collectionData.id,
+      teamId,
+    );
+
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+      );
+    }
+
+    const collectionMapped =
+      this.collectionMapper.fromUpdateDtoToEntity(collectionData);
+
+    return await this.update(collectionMapped);
+  }
+
+  async update(collectionMapped: Collection): Promise<CollectionResponseDto> {
     const collectionUpdated = await this.collectionRepository.update(
       collectionMapped,
     );
@@ -205,14 +282,16 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collectionSaved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const collection = await this.findOne(id);
+  async delete(collectionId: string): Promise<boolean> {
+    const collection = await this.collectionRepository.findOne(collectionId);
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
       );
     }
-    const collectionDeleted = await this.collectionRepository.delete(id);
+    const collectionDeleted = await this.collectionRepository.delete(
+      collectionId,
+    );
     if (!collectionDeleted) {
       throw new BadRequestException(
         COLLECTION_RESPONSE.COLLECTION_FAILED_DELETED,

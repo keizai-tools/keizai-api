@@ -25,10 +25,10 @@ import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
 @Controller('collection')
+@UseGuards(JwtAuthGuard)
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
   async create(
     @Body() collectionDto: CreateCollectionDto,
@@ -37,7 +37,6 @@ export class CollectionController {
     return this.collectionService.create(collectionDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/:id/environments')
   async createAllEnvironments(
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
@@ -51,7 +50,6 @@ export class CollectionController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
   async findAllByUser(
     @AuthUser() user: IUserResponse,
@@ -59,31 +57,33 @@ export class CollectionController {
     return await this.collectionService.findAllByUser(user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async findOne(@Param('id') id: string): Promise<CollectionResponseDto> {
-    return this.collectionService.findOne(id);
+  async findOne(
+    @AuthUser() user: IUserResponse,
+    @Param('id') id: string,
+  ): Promise<CollectionResponseDto> {
+    return this.collectionService.findOneByIds(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id/folders')
   async findFoldersByCollection(
     @AuthUser() user: IUserResponse,
     @Param('id') id: string,
   ): Promise<FolderResponseDto[]> {
-    return this.collectionService.findFoldersByCollectionId(id, user.id);
+    return this.collectionService.findFoldersByCollectionUserId(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id/environments')
   async findEnvironmentsByCollection(
     @AuthUser() user: IUserResponse,
     @Param('id') id: string,
   ): Promise<EnviromentResponseDto[]> {
-    return this.collectionService.findEnvironmentsByCollectionId(id, user.id);
+    return this.collectionService.findEnvironmentsByCollectionUserId(
+      id,
+      user.id,
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id/environment')
   findEvironmentByCollection(
     @Param('id') id: string,
@@ -95,22 +95,19 @@ export class CollectionController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/')
   async update(
     @AuthUser() user: IUserResponse,
     @Body() collectionDto: UpdateCollectionDto,
   ): Promise<CollectionResponseDto> {
-    return this.collectionService.update(collectionDto, user.id);
+    return this.collectionService.updateCollectionUser(collectionDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   async delete(@Param('id') id: string) {
     return this.collectionService.delete(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id/environments')
   async deleteAll(@Param('id') id: string) {
     return this.collectionService.deleteAllEnvironments(id);
