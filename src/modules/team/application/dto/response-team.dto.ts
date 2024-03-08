@@ -11,10 +11,6 @@ export class TeamResponseDto {
 
   @IsString()
   @IsNotEmpty()
-  adminId: string;
-
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
   @IsNotEmpty()
@@ -31,14 +27,12 @@ export class TeamResponseDto {
 
   constructor(
     name: string,
-    adminId: string,
     id: string,
     userMembers: ResponseUserRoletoTeamDto[],
     invitations: ResponseInvitationDto[],
     collections: CollectionResponseDto[],
   ) {
     this.name = name;
-    this.adminId = adminId;
     this.id = id;
     this.userMembers = userMembers;
     this.invitations = invitations;

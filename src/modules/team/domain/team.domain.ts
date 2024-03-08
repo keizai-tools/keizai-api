@@ -6,14 +6,12 @@ import { UserRoleToTeam } from '@/modules/role/domain/role.domain';
 export class Team extends Base {
   id?: string;
   name: string;
-  adminId: string;
   userMembers: UserRoleToTeam[];
   invitations?: Invitation[];
   collections?: Collection[];
-  constructor(name: string, adminId: string, id?: string) {
+  constructor(name: string, id?: string) {
     super();
     this.name = name;
-    this.adminId = adminId;
     this.id = id;
   }
 }
