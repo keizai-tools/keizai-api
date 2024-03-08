@@ -101,6 +101,7 @@ export class FolderService {
           updateFolderDto.collectionId,
           userId,
         );
+
       if (!collection) {
         throw new NotFoundException(
           FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND,
