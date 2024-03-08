@@ -19,3 +19,8 @@ items:
     id: 'folder3'
     name: 'folder3'
     collection: '@collection3'
+
+  folder4:
+    id: 'folder4'
+    name: 'folder4'
+    collection: '@collection4'
