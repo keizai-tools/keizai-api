@@ -43,10 +43,11 @@ export class FolderService {
     createFolderDto: CreateFolderDto,
     user: IUserResponse,
   ): Promise<FolderResponseDto> {
-    const collection = await this.collectionService.findOneByIds(
-      createFolderDto.collectionId,
-      user.id,
-    );
+    const collection =
+      await this.collectionService.findOneByCollectionAndUserId(
+        createFolderDto.collectionId,
+        user.id,
+      );
 
     if (!collection) {
       throw new NotFoundException(
@@ -101,10 +102,11 @@ export class FolderService {
     }
 
     if (updateFolderDto.collectionId) {
-      const collection = await this.collectionService.findOneByIds(
-        updateFolderDto.collectionId,
-        user.id,
-      );
+      const collection =
+        await this.collectionService.findOneByCollectionAndUserId(
+          updateFolderDto.collectionId,
+          user.id,
+        );
       if (!collection) {
         throw new NotFoundException(
           FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND,

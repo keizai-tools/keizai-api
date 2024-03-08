@@ -34,7 +34,7 @@ export class CollectionTeamController {
     @Param('teamId') teamId: string,
     @Param('id') id: string,
   ): Promise<CollectionResponseDto> {
-    return this.collectionService.findOneByTeamId(id, teamId);
+    return this.collectionService.findOneByCollectionAndTeamId(id, teamId);
   }
 
   @Get('/:id/folders')

@@ -77,14 +77,12 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collection);
   }
 
-  async findOneByTeamId(
+  async findOneByCollectionAndTeamId(
     id: string,
     teamId: string,
   ): Promise<CollectionResponseDto> {
-    const collection = await this.collectionRepository.findOneByTeamId(
-      id,
-      teamId,
-    );
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndTeamId(id, teamId);
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
@@ -93,11 +91,12 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collection);
   }
 
-  async findOneByIds(
+  async findOneByCollectionAndUserId(
     id: string,
     userId: string,
   ): Promise<CollectionResponseDto> {
-    const collection = await this.collectionRepository.findOneByIds(id, userId);
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndUserId(id, userId);
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
@@ -110,7 +109,10 @@ export class CollectionService {
     collectionId: string,
     userId: string,
   ): Promise<EnviromentResponseDto[]> {
-    const collection = await this.findOneByIds(collectionId, userId);
+    const collection = await this.findOneByCollectionAndUserId(
+      collectionId,
+      userId,
+    );
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
@@ -123,7 +125,10 @@ export class CollectionService {
     collectionId: string,
     teamId: string,
   ): Promise<EnviromentResponseDto[]> {
-    const collection = await this.findOneByTeamId(collectionId, teamId);
+    const collection = await this.findOneByCollectionAndTeamId(
+      collectionId,
+      teamId,
+    );
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
@@ -150,7 +155,7 @@ export class CollectionService {
     id: string,
     userId: string,
   ): Promise<FolderResponseDto[]> {
-    const collection = await this.findOneByIds(id, userId);
+    const collection = await this.findOneByCollectionAndUserId(id, userId);
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
@@ -164,7 +169,10 @@ export class CollectionService {
     collectionId: string,
     teamId: string,
   ): Promise<FolderResponseDto[]> {
-    const collection = await this.findOneByTeamId(collectionId, teamId);
+    const collection = await this.findOneByCollectionAndTeamId(
+      collectionId,
+      teamId,
+    );
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
@@ -198,7 +206,10 @@ export class CollectionService {
     createEnvironmentsDto: CreateEnvironmentsDto[],
     userId: string,
   ): Promise<EnviromentResponseDto[]> {
-    const collection = await this.findOneByIds(collectionId, userId);
+    const collection = await this.findOneByCollectionAndUserId(
+      collectionId,
+      userId,
+    );
     if (!collection) {
       throw new NotFoundException(
         COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
@@ -220,10 +231,11 @@ export class CollectionService {
       id: collectionDto.id,
     };
 
-    const collection = await this.collectionRepository.findOneByIds(
-      collectionData.id,
-      userId,
-    );
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndUserId(
+        collectionData.id,
+        userId,
+      );
 
     if (!collection) {
       throw new NotFoundException(
@@ -247,10 +259,11 @@ export class CollectionService {
       id: collectionDto.id,
     };
 
-    const collection = await this.collectionRepository.findOneByTeamId(
-      collectionData.id,
-      teamId,
-    );
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndTeamId(
+        collectionData.id,
+        teamId,
+      );
 
     if (!collection) {
       throw new NotFoundException(

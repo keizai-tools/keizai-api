@@ -62,7 +62,7 @@ export class CollectionController {
     @AuthUser() user: IUserResponse,
     @Param('id') id: string,
   ): Promise<CollectionResponseDto> {
-    return this.collectionService.findOneByIds(id, user.id);
+    return this.collectionService.findOneByCollectionAndUserId(id, user.id);
   }
 
   @Get('/:id/folders')

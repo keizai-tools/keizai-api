@@ -26,7 +26,10 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
-  async findOneByIds(id: string, userId: string): Promise<Collection> {
+  async findOneByCollectionAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<Collection> {
     return await this.repository.findOne({
       relations: { folders: { invocations: true }, enviroments: true },
       where: {
@@ -36,7 +39,10 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
-  async findOneByTeamId(id: string, teamId: string): Promise<Collection> {
+  async findOneByCollectionAndTeamId(
+    id: string,
+    teamId: string,
+  ): Promise<Collection> {
     return await this.repository.findOne({
       relations: { folders: { invocations: true }, enviroments: true },
       where: {
