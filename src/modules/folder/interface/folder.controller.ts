@@ -20,42 +20,33 @@ import { UpdateFolderDto } from '../application/dto/update-folder.dto';
 import { FolderService } from '../application/service/folder.service';
 
 @Controller('folder')
-export class FolderController {
+@UseGuards(JwtAuthGuard)
+export class FolderUserController {
   constructor(private readonly folderService: FolderService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('')
   async create(
     @AuthUser() user: IUserResponse,
     @Body() createFolderDto: CreateFolderDto,
   ) {
-    return this.folderService.create(createFolderDto, user);
+    return this.folderService.createByUser(createFolderDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('')
-  findAll(@AuthUser() user: IUserResponse) {
-    return this.folderService.findAll(user);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.folderService.findOneByIds(id, user.id);
+    return this.folderService.findOneByFolderAndUserId(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch()
   update(
     @AuthUser() user: IUserResponse,
     @Body() updateFoldertDto: UpdateFolderDto,
   ) {
-    return this.folderService.update(updateFoldertDto, user.id);
+    return this.folderService.updateByUser(updateFoldertDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.folderService.delete(id, user.id);
+    return this.folderService.deleteByUser(id, user.id);
   }
 }
