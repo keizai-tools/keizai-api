@@ -39,10 +39,15 @@ export class FolderService {
     private readonly collectionService: CollectionService,
   ) {}
 
-  async create(createFolderDto: CreateFolderDto): Promise<FolderResponseDto> {
-    const collection = await this.collectionService.findOne(
-      createFolderDto.collectionId,
-    );
+  async create(
+    createFolderDto: CreateFolderDto,
+    user: IUserResponse,
+  ): Promise<FolderResponseDto> {
+    const collection =
+      await this.collectionService.findOneByCollectionAndUserId(
+        createFolderDto.collectionId,
+        user.id,
+      );
 
     if (!collection) {
       throw new NotFoundException(FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND);
@@ -91,9 +96,12 @@ export class FolderService {
     await this.findOneByIds(updateFolderDto.id, userId);
 
     if (updateFolderDto.collectionId) {
-      const collection = await this.collectionService.findOne(
-        updateFolderDto.collectionId,
-      );
+      const collection =
+        await this.collectionService.findOneByCollectionAndUserId(
+          updateFolderDto.collectionId,
+          userId,
+        );
+
       if (!collection) {
         throw new NotFoundException(
           FOLDER_RESPONSE.FOLDER_COLLECTION_NOT_FOUND,
@@ -137,12 +145,6 @@ export class FolderService {
     }
 
     const { collection } = folder;
-
-    if (collection.team && collection.team.adminId !== userId) {
-      throw new BadRequestException(
-        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID,
-      );
-    }
 
     if (collection.user && collection.user.id !== userId) {
       throw new BadRequestException(

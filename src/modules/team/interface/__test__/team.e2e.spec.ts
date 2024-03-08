@@ -148,28 +148,6 @@ describe('Team - [/team]', () => {
     });
   });
 
-  describe('GET all collections - [GET /team/:id/collections]', () => {
-    it('should get collections associated with a team', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/team/team0/collections')
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toEqual([
-        expect.objectContaining({
-          id: 'collection0',
-          name: 'collection0',
-        }),
-      ]);
-    });
-    it('should throw error when try to get collections with a team not associated a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/team/team3/collections')
-        .expect(HttpStatus.UNAUTHORIZED);
-
-      expect(response.body.message).toEqual(AUTH_RESPONSE.USER_NOT_MEMBER_TEAM);
-    });
-  });
-
   describe('Update one - [PATCH /team]', () => {
     it('should update one team associated with a user', async () => {
       const response = await request(app.getHttpServer())

@@ -25,8 +25,11 @@ export class FolderController {
 
   @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(@Body() createFolderDto: CreateFolderDto) {
-    return this.folderService.create(createFolderDto);
+  async create(
+    @AuthUser() user: IUserResponse,
+    @Body() createFolderDto: CreateFolderDto,
+  ) {
+    return this.folderService.create(createFolderDto, user);
   }
 
   @UseGuards(JwtAuthGuard)

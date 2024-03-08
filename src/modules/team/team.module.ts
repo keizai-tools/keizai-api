@@ -29,5 +29,6 @@ import { TeamController } from './interface/team.controller';
       useClass: TeamRepository,
     },
   ],
+  exports: [TeamService],
 })
 export class TeamModule {}
