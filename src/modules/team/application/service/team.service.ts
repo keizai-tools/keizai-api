@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from '@/modules/auth/application/service/auth.service';
-import { Role } from '@/modules/auth/domain/role.enum';
 import { User } from '@/modules/auth/domain/user.domain';
 import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
@@ -15,7 +14,6 @@ import { ResponseInvitationDto } from '@/modules/invitation/application/dto/resp
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
 import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
 
-import { Team } from '../../domain/team.domain';
 import { CreateTeamDto } from '../dto/create-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
@@ -27,7 +25,6 @@ import {
 
 export interface ITeamData {
   name: string;
-  adminId: string;
   users?: User[];
 }
 
@@ -91,7 +88,6 @@ export class TeamService {
 
     const teamData: ITeamData = {
       name: createTeamDto.name,
-      adminId: user.id,
       users,
     };
 
@@ -100,8 +96,8 @@ export class TeamService {
     try {
       const teamSaved = await this.teamRepository.save(team);
 
-      await this.createAllInvitations(users, teamSaved.id, teamSaved.adminId);
-      await this.createAllUserRole(users, teamSaved);
+      await this.createAllInvitations(users, teamSaved.id, user.id);
+      await this.createAllUserRole(users, teamSaved.id, user.id);
 
       return this.teamMapper.fromEntityToDto(teamSaved);
     } catch (error) {
@@ -125,20 +121,20 @@ export class TeamService {
     return await this.invitationService.createAll(invitationsToSave);
   }
 
-  async createAllUserRole(users: User[], team: Team | IUpdateTeamData) {
+  async createAllUserRole(users: User[], teamId: string, ownerId?: string) {
     const userRoleToSave = users.map((user) => {
       return {
-        teamId: team.id,
+        teamId,
         userId: user.id,
-        role: Role.ADMIN,
+        role: 'ADMIN',
       };
     });
 
-    if (team instanceof Team && team.adminId) {
+    if (ownerId) {
       userRoleToSave.push({
-        teamId: team.id,
-        userId: team.adminId,
-        role: Role.OWNER,
+        teamId,
+        userId: ownerId,
+        role: 'OWNER',
       });
     }
 
@@ -149,10 +145,9 @@ export class TeamService {
     const teamData: IUpdateTeamData = {
       name: updateTeamDto.name,
       id: updateTeamDto.id,
-      adminId,
     };
 
-    const team = await this.findOneByIds(updateTeamDto.id, adminId);
+    const team = await this.findOne(updateTeamDto.id);
 
     if (!team) {
       throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID);
@@ -164,7 +159,7 @@ export class TeamService {
 
     if (users.length !== 0) {
       await this.createAllInvitations(users, teamData.id, adminId);
-      await this.createAllUserRole(users, teamData);
+      await this.createAllUserRole(users, teamData.id);
     }
 
     const teamMapped = this.teamMapper.fromUpdateDtoToEntity(teamData);

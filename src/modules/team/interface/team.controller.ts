@@ -13,12 +13,12 @@ import {
   AuthUser,
   IUserResponse,
 } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import { AdminRoleGuard } from '@/modules/auth/infrastructure/guard/admin-role.guard';
 import { AuthTeamGuard } from '@/modules/auth/infrastructure/guard/auth-team.guard';
 import { OwnerRoleGuard } from '@/modules/auth/infrastructure/guard/owner-role.guard';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 
 import { CreateTeamDto } from '../application/dto/create-team.dto';
-import { UpdateTeamDto } from '../application/dto/update-team.dto';
 import { TeamService } from '../application/service/team.service';
 
 @Controller('team')
@@ -45,12 +45,14 @@ export class TeamController {
     return this.teamService.create(createTeamDto, user);
   }
 
-  @Patch('/')
+  @UseGuards(AdminRoleGuard)
+  @Patch('/:teamId')
   async update(
     @AuthUser() user: IUserResponse,
-    @Body() updateTeamDto: UpdateTeamDto,
+    @Body() updateTeamDto: CreateTeamDto,
+    @Param('teamId') teamId: string,
   ) {
-    return this.teamService.update(updateTeamDto, user.id);
+    return this.teamService.update({ ...updateTeamDto, id: teamId }, user.id);
   }
 
   @UseGuards(OwnerRoleGuard)

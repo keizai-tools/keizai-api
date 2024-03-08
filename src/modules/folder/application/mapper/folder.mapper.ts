@@ -12,8 +12,8 @@ export class FolderMapper {
     private readonly invocationMapper: InvocationMapper,
   ) {}
   fromDtoToEntity(createFolderDto: IFolderValues): Folder {
-    const { name, collectionId, userId } = createFolderDto;
-    return new Folder(name, collectionId, userId);
+    const { name, collectionId } = createFolderDto;
+    return new Folder(name, collectionId);
   }
 
   fromEntityToDto(folder: Folder): FolderResponseDto {
@@ -25,7 +25,7 @@ export class FolderMapper {
   }
 
   fromUpdateDtoToEntity(updateFolderDto: IUpdateFolderValues): Folder {
-    const { name, collectionId, userId, id } = updateFolderDto;
-    return new Folder(name, collectionId, userId, id);
+    const { name, collectionId, id } = updateFolderDto;
+    return new Folder(name, collectionId, id);
   }
 }
