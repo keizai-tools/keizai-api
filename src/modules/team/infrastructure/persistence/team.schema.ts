@@ -13,9 +13,6 @@ export const TeamSchema = new EntitySchema<Team>({
       type: 'varchar',
       name: 'name',
     },
-    adminId: {
-      type: String,
-    },
   },
   relations: {
     userMembers: {
