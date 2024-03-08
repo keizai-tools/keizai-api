@@ -19,7 +19,12 @@ export class CollectionRepository implements ICollectionRepository {
 
   async findOne(id: string): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { user: true, enviroments: true },
+      relations: {
+        team: true,
+        user: true,
+        folders: { invocations: true },
+        enviroments: true,
+      },
       where: {
         id,
       },
@@ -31,7 +36,12 @@ export class CollectionRepository implements ICollectionRepository {
     userId: string,
   ): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { folders: { invocations: true }, enviroments: true },
+      relations: {
+        team: true,
+        user: true,
+        folders: { invocations: true },
+        enviroments: true,
+      },
       where: {
         id,
         userId,

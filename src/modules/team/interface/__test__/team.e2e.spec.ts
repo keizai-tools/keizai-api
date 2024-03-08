@@ -76,7 +76,6 @@ describe('Team - [/team]', () => {
 
       expect(response.body).toEqual({
         name: 'test',
-        adminId: 'user0',
         id: expect.any(String),
       });
     });
@@ -86,19 +85,36 @@ describe('Team - [/team]', () => {
     it('should get all teams associated with a user', async () => {
       const responseExpected = expect.arrayContaining([
         expect.objectContaining({
-          adminId: 'user0',
           id: expect.any(String),
+          userMembers: expect.arrayContaining([
+            expect.objectContaining({ userId: 'user0' }),
+          ]),
         }),
         expect.objectContaining({
-          adminId: 'user0',
           id: expect.any(String),
+          userMembers: expect.arrayContaining([
+            expect.objectContaining({ userId: 'user0' }),
+          ]),
+        }),
+        expect.objectContaining({
+          id: expect.any(String),
+          userMembers: expect.arrayContaining([
+            expect.objectContaining({ userId: 'user0' }),
+          ]),
+        }),
+        expect.objectContaining({
+          id: expect.any(String),
+          userMembers: expect.arrayContaining([
+            expect.objectContaining({ userId: 'user0' }),
+          ]),
         }),
       ]);
+
       const response = await request(app.getHttpServer())
         .get('/team')
         .expect(HttpStatus.OK);
 
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(4);
       expect(response.body).toEqual(responseExpected);
     });
   });
@@ -113,7 +129,6 @@ describe('Team - [/team]', () => {
         expect.objectContaining({
           id: 'team0',
           name: 'team0',
-          adminId: 'user0',
         }),
       );
     });
@@ -136,10 +151,9 @@ describe('Team - [/team]', () => {
   describe('Update one - [PATCH /team]', () => {
     it('should update one team associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/team')
+        .patch('/team/team0')
         .send({
           name: 'team updated',
-          id: 'team0',
           usersEmails: ['user1'],
         })
         .expect(HttpStatus.OK);
@@ -147,20 +161,28 @@ describe('Team - [/team]', () => {
       expect(response.body).toEqual({
         name: 'team updated',
         id: 'team0',
-        adminId: 'user0',
       });
     });
     it('should throw error when try to update one team not associated with a user', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/team')
+        .patch('/team/2')
         .send({
           name: 'team updated',
-          id: '2',
         })
         .expect(HttpStatus.NOT_FOUND);
 
+      expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+    });
+    it('should throw error when try to update one team with a user without the admin role', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/team/team2')
+        .send({
+          name: 'team updated',
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+
       expect(response.body.message).toEqual(
-        TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID,
+        AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
       );
     });
   });

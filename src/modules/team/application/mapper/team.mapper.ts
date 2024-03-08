@@ -19,17 +19,17 @@ export class TeamMapper {
   ) {}
 
   fromDtoToEntity(teamData: ITeamData): Team {
-    const { name, adminId } = teamData;
-    return new Team(name, adminId);
+    const { name } = teamData;
+    return new Team(name);
   }
 
   fromUpdateDtoToEntity(teamData: IUpdateTeamData): Team {
-    const { name, id, adminId } = teamData;
-    return new Team(name, adminId, id);
+    const { name, id } = teamData;
+    return new Team(name, id);
   }
 
   fromEntityToDto(team: Team): TeamResponseDto {
-    const { name, adminId, id, invitations, collections, userMembers } = team;
+    const { name, id, invitations, collections, userMembers } = team;
 
     const userMembersMapped = userMembers?.map((userMember) => {
       return this.userRoleToTeamMapper.fromEntityToDto(userMember);
@@ -45,7 +45,6 @@ export class TeamMapper {
 
     return new TeamResponseDto(
       name,
-      adminId,
       id,
       userMembersMapped,
       invitationsMapped,

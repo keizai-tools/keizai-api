@@ -19,7 +19,7 @@ export class TeamRepository implements ITeamRepository {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: { userMembers: true, collections: true, invitations: true },
-      where: [{ adminId: userId }, { userMembers: { id: userId } }],
+      where: [{ userMembers: { userId } }],
     });
   }
 
@@ -32,12 +32,12 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
-  async findOneByIds(id: string, adminId: string): Promise<Team> {
+  async findOneByIds(id: string, userId: string): Promise<Team> {
     return await this.repository.findOne({
       relations: { userMembers: true, collections: true },
       where: {
         id,
-        adminId,
+        userMembers: { userId },
       },
     });
   }

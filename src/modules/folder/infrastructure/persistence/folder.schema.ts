@@ -13,10 +13,7 @@ export const FolderSchema = new EntitySchema<Folder>({
       type: 'varchar',
     },
     collectionId: {
-      type: String,
-    },
-    userId: {
-      type: String,
+      type: 'varchar',
     },
   },
   relations: {
@@ -25,14 +22,6 @@ export const FolderSchema = new EntitySchema<Folder>({
       type: 'many-to-one',
       joinColumn: {
         name: 'collection_id',
-      },
-      onDelete: 'CASCADE',
-    },
-    user: {
-      target: 'User',
-      type: 'many-to-one',
-      joinColumn: {
-        name: 'user_id',
       },
       onDelete: 'CASCADE',
     },
