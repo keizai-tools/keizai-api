@@ -148,8 +148,8 @@ describe('Collection - [/collection]', () => {
       expect(response.body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
-            name: expect.any(String),
+            id: 'folder0',
+            name: 'folder0',
           }),
         ]),
       );
@@ -298,6 +298,20 @@ describe('Collection - [/collection]', () => {
 
         expect(response.body).toHaveLength(2);
         expect(response.body).toEqual(responseExpected);
+      });
+      it('should get all folders by collections and team id', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/team/team0/collection/collection3/folders')
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: 'folder1',
+              name: 'folder1',
+            }),
+          ]),
+        );
       });
       it('should throw error when try to get collections with a team not associated a user', async () => {
         const response = await request(app.getHttpServer())
