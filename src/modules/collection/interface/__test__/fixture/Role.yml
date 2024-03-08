@@ -16,4 +16,4 @@ items:
     id: 'role2'
     teamId: '@team1'
     userId: '@user0'
-    role: 'ADMIN'
+    role: 'USER'
