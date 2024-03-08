@@ -21,14 +21,6 @@ export class EnviromentRepository implements IEnviromentRepository {
     return this.repository.save(environment);
   }
 
-  async findAll(collectionId: string): Promise<Enviroment[]> {
-    return await this.repository.find({
-      where: {
-        collectionId,
-      },
-    });
-  }
-
   async findOne(id: string): Promise<Enviroment> {
     return await this.repository.findOne({
       where: {
@@ -46,11 +38,20 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
-  async findOneByIds(id: string, collectionId: string): Promise<Enviroment> {
+  async findOneByEnvAndUserId(id: string, userId: string): Promise<Enviroment> {
     return await this.repository.findOne({
       where: {
         id,
-        collectionId,
+        collection: { userId },
+      },
+    });
+  }
+
+  async findOneByEnvAndTeamId(id: string, teamId: string): Promise<Enviroment> {
+    return await this.repository.findOne({
+      where: {
+        id,
+        collection: { teamId },
       },
     });
   }
