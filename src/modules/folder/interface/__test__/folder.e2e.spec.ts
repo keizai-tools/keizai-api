@@ -123,7 +123,33 @@ describe('Folder - [/folder]', () => {
       );
     });
   });
+  describe('Get all invocations - [GET /folder/:id/invocations]', () => {
+    it('should get all invocations associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/folder/folder0/invocations')
+        .expect(HttpStatus.OK);
 
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'invocation0',
+            folderId: 'folder0',
+            network: 'FUTURENET',
+            id: 'invocation0',
+          }),
+        ]),
+      );
+    });
+    it('should throw error when try to get all invocations not associated with the user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/folder/folder1/invocations')
+        .expect(HttpStatus.NOT_FOUND);
+
+      expect(response.body.message).toEqual(
+        FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
+      );
+    });
+  });
   describe('Update one  - [PUT /folder/:id]', () => {
     it('should update one folder associated with a user', async () => {
       const response = await request(app.getHttpServer())
@@ -242,6 +268,33 @@ describe('Folder - [/folder]', () => {
       it('should throw error when try to get one folder not associated with a team', async () => {
         const response = await request(app.getHttpServer())
           .get(`${invalidRoute}/folder1`)
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID,
+        );
+      });
+    });
+    describe('Get all invocations - [GET /folder/:id/invocations]', () => {
+      it('should get all invocations associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${validRoute}/folder2/invocations`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              name: 'invocation2',
+              folderId: 'folder2',
+              network: 'FUTURENET',
+              id: 'invocation2',
+            }),
+          ]),
+        );
+      });
+      it('should throw error when try to get all invocations not associated with the team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${validRoute}/folder/invocations`)
           .expect(HttpStatus.NOT_FOUND);
 
         expect(response.body.message).toEqual(
