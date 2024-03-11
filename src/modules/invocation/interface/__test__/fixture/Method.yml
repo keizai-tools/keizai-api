@@ -43,9 +43,54 @@ items:
   method4:
     id: 'method4'
     name: 'method4'
-    inputs: [{name: 'name', type: 'string'}]
+    inputs: [{ name: 'name', type: 'string' }]
     outputs: []
     params: [{ name: 'name', value: 'string' }]
     docs: 'docs1'
     user: '@user0'
     invocation: '@invocation2'
+
+  method5:
+    id: 'method5'
+    name: 'method5'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs0'
+    invocation: '@invocation6'
+
+  method6:
+    id: 'method6'
+    name: 'method6'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs1'
+    invocation: '@invocation7'
+
+  method7:
+    id: 'method7'
+    name: 'method7'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs0'
+    invocation: '@invocation6'
+
+  method8:
+    id: 'method8'
+    name: 'method8'
+    inputs: []
+    outputs: []
+    params: [{ name: 'name', value: 'value' }]
+    docs: 'docs1'
+    invocation: '@invocation11'
+
+  method9:
+    id: 'method9'
+    name: 'method9'
+    inputs: [{ name: 'name', type: 'string' }]
+    outputs: []
+    params: [{ name: 'name', value: 'string' }]
+    docs: 'docs1'
+    invocation: '@invocation11'

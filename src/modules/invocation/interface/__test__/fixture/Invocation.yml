@@ -3,21 +3,18 @@ items:
   invocation0:
     id: 'invocation0'
     name: 'invocation0'
-    user: '@user0'
     folder: '@folder0'
     network: 'FUTURENET'
 
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
-    user: '@user1'
     folder: '@folder1'
     network: 'FUTURENET'
 
   invocation2:
     id: 'invocation2'
     name: 'invocation2'
-    user: '@user0'
     folder: '@folder0'
     network: 'FUTURENET'
     publicKey: 'publicKey2'
@@ -25,7 +22,6 @@ items:
   invocation3:
     id: 'invocation3'
     name: 'invocation3'
-    user: '@user0'
     folder: '@folder1'
     network: 'FUTURENET'
     publicKey: 'publicKey3'
@@ -36,15 +32,60 @@ items:
   invocation4:
     id: 'invocation4'
     name: 'invocation4'
-    user: '@user0'
     folder: '@folder0'
     network: 'FUTURENET'
 
   invocation5:
     id: 'invocation5'
     name: 'invocation5'
-    user: '@user0'
-    folder: '@folder1'
+    folder: '@folder0'
+    network: 'FUTURENET'
+    contractId: 'contractId'
+    publicKey: 'publicKey5'
+    secretKey: 'secretKey5'
+    preInvocation: 'const a = () => "a"; a();'
+    postInvocation: 'const a = () => "a"; a();'
+    selectedMethod: '@method4'
+
+  invocation6:
+    id: 'invocation6'
+    name: 'invocation6'
+    folder: '@folder2'
+    network: 'FUTURENET'
+
+  invocation7:
+    id: 'invocation7'
+    name: 'invocation7'
+    folder: '@folder4'
+    network: 'FUTURENET'
+
+  invocation8:
+    id: 'invocation8'
+    name: 'invocation8'
+    folder: '@folder2'
+    network: 'FUTURENET'
+    publicKey: 'publicKey2'
+
+  invocation9:
+    id: 'invocation9'
+    name: 'invocation9'
+    folder: '@folder3'
+    network: 'FUTURENET'
+    publicKey: 'publicKey3'
+    secretKey: 'secretKey3'
+    preInvocation: 'a'
+    selectedMethod: '@method3'
+
+  invocation10:
+    id: 'invocation10'
+    name: 'invocation10'
+    folder: '@folder2'
+    network: 'FUTURENET'
+
+  invocation11:
+    id: 'invocation11'
+    name: 'invocation11'
+    folder: '@folder2'
     network: 'FUTURENET'
     contractId: 'contractId'
     publicKey: 'publicKey5'
