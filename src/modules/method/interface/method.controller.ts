@@ -20,36 +20,33 @@ import { UpdateMethodDto } from '../application/dto/update-method.dto';
 import { MethodService } from '../application/service/method.service';
 
 @Controller('method')
-export class MethodController {
+@UseGuards(JwtAuthGuard)
+export class MethodUserController {
   constructor(private readonly methodService: MethodService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(@Body() createMethodDto: CreateMethodDto) {
-    return this.methodService.create(createMethodDto);
+  async create(
+    @AuthUser() user: IUserResponse,
+    @Body() createMethodDto: CreateMethodDto,
+  ) {
+    return this.methodService.createByUser(createMethodDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('')
-  findAll(@AuthUser() user: IUserResponse) {
-    return this.methodService.findAll(user);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@Param('id') id: string) {
-    return this.methodService.findOne(id);
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.methodService.findOneByMethodAndUserId(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch()
-  update(@Body() updateMethodDto: UpdateMethodDto) {
-    return this.methodService.update(updateMethodDto);
+  update(
+    @AuthUser() user: IUserResponse,
+    @Body() updateMethodDto: UpdateMethodDto,
+  ) {
+    return this.methodService.updateByUser(updateMethodDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@Param('id') id: string) {
-    return this.methodService.delete(id);
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.methodService.deleteByUser(id, user.id);
   }
 }
