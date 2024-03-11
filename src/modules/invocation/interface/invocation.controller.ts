@@ -22,34 +22,31 @@ import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
 @Controller('invocation')
-export class InvocationController {
+@UseGuards(JwtAuthGuard)
+export class InvocationUserController {
   constructor(private readonly invocationService: InvocationService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(@Body() createInvocationDto: CreateInvocationDto) {
-    return this.invocationService.create(createInvocationDto);
+  async create(
+    @AuthUser() user: IUserResponse,
+    @Body() createInvocationDto: CreateInvocationDto,
+  ) {
+    return this.invocationService.createByUser(createInvocationDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('')
-  findAll(@AuthUser() user: IUserResponse) {
-    return this.invocationService.findAll(user);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@Param('id') id: string) {
-    return this.invocationService.findOne(id);
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.findOneByInvocationAndUserIdToDto(
+      id,
+      user.id,
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id/run')
-  runInvocation(@Param('id') id: string) {
-    return this.invocationService.runInvocation(id);
+  runInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.runInvocationByUser(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseInterceptors(
     ResilienceInterceptor(
@@ -62,12 +59,11 @@ export class InvocationController {
     @Body() updateInvocationDto: UpdateInvocationDto,
     @AuthUser() user: IUserResponse,
   ) {
-    return this.invocationService.update(updateInvocationDto, user);
+    return this.invocationService.updateByUser(updateInvocationDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@Param('id') id: string) {
-    return this.invocationService.delete(id);
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.deleteByUser(id, user.id);
   }
 }
