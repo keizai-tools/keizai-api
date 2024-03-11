@@ -29,6 +29,7 @@ import { FolderUserController } from './interface/folder.controller';
     },
   ],
   exports: [
+    FolderService,
     FolderMapper,
     {
       provide: FOLDER_REPOSITORY,

@@ -37,6 +37,11 @@ export class FolderUserController {
     return this.folderService.findOneByFolderAndUserId(id, user.id);
   }
 
+  @Get('/:id/invocations')
+  findAllInvocations(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.folderService.findAllInvocationsByUser(id, user.id);
+  }
+
   @Patch()
   update(
     @AuthUser() user: IUserResponse,

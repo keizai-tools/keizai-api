@@ -103,6 +103,28 @@ export class FolderService {
     return this.folderMapper.fromEntityToDto(folder);
   }
 
+  async findAllInvocationsByUser(folderId: string, userId: string) {
+    const folder = await this.folderRepository.findOneByFolderAndUserId(
+      folderId,
+      userId,
+    );
+    if (!folder) {
+      throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID);
+    }
+    return folder.invocations;
+  }
+
+  async findAllInvocationsByTeam(folderId: string, teamId: string) {
+    const folder = await this.folderRepository.findOneByFolderAndTeamId(
+      folderId,
+      teamId,
+    );
+    if (!folder) {
+      throw new NotFoundException(FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID);
+    }
+    return folder.invocations;
+  }
+
   async updateByUser(
     updateFolderDto: UpdateFolderDto,
     userId: string,
