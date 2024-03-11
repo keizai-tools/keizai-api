@@ -17,51 +17,40 @@ export class FolderRepository implements IFolderRepository {
     return this.repository.save(folder);
   }
 
-  async findAll(collectionId: string): Promise<Folder[]> {
-    return await this.repository.find({
-      order: { createdAt: 'DESC' },
-      relations: {
-        invocations: { selectedMethod: true },
-      },
-      where: {
-        collectionId,
-      },
-    });
-  }
-
-  async findAllByCollectionId(collectionId: string): Promise<Folder[]> {
-    return await this.repository.find({
-      order: { createdAt: 'DESC' },
-      relations: {
-        invocations: { selectedMethod: false },
-      },
-      where: {
-        collectionId,
-      },
-    });
-  }
-
   async findOne(id: string): Promise<Folder> {
     return await this.repository.findOne({
-      relations: {
-        collection: { team: true, user: true },
-        invocations: { selectedMethod: false },
-      },
       where: {
         id,
       },
     });
   }
 
-  async findOneByIds(id: string, collectionId: string): Promise<Folder> {
+  async findOneByFolderAndUserId(id: string, userId: string): Promise<Folder> {
     return await this.repository.findOne({
       relations: {
-        collection: { team: true, user: true },
+        collection: true,
         invocations: { selectedMethod: true },
       },
       where: {
         id,
-        collectionId,
+        collection: {
+          userId,
+        },
+      },
+    });
+  }
+
+  async findOneByFolderAndTeamId(id: string, teamId: string): Promise<Folder> {
+    return await this.repository.findOne({
+      relations: {
+        collection: true,
+        invocations: { selectedMethod: true },
+      },
+      where: {
+        id,
+        collection: {
+          teamId,
+        },
       },
     });
   }
