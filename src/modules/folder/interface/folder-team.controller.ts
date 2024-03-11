@@ -36,6 +36,11 @@ export class FolderTeamController {
     return this.folderService.findOneByFolderAndTeamId(id, teamId);
   }
 
+  @Get('/:id/invocations')
+  findAllInvocations(@Param('teamId') teamId: string, @Param('id') id: string) {
+    return this.folderService.findAllInvocationsByTeam(id, teamId);
+  }
+
   @UseGuards(AdminRoleGuard)
   @Patch('')
   update(

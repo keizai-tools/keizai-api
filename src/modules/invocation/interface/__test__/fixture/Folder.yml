@@ -3,11 +3,24 @@ items:
   folder0:
     id: 'folder0'
     name: 'folder0'
-    user: '@user0'
     collection: '@collection0'
 
   folder1:
     id: 'folder1'
     name: 'folder1'
-    user: '@user1'
     collection: '@collection1'
+
+  folder2:
+    id: 'folder2'
+    name: 'folder2'
+    collection: '@collection2'
+
+  folder3:
+    id: 'folder3'
+    name: 'folder3'
+    collection: '@collection3'
+
+  folder4:
+    id: 'folder4'
+    name: 'folder4'
+    collection: '@collection4'

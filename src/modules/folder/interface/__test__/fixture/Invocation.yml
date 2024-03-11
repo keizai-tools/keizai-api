@@ -1,0 +1,19 @@
+entity: Invocation
+items:
+  invocation0:
+    id: 'invocation0'
+    name: 'invocation0'
+    folder: '@folder0'
+    network: 'FUTURENET'
+
+  invocation1:
+    id: 'invocation1'
+    name: 'invocation1'
+    folder: '@folder0'
+    network: 'FUTURENET'
+
+  invocation2:
+    id: 'invocation2'
+    name: 'invocation2'
+    folder: '@folder2'
+    network: 'FUTURENET'
