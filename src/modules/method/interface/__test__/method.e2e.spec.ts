@@ -9,6 +9,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { INVOCATION_RESPONSE } from '@/modules/invocation/application/exceptions/invocation-response.enum.dto';
 
 import { METHOD_RESPONSE } from '../../application/exceptions/method-response.enum';
 
@@ -161,6 +162,118 @@ describe('Parameter - [/param]', () => {
         .expect(HttpStatus.NOT_FOUND);
 
       expect(response.body.message).toEqual(METHOD_RESPONSE.METHOD_NOT_FOUND);
+    });
+  });
+  describe('By Team - [/team/:teamId/method]', () => {
+    const validRoute = '/team/team0/method';
+    const invalidRoute = '/team/team1/method';
+    describe('Create one - [POST /method]', () => {
+      it('Should create a new method', async () => {
+        const responseExpected = expect.objectContaining({
+          id: expect.any(String),
+          name: expect.any(String),
+        });
+        const response = await request(app.getHttpServer())
+          .post(`${validRoute}`)
+          .send({
+            name: 'test',
+            inputs: [],
+            outputs: [],
+            params: [],
+            invocationId: 'invocation2',
+          })
+          .expect(HttpStatus.CREATED);
+
+        expect(response.body).toEqual(responseExpected);
+      });
+      it('should throw error when try to create a new method not associated with an invocation ', async () => {
+        const response = await request(app.getHttpServer())
+          .post(`${invalidRoute}`)
+          .send({
+            name: 'test',
+            invocationId: 'invocation2',
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+
+        expect(response.body.message).toEqual(
+          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+        );
+      });
+    });
+
+    describe('Get one - [GET /method/:id]', () => {
+      it('Should get one method associated with a team', async () => {
+        const responseExpected = expect.objectContaining({
+          id: 'method2',
+          name: expect.any(String),
+        });
+
+        const response = await request(app.getHttpServer())
+          .get(`${validRoute}/method2`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(responseExpected);
+      });
+      it('Should throw error when try to get one parameter not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${invalidRoute}/method2`)
+          .expect(HttpStatus.BAD_REQUEST);
+
+        expect(response.body.message).toEqual(
+          METHOD_RESPONSE.METHOD_NOT_FOUND_BY_TEAM_AND_ID,
+        );
+      });
+    });
+
+    describe('Update one  - [PUT /method/:id]', () => {
+      it('Should update one method associated with a team', async () => {
+        const responseExpected = expect.objectContaining({
+          id: 'method2',
+          name: 'method updated',
+        });
+        const response = await request(app.getHttpServer())
+          .patch(`${validRoute}`)
+          .send({
+            name: 'method updated',
+            id: 'method2',
+            invocationId: 'invocation2',
+          })
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(responseExpected);
+      });
+      it('should throw error when try to update a method not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`${invalidRoute}`)
+          .send({
+            name: 'method updated',
+            id: 'method2',
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+
+        expect(response.body.message).toEqual(
+          METHOD_RESPONSE.METHOD_NOT_FOUND_BY_TEAM_AND_ID,
+        );
+      });
+    });
+
+    describe('Delete one  - [DELETE /method/:id]', () => {
+      it('Should delete one method associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${validRoute}/method2`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual({});
+      });
+      it('Should throw error when try to delete one param not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${validRoute}/method3`)
+          .expect(HttpStatus.BAD_REQUEST);
+
+        expect(response.body.message).toEqual(
+          METHOD_RESPONSE.METHOD_NOT_FOUND_BY_TEAM_AND_ID,
+        );
+      });
     });
   });
 });

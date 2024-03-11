@@ -4,12 +4,22 @@ items:
     id: 'invocation0'
     name: 'invocation0'
     folder: '@folder0'
-    user: '@user0'
     network: 'FUTURENET'
 
   invocation1:
     id: 'invocation1'
     name: 'invocation1'
     folder: '@folder0'
-    user: '@user1'
+    network: 'FUTURENET'
+
+  invocation2:
+    id: 'invocation2'
+    name: 'invocation2'
+    folder: '@folder2'
+    network: 'FUTURENET'
+
+  invocation3:
+    id: 'invocation3'
+    name: 'invocation3'
+    folder: '@folder3'
     network: 'FUTURENET'

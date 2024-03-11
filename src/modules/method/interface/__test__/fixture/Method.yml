@@ -7,7 +7,6 @@ items:
     outputs: []
     params: []
     docs: 'docs0'
-    user: '@user0'
     invocation: '@invocation0'
 
   method1:
@@ -17,5 +16,22 @@ items:
     outputs: []
     params: []
     docs: 'docs1'
-    user: '@user1'
     invocation: '@invocation1'
+
+  method2:
+    id: 'method2'
+    name: 'method2'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs0'
+    invocation: '@invocation2'
+
+  method3:
+    id: 'method3'
+    name: 'method3'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs1'
+    invocation: '@invocation3'
