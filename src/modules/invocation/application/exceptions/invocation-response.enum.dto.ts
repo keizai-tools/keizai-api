@@ -3,6 +3,7 @@ export enum INVOCATION_RESPONSE {
   Invocation_NOT_FOUND_BY_ID = 'Invocation with specified ID not found',
   Invocation_NOT_FOUND_BY_USER = 'No invocations found for user',
   Invocation_NOT_FOUND_BY_USER_AND_ID = 'No invocations found for user with specified ID',
+  Invocation_NOT_FOUND_BY_TEAM_AND_ID = 'No invocations found for team with specified ID',
   Invocation_NOT_SAVE = 'Unable to save invocation',
   Invocation_NOT_DELETED = 'Unable to delete invocation',
   Invocation_NOT_UPDATED = 'Unable to update invocation',

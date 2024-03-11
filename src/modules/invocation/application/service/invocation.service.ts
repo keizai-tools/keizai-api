@@ -11,12 +11,8 @@ import {
   IContractService,
 } from '@/common/application/repository/contract.interface.service';
 import { NETWORK } from '@/common/application/types/soroban.enum';
-import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
-import {
-  FOLDER_REPOSITORY,
-  IFolderRepository,
-} from '@/modules/folder/application/repository/folder.repository';
+import { FolderService } from '@/modules/folder/application/service/folder.service';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import {
   IMethodRepository,
@@ -64,8 +60,7 @@ export class InvocationService {
     private readonly invocationMapper: InvocationMapper,
     @Inject(INVOCATION_REPOSITORY)
     private readonly invocationRepository: IInvocationRepository,
-    @Inject(FOLDER_REPOSITORY)
-    private readonly folderRepository: IFolderRepository,
+    private readonly folderService: FolderService,
     @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
     @Inject(forwardRef(() => MethodMapper))
@@ -86,9 +81,17 @@ export class InvocationService {
     return environment ? environment.value : contractIdValue;
   }
 
-  async runInvocation(id: string) {
-    const invocation = await this.invocationRepository.findOne(id);
+  async runInvocationByUser(id: string, userId: string) {
+    const invocation = await this.findOneByInvocationAndUserId(id, userId);
+    return this.runInvocation(invocation);
+  }
 
+  async runInvocationByTeam(id: string, teamId: string) {
+    const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
+    return this.runInvocation(invocation);
+  }
+
+  async runInvocation(invocation: Invocation) {
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
@@ -152,18 +155,31 @@ export class InvocationService {
     }
   }
 
+  async createByUser(
+    createFolderDto: CreateInvocationDto,
+    userId: string,
+  ): Promise<InvocationResponseDto> {
+    await this.folderService.findOneByFolderAndUserId(
+      createFolderDto.folderId,
+      userId,
+    );
+    return await this.create(createFolderDto);
+  }
+
+  async createByTeam(
+    createFolderDto: CreateInvocationDto,
+    teamId: string,
+  ): Promise<InvocationResponseDto> {
+    await this.folderService.findOneByFolderAndTeamId(
+      createFolderDto.folderId,
+      teamId,
+    );
+    return await this.create(createFolderDto);
+  }
+
   async create(
     createFolderDto: CreateInvocationDto,
   ): Promise<InvocationResponseDto> {
-    const folder = await this.folderRepository.findOne(
-      createFolderDto.folderId,
-    );
-    if (!folder) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
-      );
-    }
-
     const invocationValues: IInvocationValues = {
       name: createFolderDto.name,
       secretKey: createFolderDto.secretKey,
@@ -184,34 +200,82 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
 
-  async findAll(user: IUserResponse): Promise<InvocationResponseDto[]> {
-    const invocations = await this.invocationRepository.findAll(user.id);
-    if (!invocations) {
-      throw new NotFoundException(
-        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_ID,
-      );
-    }
-
-    return invocations.map((invocation) => {
-      return this.invocationMapper.fromEntityToDto(invocation);
-    });
+  async findOneByInvocationAndUserIdToDto(id: string, userId: string) {
+    const invocation = await this.findOneByInvocationAndUserId(id, userId);
+    return this.invocationMapper.fromEntityToDto(invocation);
   }
 
-  async findOne(id: string): Promise<InvocationResponseDto> {
+  async findOneByInvocationAndTeamIdToDto(id: string, teamId: string) {
+    const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
+    return this.invocationMapper.fromEntityToDto(invocation);
+  }
+
+  async findOneByInvocationAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<Invocation> {
     const invocation = await this.invocationRepository.findOne(id);
+
     if (!invocation) {
       throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
     }
-    return this.invocationMapper.fromEntityToDto(invocation);
+
+    const { folder } = invocation;
+
+    if (folder.collection.userId !== userId) {
+      throw new BadRequestException(
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+      );
+    }
+    return invocation;
+  }
+
+  async findOneByInvocationAndTeamId(
+    id: string,
+    teamId: string,
+  ): Promise<Invocation> {
+    const invocation = await this.invocationRepository.findOne(id);
+
+    if (!invocation) {
+      throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
+    }
+
+    const { folder } = invocation;
+
+    if (folder.collection.teamId !== teamId) {
+      throw new BadRequestException(
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+      );
+    }
+    return invocation;
+  }
+
+  async updateByUser(
+    updateInvocationDto: UpdateInvocationDto,
+    userId: string,
+  ): Promise<InvocationResponseDto> {
+    const invocation = await this.findOneByInvocationAndUserId(
+      updateInvocationDto.id,
+      userId,
+    );
+    return await this.update(updateInvocationDto, invocation);
+  }
+
+  async updateByTeam(
+    updateInvocationDto: UpdateInvocationDto,
+    teamId: string,
+  ): Promise<InvocationResponseDto> {
+    const invocation = await this.findOneByInvocationAndTeamId(
+      updateInvocationDto.id,
+      teamId,
+    );
+    return await this.update(updateInvocationDto, invocation);
   }
 
   async update(
     updateInvocationDto: UpdateInvocationDto,
-    user: IUserResponse,
+    invocation: Invocation,
   ): Promise<InvocationResponseDto> {
-    const invocation = await this.invocationRepository.findOne(
-      updateInvocationDto.id,
-    );
     this.invocationException.validateInvocation(
       invocation,
       updateInvocationDto,
@@ -231,7 +295,6 @@ export class InvocationService {
         const methodsToRemove =
           await this.methodRepository.findAllByInvocationId(
             updateInvocationDto.id,
-            user.id,
           );
 
         if (methodsToRemove) {
@@ -289,11 +352,13 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocationSaved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const invocation = await this.invocationRepository.findOne(id);
-    if (!invocation) {
-      throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
-    }
+  async deleteByUser(id: string, userId: string): Promise<boolean> {
+    await this.findOneByInvocationAndUserId(id, userId);
+    return this.invocationRepository.delete(id);
+  }
+
+  async deleteByTeam(id: string, teamId: string): Promise<boolean> {
+    await this.findOneByInvocationAndTeamId(id, teamId);
     return this.invocationRepository.delete(id);
   }
 }
