@@ -21,7 +21,7 @@ export class MethodRepository implements IMethodRepository {
     return this.repository.save(methods);
   }
 
-  async findAll(invocationId: string): Promise<Method[]> {
+  async findAllByInvocationId(invocationId: string): Promise<Method[]> {
     return await this.repository.find({
       relations: { invocation: true },
       where: {
@@ -30,16 +30,15 @@ export class MethodRepository implements IMethodRepository {
     });
   }
 
-  async findAllByInvocationId(invocationId: string): Promise<Method[]> {
-    return await this.repository.find({
-      where: {
-        invocationId,
-      },
-    });
-  }
-
   async findOne(id: string): Promise<Method> {
     return await this.repository.findOne({
+      relations: {
+        invocation: {
+          folder: {
+            collection: true,
+          },
+        },
+      },
       where: {
         id,
       },

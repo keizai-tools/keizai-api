@@ -6,13 +6,16 @@ import {
   forwardRef,
 } from '@nestjs/common';
 
-import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { InvocationMapper } from '@/modules/invocation/application/mapper/invocation.mapper';
 import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
 } from '@/modules/invocation/application/repository/invocation.repository';
-import { IUpdateInvocationValues } from '@/modules/invocation/application/service/invocation.service';
+import {
+  IUpdateInvocationValues,
+  InvocationService,
+} from '@/modules/invocation/application/service/invocation.service';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 import { Method } from '../../domain/method.domain';
 import { CreateMethodDto } from '../dto/create-method.dto';
@@ -49,17 +52,38 @@ export class MethodService {
     private readonly methodRepository: IMethodRepository,
     @Inject(forwardRef(() => INVOCATION_REPOSITORY))
     private readonly invocationRepository: IInvocationRepository,
+    @Inject(forwardRef(() => InvocationService))
+    private readonly invocationService: InvocationService,
   ) {}
 
-  async create(createParamDto: CreateMethodDto): Promise<MethodResponseDto> {
-    const invocation = await this.invocationRepository.findOne(
-      createParamDto.invocationId,
-    );
+  async createByUser(
+    createParamDto: CreateMethodDto,
+    userId: string,
+  ): Promise<MethodResponseDto> {
+    const invocation =
+      await this.invocationService.findOneByInvocationAndUserId(
+        createParamDto.invocationId,
+        userId,
+      );
+    return this.create(createParamDto, invocation);
+  }
 
-    if (!invocation) {
-      throw new NotFoundException(METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND);
-    }
+  async createByTeam(
+    createParamDto: CreateMethodDto,
+    teamId: string,
+  ): Promise<MethodResponseDto> {
+    const invocation =
+      await this.invocationService.findOneByInvocationAndTeamId(
+        createParamDto.invocationId,
+        teamId,
+      );
+    return this.create(createParamDto, invocation);
+  }
 
+  async create(
+    createParamDto: CreateMethodDto,
+    invocation: Invocation,
+  ): Promise<MethodResponseDto> {
     const methodValues: IMethodValues = {
       name: createParamDto.name,
       inputs: createParamDto.inputs,
@@ -89,8 +113,10 @@ export class MethodService {
     return this.methodMapper.fromEntityToDto(methodSaved);
   }
 
-  async findAll(user: IUserResponse): Promise<MethodResponseDto[]> {
-    const methods = await this.methodRepository.findAll(user.id);
+  async findAll(invocationId: string): Promise<MethodResponseDto[]> {
+    const methods = await this.methodRepository.findAllByInvocationId(
+      invocationId,
+    );
     if (!methods) {
       throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER);
     }
@@ -98,28 +124,68 @@ export class MethodService {
     return methods.map((param) => this.methodMapper.fromEntityToDto(param));
   }
 
-  async findOne(id: string): Promise<MethodResponseDto> {
-    const method = await this.methodRepository.findOne(id);
+  async findOneByMethodAndUserId(
+    methodId: string,
+    userId: string,
+  ): Promise<MethodResponseDto> {
+    const method = await this.methodRepository.findOne(methodId);
     if (!method) {
       throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
+    }
+
+    const collectionUserId = method.invocation.folder.collection.userId;
+
+    if (collectionUserId !== userId) {
+      throw new BadRequestException(
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+      );
     }
     return this.methodMapper.fromEntityToDto(method);
   }
 
-  async update(updateMethodDto: UpdateMethodDto): Promise<MethodResponseDto> {
-    const method = await this.methodRepository.findOne(updateMethodDto.id);
-
+  async findOneByMethodAndTeamId(
+    methodId: string,
+    teamId: string,
+  ): Promise<MethodResponseDto> {
+    const method = await this.methodRepository.findOne(methodId);
     if (!method) {
       throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
     }
+    const collectionTeamId = method.invocation.folder.collection.teamId;
 
-    const invocation = await this.invocationRepository.findOne(
-      updateMethodDto.invocationId,
-    );
-
-    if (!invocation) {
-      throw new NotFoundException(METHOD_RESPONSE.METHOD_INVOCATION_NOT_FOUND);
+    if (collectionTeamId !== teamId) {
+      throw new BadRequestException(
+        METHOD_RESPONSE.METHOD_NOT_FOUND_BY_TEAM_AND_ID,
+      );
     }
+    return this.methodMapper.fromEntityToDto(method);
+  }
+
+  async updateByUser(
+    updateMethodDto: UpdateMethodDto,
+    userId: string,
+  ): Promise<MethodResponseDto> {
+    await this.findOneByMethodAndUserId(updateMethodDto.id, userId);
+    await this.invocationService.findOneByInvocationAndUserId(
+      updateMethodDto.invocationId,
+      userId,
+    );
+    return this.update(updateMethodDto);
+  }
+
+  async updateByTeam(
+    updateMethodDto: UpdateMethodDto,
+    teamId: string,
+  ): Promise<MethodResponseDto> {
+    await this.findOneByMethodAndTeamId(updateMethodDto.id, teamId);
+    await this.invocationService.findOneByInvocationAndTeamId(
+      updateMethodDto.invocationId,
+      teamId,
+    );
+    return this.update(updateMethodDto);
+  }
+
+  async update(updateMethodDto: UpdateMethodDto): Promise<MethodResponseDto> {
     const methodValues: IUpdateMethodValues = {
       name: updateMethodDto.name,
       invocationId: updateMethodDto.invocationId,
@@ -138,12 +204,14 @@ export class MethodService {
     return this.methodMapper.fromEntityToDto(methodSaved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const method = await this.methodRepository.findOne(id);
-    if (!method) {
-      throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
-    }
-    return this.methodRepository.delete(id);
+  async deleteByUser(methodId: string, userId: string): Promise<boolean> {
+    await this.findOneByMethodAndUserId(methodId, userId);
+    return this.methodRepository.delete(methodId);
+  }
+
+  async deleteByTeam(methodId: string, teamId: string): Promise<boolean> {
+    await this.findOneByMethodAndTeamId(methodId, teamId);
+    return this.methodRepository.delete(methodId);
   }
 
   async deleteAll(methods: Method[]): Promise<boolean> {
