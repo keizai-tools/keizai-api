@@ -35,7 +35,9 @@ export class InvocationRepository implements IInvocationRepository {
   async findOne(id: string): Promise<Invocation> {
     return await this.repository.findOne({
       relations: {
-        folder: true,
+        folder: {
+          collection: true,
+        },
         selectedMethod: true,
         methods: true,
       },
