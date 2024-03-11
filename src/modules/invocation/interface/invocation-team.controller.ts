@@ -43,6 +43,11 @@ export class InvocationTeamController {
     return this.invocationService.runInvocationByTeam(id, teamId);
   }
 
+  @Get('/:id/methods')
+  findAllMethods(@Param('teamId') teamId: string, @Param('id') id: string) {
+    return this.invocationService.findAllMethodsByTeam(id, teamId);
+  }
+
   @Patch('')
   @UseInterceptors(
     ResilienceInterceptor(
