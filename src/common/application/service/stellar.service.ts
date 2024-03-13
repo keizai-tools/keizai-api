@@ -94,6 +94,11 @@ export class StellarService implements IContractService {
         this.networkPassphrase = Networks.TESTNET;
         this.currentNetwork = NETWORK.SOROBAN_TESTNET;
         break;
+      case NETWORK.SOROBAN_MAINNET:
+        this.server = new SorobanRpc.Server(SOROBAN_SERVER.MAINNET);
+        this.networkPassphrase = Networks.PUBLIC;
+        this.currentNetwork = NETWORK.SOROBAN_MAINNET;
+        break;
     }
   }
 
