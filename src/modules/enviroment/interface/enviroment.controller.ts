@@ -21,40 +21,36 @@ import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
 import { EnviromentService } from '../application/service/enviroment.service';
 
 @Controller('environment')
-export class EnviromentController {
+@UseGuards(JwtAuthGuard)
+export class EnviromentUserController {
   constructor(private readonly enviromentService: EnviromentService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(@Body() createEnviromentDto: CreateEnviromentDto) {
-    return this.enviromentService.create(createEnviromentDto);
+  async create(
+    @AuthUser() user: IUserResponse,
+    @Body() createEnviromentDto: CreateEnviromentDto,
+  ) {
+    return this.enviromentService.createByUser(createEnviromentDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('')
-  findAll(@AuthUser() user: IUserResponse) {
-    return this.enviromentService.findAll(user);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  findOne(@Param('id') id: string) {
-    return this.enviromentService.findOne(id);
+  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.enviromentService.findOneByEnvAndUserId(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch()
-  update(@Body() updateEnviromentDto: UpdateEnviromentDto) {
-    return this.enviromentService.update(updateEnviromentDto);
+  update(
+    @AuthUser() user: IUserResponse,
+    @Body() updateEnviromentDto: UpdateEnviromentDto,
+  ) {
+    return this.enviromentService.updateByUser(updateEnviromentDto, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  delete(@Param('id') id: string) {
-    return this.enviromentService.delete(id);
+  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.enviromentService.deleteByUser(id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/')
   deleteByName(
     @Query('name') name: string,

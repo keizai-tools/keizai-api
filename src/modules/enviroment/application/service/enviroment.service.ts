@@ -6,7 +6,6 @@ import {
   forwardRef,
 } from '@nestjs/common';
 
-import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { Enviroment } from '../../domain/enviroment.domain';
@@ -42,23 +41,41 @@ export class EnviromentService {
     private readonly collectionService: CollectionService,
   ) {}
 
-  async create(
-    createEnviromentDto: CreateEnviromentDto,
-  ): Promise<EnviromentResponseDto> {
-    const collection = await this.collectionService.findOne(
-      createEnviromentDto.collectionId,
-    );
-
-    if (!collection)
-      throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_COLLECTION_NOT_FOUND,
+  async createByUser(createEnviromentDto: CreateEnviromentDto, userId: string) {
+    const collection =
+      await this.collectionService.findOneByCollectionAndUserId(
+        createEnviromentDto.collectionId,
+        userId,
       );
 
     const environments = await this.enviromentRepository.findByNames(
       [createEnviromentDto.name],
       collection.id,
     );
+    return await this.create(createEnviromentDto, environments);
+  }
 
+  async createByTeam(
+    createEnviromentDto: CreateEnviromentDto,
+    teamId: string,
+  ): Promise<EnviromentResponseDto> {
+    const collection =
+      await this.collectionService.findOneByCollectionAndTeamId(
+        createEnviromentDto.collectionId,
+        teamId,
+      );
+
+    const environments = await this.enviromentRepository.findByNames(
+      [createEnviromentDto.name],
+      collection.id,
+    );
+    return await this.create(createEnviromentDto, environments);
+  }
+
+  async create(
+    createEnviromentDto: CreateEnviromentDto,
+    environments: Enviroment[],
+  ): Promise<EnviromentResponseDto> {
     if (environments[0]) {
       const enviromentValues = {
         id: environments[0].id,
@@ -115,24 +132,6 @@ export class EnviromentService {
     );
   }
 
-  async findAll(user: IUserResponse): Promise<EnviromentResponseDto[]> {
-    const enviroments = await this.enviromentRepository.findAll(user.id);
-    if (!enviroments)
-      throw new NotFoundException(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
-      );
-    return enviroments.map((enviroment) =>
-      this.enviromentMapper.fromEntityToDto(enviroment),
-    );
-  }
-
-  async findOne(id: string): Promise<EnviromentResponseDto> {
-    const enviroment = await this.enviromentRepository.findOne(id);
-    if (!enviroment)
-      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
-    return this.enviromentMapper.fromEntityToDto(enviroment);
-  }
-
   async findOneByName(name: string, collectionId: string) {
     return await this.enviromentRepository.findOneByName(name, collectionId);
   }
@@ -145,25 +144,57 @@ export class EnviromentService {
     return envs;
   }
 
+  async findOneByEnvAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<EnviromentResponseDto> {
+    const enviroment = await this.enviromentRepository.findOneByEnvAndUserId(
+      id,
+      userId,
+    );
+    if (!enviroment)
+      throw new NotFoundException(
+        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+      );
+    return this.enviromentMapper.fromEntityToDto(enviroment);
+  }
+
+  async findOneByEnvAndTeamId(
+    id: string,
+    teamId: string,
+  ): Promise<EnviromentResponseDto> {
+    const enviroment = await this.enviromentRepository.findOneByEnvAndTeamId(
+      id,
+      teamId,
+    );
+    if (!enviroment)
+      throw new NotFoundException(
+        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_TEAM_ID,
+      );
+    return this.enviromentMapper.fromEntityToDto(enviroment);
+  }
+
+  async updateByUser(updateEnviromentDto: UpdateEnviromentDto, userId: string) {
+    await this.findOneByEnvAndUserId(updateEnviromentDto.id, userId);
+    await this.collectionService.findOneByCollectionAndUserId(
+      updateEnviromentDto.collectionId,
+      userId,
+    );
+    return await this.update(updateEnviromentDto);
+  }
+
+  async updateByTeam(updateEnviromentDto: UpdateEnviromentDto, teamId: string) {
+    await this.findOneByEnvAndTeamId(updateEnviromentDto.id, teamId);
+    await this.collectionService.findOneByCollectionAndTeamId(
+      updateEnviromentDto.collectionId,
+      teamId,
+    );
+    return await this.update(updateEnviromentDto);
+  }
+
   async update(
     updateEnviromentDto: UpdateEnviromentDto,
   ): Promise<EnviromentResponseDto> {
-    const enviroment = await this.enviromentRepository.findOne(
-      updateEnviromentDto.id,
-    );
-    if (!enviroment)
-      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
-
-    if (updateEnviromentDto.collectionId) {
-      const collection = await this.collectionService.findOne(
-        updateEnviromentDto.collectionId,
-      );
-      if (!collection)
-        throw new NotFoundException(
-          ENVIROMENT_RESPONSE.ENVIROMENT_COLLECTION_NOT_FOUND,
-        );
-    }
-
     const enviromentValues: IUpdateEnviromentValues = {
       name: updateEnviromentDto.name,
       value: updateEnviromentDto.value,
@@ -189,10 +220,17 @@ export class EnviromentService {
     return this.enviromentMapper.fromEntityToDto(enviromentSaved);
   }
 
+  async deleteByUser(id: string, userId: string): Promise<boolean> {
+    await this.findOneByEnvAndUserId(id, userId);
+    return await this.delete(id);
+  }
+
+  async deleteByTeam(id: string, teamId: string): Promise<boolean> {
+    await this.findOneByEnvAndTeamId(id, teamId);
+    return await this.delete(id);
+  }
+
   async delete(id: string): Promise<boolean> {
-    const enviroment = await this.enviromentRepository.findOne(id);
-    if (!enviroment)
-      throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_NOT_FOUND);
     const enviromentDeleted = this.enviromentRepository.delete(id);
     if (!enviromentDeleted)
       throw new BadRequestException(

@@ -11,6 +11,7 @@ import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.i
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
 import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
+import { TEAM_RESPONSE } from '@/modules/team/application/exceptions/team-response.enum';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
 
@@ -242,6 +243,13 @@ describe('Collection - [/collection]', () => {
 
   describe('Delete one  - [DELETE /collection/:id]', () => {
     const collectionId = 'collection0';
+    it('should delete all environments associated with a collection', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`/collection/${collectionId}/environments`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({});
+    });
     it('should delete one collection associated with a user', async () => {
       const response = await request(app.getHttpServer())
         .delete(`/collection/${collectionId}`)
@@ -260,14 +268,7 @@ describe('Collection - [/collection]', () => {
       );
     });
   });
-  it('should delete all environments associated with a collection', async () => {
-    const collectionId = 'collection1';
-    const response = await request(app.getHttpServer())
-      .delete(`/collection/${collectionId}/environments`)
-      .expect(HttpStatus.OK);
 
-    expect(response.body).toEqual({});
-  });
   describe('by Team - [/team/:teamId/collection]', () => {
     const team0Route = '/team/team0';
     describe('Create one  - [POST /collection]', () => {
@@ -284,6 +285,66 @@ describe('Collection - [/collection]', () => {
           name: 'team test',
           id: expect.any(String),
         });
+      });
+    });
+    describe('Create all - [POST /collection/:id]', () => {
+      const environments = [
+        {
+          name: 'inc4',
+          value: '4',
+        },
+        {
+          name: 'inc5',
+          value: '5',
+        },
+        {
+          name: 'inc6',
+          value: '6',
+        },
+      ];
+      it('Should save many environments at once', async () => {
+        const response = await request(app.getHttpServer())
+          .post(`${team0Route}/collection/collection3/environments`)
+          .send(environments)
+          .expect(HttpStatus.CREATED);
+
+        expect(response.body).toEqual([
+          {
+            name: 'inc4',
+            value: '4',
+            id: expect.any(String),
+          },
+          {
+            name: 'inc5',
+            value: '5',
+            id: expect.any(String),
+          },
+          {
+            name: 'inc6',
+            value: '6',
+            id: expect.any(String),
+          },
+        ]);
+      });
+      it('Should throw error when save many environments at once not associated with a collection', async () => {
+        const response = await request(app.getHttpServer())
+          .post(`${team0Route}/collection/collection2/environments`)
+          .send(environments)
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+        );
+      });
+      it('Should throw an unauthorize error when save many environments with a user without the required role', async () => {
+        const response = await request(app.getHttpServer())
+          .post(`/team/team1/collection/collection2/environments`)
+          .send(environments)
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(response.body.message).toEqual(
+          AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
+        );
       });
     });
     describe('Get all - [GET - /collection]', () => {
@@ -320,6 +381,44 @@ describe('Collection - [/collection]', () => {
 
         expect(response.body.message).toEqual(
           AUTH_RESPONSE.USER_NOT_MEMBER_TEAM,
+        );
+      });
+      it('should get enviroments by collections id', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${team0Route}/collection/collection3/environments`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: expect.any(String),
+              name: expect.any(String),
+            }),
+          ]),
+        );
+      });
+      it('should get environment by collections id and environment name', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${team0Route}/collection/collection3/environment`)
+          .query({ name: 'enviroment2' })
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.objectContaining({
+            id: expect.any(String),
+            name: 'enviroment2',
+            value: expect.any(String),
+          }),
+        );
+      });
+      it('should throw error when try to get environment that not exists', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/collection/collection0/environment')
+          .query({ name: 'enviroment' })
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS,
         );
       });
     });
@@ -372,6 +471,13 @@ describe('Collection - [/collection]', () => {
       });
     });
     describe('Delete one - [Delete /:id]', () => {
+      it('should delete all envionments associated with a collection', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${team0Route}/collection/collection3/environments`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual({});
+      });
       it('should delete one collection associated with a team', async () => {
         const response = await request(app.getHttpServer())
           .delete(`${team0Route}/collection/collection3`)
@@ -381,11 +487,29 @@ describe('Collection - [/collection]', () => {
       });
       it('should throw error when try to delete one collection not associated with a team', async () => {
         const response = await request(app.getHttpServer())
-          .delete('/team/team1/collection/collection3')
+          .delete('/team/team/collection/collection3')
           .expect(HttpStatus.NOT_FOUND);
 
         expect(response.body.message).toEqual(
-          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+          TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID,
+        );
+      });
+      it('should throw error when delete all envionments not associated with a collection', async () => {
+        const response = await request(app.getHttpServer())
+          .delete('/team/team0/collection/collection2/environments')
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(response.body.message).toEqual(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+        );
+      });
+      it('should throw error when try to delete one collection with a user without the required role', async () => {
+        const response = await request(app.getHttpServer())
+          .delete('/team/team1/collection/collection3')
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(response.body.message).toEqual(
+          AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
         );
       });
     });

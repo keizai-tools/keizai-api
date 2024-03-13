@@ -43,7 +43,7 @@ export class CollectionController {
     @Param('id') id: string,
     @AuthUser() user: IUserResponse,
   ): Promise<EnviromentResponseDto[]> {
-    return this.collectionService.createAllEnvironments(
+    return this.collectionService.createAllEnvironmentsByUser(
       id,
       createEnvironmentsDto,
       user.id,
@@ -78,7 +78,7 @@ export class CollectionController {
     @AuthUser() user: IUserResponse,
     @Param('id') id: string,
   ): Promise<EnviromentResponseDto[]> {
-    return this.collectionService.findEnvironmentsByCollectionUserId(
+    return this.collectionService.findEnvironmentsByCollectionAndUserId(
       id,
       user.id,
     );
@@ -109,7 +109,7 @@ export class CollectionController {
   }
 
   @Delete('/:id/environments')
-  async deleteAll(@Param('id') id: string) {
-    return this.collectionService.deleteAllEnvironments(id);
+  async deleteAll(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.collectionService.deleteAllEnvironmentsByUser(id, user.id);
   }
 }

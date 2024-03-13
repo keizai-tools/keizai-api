@@ -105,7 +105,7 @@ export class CollectionService {
     return this.collectionMapper.fromEntityToDto(collection);
   }
 
-  async findEnvironmentsByCollectionUserId(
+  async findEnvironmentsByCollectionAndUserId(
     collectionId: string,
     userId: string,
   ): Promise<EnviromentResponseDto[]> {
@@ -121,7 +121,7 @@ export class CollectionService {
     return collection.enviroments;
   }
 
-  async findEnvironmentsByCollectionTeamId(
+  async findEnvironmentsByCollectionAndTeamId(
     collectionId: string,
     teamId: string,
   ): Promise<EnviromentResponseDto[]> {
@@ -201,20 +201,24 @@ export class CollectionService {
     }
   }
 
-  async createAllEnvironments(
+  async createAllEnvironmentsByUser(
     collectionId: string,
     createEnvironmentsDto: CreateEnvironmentsDto[],
     userId: string,
   ): Promise<EnviromentResponseDto[]> {
-    const collection = await this.findOneByCollectionAndUserId(
+    await this.findOneByCollectionAndUserId(collectionId, userId);
+    return await this.environmentService.createAll(
+      createEnvironmentsDto,
       collectionId,
-      userId,
     );
-    if (!collection) {
-      throw new NotFoundException(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
-      );
-    }
+  }
+
+  async createAllEnvironmentsByTeam(
+    collectionId: string,
+    createEnvironmentsDto: CreateEnvironmentsDto[],
+    teamId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    await this.findOneByCollectionAndTeamId(collectionId, teamId);
     return await this.environmentService.createAll(
       createEnvironmentsDto,
       collectionId,
@@ -313,13 +317,38 @@ export class CollectionService {
     return collectionDeleted;
   }
 
-  async deleteAllEnvironments(collectionId: string): Promise<boolean> {
-    const collection = await this.collectionRepository.findOne(collectionId);
+  async deleteAllEnvironmentsByUser(
+    collectionId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndUserId(
+        collectionId,
+        userId,
+      );
+
     if (!collection) {
       throw new NotFoundException(
-        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
       );
     }
+
+    return await this.environmentService.deleteAll(collection.enviroments);
+  }
+
+  async deleteAllEnvironmentsByTeam(collectionId: string, teamId: string) {
+    const collection =
+      await this.collectionRepository.findOneByCollectionAndTeamId(
+        collectionId,
+        teamId,
+      );
+
+    if (!collection) {
+      throw new NotFoundException(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_TEAM,
+      );
+    }
+
     return await this.environmentService.deleteAll(collection.enviroments);
   }
 }

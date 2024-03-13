@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import {
 import { AdminRoleGuard } from '@/modules/auth/infrastructure/guard/admin-role.guard';
 import { AuthTeamGuard } from '@/modules/auth/infrastructure/guard/auth-team.guard';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
@@ -23,6 +25,20 @@ import { CollectionService } from '../application/service/collection.service';
 @UseGuards(JwtAuthGuard, AuthTeamGuard)
 export class CollectionTeamController {
   constructor(private readonly collectionService: CollectionService) {}
+
+  @UseGuards(AdminRoleGuard)
+  @Post('/:id/environments')
+  async createAllEnvironments(
+    @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
+    @Param('id') id: string,
+    @Param('teamId') teamId: string,
+  ): Promise<EnviromentResponseDto[]> {
+    return this.collectionService.createAllEnvironmentsByTeam(
+      id,
+      createEnvironmentsDto,
+      teamId,
+    );
+  }
 
   @Get('/')
   async findCollectionsByTeam(@Param('teamId') teamId: string) {
@@ -50,7 +66,7 @@ export class CollectionTeamController {
     @Param('teamId') teamId: string,
     @Param('id') id: string,
   ): Promise<EnviromentResponseDto[]> {
-    return this.collectionService.findEnvironmentsByCollectionTeamId(
+    return this.collectionService.findEnvironmentsByCollectionAndTeamId(
       id,
       teamId,
     );
@@ -84,7 +100,7 @@ export class CollectionTeamController {
 
   @UseGuards(AdminRoleGuard)
   @Delete('/:id/environments')
-  async deleteAll(@Param('id') id: string) {
-    return this.collectionService.deleteAllEnvironments(id);
+  async deleteAll(@Param('teamId') teamId: string, @Param('id') id: string) {
+    return this.collectionService.deleteAllEnvironmentsByTeam(id, teamId);
   }
 }

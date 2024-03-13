@@ -16,4 +16,10 @@ items:
     id: 'role2'
     teamId: '@team1'
     userId: '@user0'
+    role: 'ADMIN'
+
+  role3:
+    id: 'role3'
+    teamId: '@team2'
+    userId: '@user0'
     role: 'USER'
