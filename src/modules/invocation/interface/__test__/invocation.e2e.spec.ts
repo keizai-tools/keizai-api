@@ -148,6 +148,37 @@ describe('Invocation - [/invocation]', () => {
       );
     });
   });
+  describe('Get all methods - [GET /invocation/:id/methods]', () => {
+    it('should get all methods associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/invocation/invocation0/methods')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'method0',
+            invocationId: 'invocation0',
+            id: 'method0',
+          }),
+          expect.objectContaining({
+            name: 'method2',
+            invocationId: 'invocation0',
+            id: 'method2',
+          }),
+        ]),
+      );
+    });
+    it('should throw error when try to get all methods not associated with a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/invocation/invocation1')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
+  });
 
   describe('Update one  - [PUT /invocation/:id]', () => {
     it('should update one invocation associated with a user', async () => {
@@ -535,6 +566,37 @@ describe('Invocation - [/invocation]', () => {
       it('should throw error when try to get one invocation not associated with a team', async () => {
         const response = await request(app.getHttpServer())
           .get(`${invalidRoute}/invocation7`)
+          .expect(HttpStatus.BAD_REQUEST);
+
+        expect(response.body.message).toEqual(
+          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+        );
+      });
+    });
+    describe('Get all methods - [GET /invocation/:id/methods]', () => {
+      it('should get all methods associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${validRoute}/invocation6/methods`)
+          .expect(HttpStatus.OK);
+
+        expect(response.body).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              name: 'method5',
+              invocationId: 'invocation6',
+              id: 'method5',
+            }),
+            expect.objectContaining({
+              name: 'method7',
+              invocationId: 'invocation6',
+              id: 'method7',
+            }),
+          ]),
+        );
+      });
+      it('should throw error when try to get all methods not associated with a team', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${invalidRoute}/invocation7/methods`)
           .expect(HttpStatus.BAD_REQUEST);
 
         expect(response.body.message).toEqual(

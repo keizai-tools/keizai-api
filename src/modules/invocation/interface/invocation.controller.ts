@@ -47,6 +47,11 @@ export class InvocationUserController {
     return this.invocationService.runInvocationByUser(id, user.id);
   }
 
+  @Get(':id/methods')
+  findAllMethods(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.findAllMethodsByUser(id, user.id);
+  }
+
   @Patch('')
   @UseInterceptors(
     ResilienceInterceptor(

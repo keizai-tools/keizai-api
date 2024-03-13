@@ -36,6 +36,7 @@ import { InvocationUserController } from './interface/invocation.controller';
     },
   ],
   exports: [
+    InvocationService,
     InvocationMapper,
     {
       provide: INVOCATION_REPOSITORY,

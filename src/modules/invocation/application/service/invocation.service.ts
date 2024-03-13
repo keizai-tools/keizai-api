@@ -210,6 +210,16 @@ export class InvocationService {
     return this.invocationMapper.fromEntityToDto(invocation);
   }
 
+  async findAllMethodsByUser(id: string, userId: string) {
+    const invocation = await this.findOneByInvocationAndUserId(id, userId);
+    return invocation.methods;
+  }
+
+  async findAllMethodsByTeam(id: string, teamId: string) {
+    const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
+    return invocation.methods;
+  }
+
   async findOneByInvocationAndUserId(
     id: string,
     userId: string,
