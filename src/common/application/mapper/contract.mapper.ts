@@ -2,7 +2,7 @@ import { nativeToScVal, scValToNative, xdr } from 'stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 
-import { EventResponse } from '../types/contract-events';
+import { EncodeEvent, EventResponse } from '../types/contract-events';
 import { SC_VAL_TYPE } from '../types/soroban.enum';
 
 type Param = {
@@ -31,7 +31,7 @@ export class StellarMapper {
     SC_SPEC_TYPE_MAP: 'map',
   };
 
-  encodeEventToDisplayEvent(events: EventResponse[]) {
+  encodeEventToDisplayEvent(events: EncodeEvent[]): EventResponse[] {
     return events.map((event) => {
       return {
         type: event.type,

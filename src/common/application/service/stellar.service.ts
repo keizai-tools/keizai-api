@@ -22,7 +22,7 @@ import { Method } from '@/modules/method/domain/method.domain';
 
 import { StellarMapper } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
-import { EventResponse } from '../types/contract-events';
+import { EncodeEvent } from '../types/contract-events';
 import {
   CONTRACT_EXECUTABLE_TYPE,
   NETWORK,
@@ -510,7 +510,9 @@ export class StellarService implements IContractService {
     }
   }
 
-  async getContractSpecEntries(instanceValue: xdr.ContractExecutable) {
+  async getContractSpecEntries(
+    instanceValue: xdr.ContractExecutable,
+  ): Promise<any[]> {
     try {
       const contractCode = await this.getWasmCode(instanceValue);
       const wasmModule = new WebAssembly.Module(contractCode);
@@ -525,7 +527,7 @@ export class StellarService implements IContractService {
     }
   }
 
-  async getContractEvents(contractId: string): Promise<EventResponse[]> {
+  async getContractEvents(contractId: string): Promise<EncodeEvent[]> {
     const oneDayEarlierLedger = 9999;
     const { sequence } = await this.server.getLatestLedger();
     const newStartLedger = sequence - oneDayEarlierLedger;
