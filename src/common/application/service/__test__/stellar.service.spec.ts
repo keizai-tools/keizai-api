@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { xdr } from 'stellar-sdk';
 
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import { Method } from '@/modules/method/domain/method.domain';
 
 import { StellarMapper } from '../../mapper/contract.mapper';
 import { CONTRACT_EXECUTABLE_TYPE, NETWORK } from '../../types/soroban.enum';
@@ -93,6 +94,57 @@ describe('StellarService', () => {
       expect(service.getInstanceValue).toHaveBeenCalled();
       expect(service.getStellarAssetContractFunctions).not.toHaveBeenCalled();
       expect(service.getContractSpecEntries).toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+  });
+  describe('generateScArgsToFromContractId', () => {
+    const mockedMethod = new Method('mock', [], [], [], 'mock');
+
+    it('Should return the stellar asset contract arguments', async () => {
+      jest
+        .spyOn(service, 'getInstanceValue')
+        .mockResolvedValue(contractExecutable);
+      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
+        name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
+        value: 1,
+      });
+      jest
+        .spyOn(stellarMapper, 'getScValFromStellarAssetContract')
+        .mockReturnValue([]);
+      jest.spyOn(service, 'getScValFromSmartContract');
+
+      const result = await service.generateScArgsToFromContractId(
+        'contractId',
+        mockedMethod,
+      );
+
+      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(stellarMapper.getScValFromStellarAssetContract).toHaveBeenCalled();
+      expect(service.getScValFromSmartContract).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+    it('Should return the smart contract arguments', async () => {
+      jest
+        .spyOn(service, 'getInstanceValue')
+        .mockResolvedValue(contractExecutable);
+      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
+        name: CONTRACT_EXECUTABLE_TYPE.WASM,
+        value: 0,
+      });
+      jest.spyOn(stellarMapper, 'getScValFromStellarAssetContract');
+      jest.spyOn(service, 'getContractSpecEntries').mockResolvedValue([]);
+      jest.spyOn(service, 'getScValFromSmartContract').mockResolvedValue([]);
+
+      const result = await service.generateScArgsToFromContractId(
+        'contractId',
+        mockedMethod,
+      );
+
+      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(
+        stellarMapper.getScValFromStellarAssetContract,
+      ).not.toHaveBeenCalled();
+      expect(service.getScValFromSmartContract).toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
