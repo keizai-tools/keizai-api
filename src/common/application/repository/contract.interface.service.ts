@@ -8,8 +8,9 @@ import { EventResponse } from '../types/contract-events';
 export interface IContractService {
   verifyNetwork(selectedNetwork: string): void;
   changeNetwork(selectedNetwork: string): void;
-  getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry>;
-  getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer>;
+  getStellarAssetContractFunctions(): IGeneratedMethod[];
+  getInstanceValue(contractId: string): Promise<xdr.ContractExecutable>;
+  getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer>;
   decodeContractSpecBuffer(buffer);
   extractFunctionInfo(decodedSection, SCSpecTypeMap);
   getContractEvents(contractId: string): Promise<EventResponse[]>;

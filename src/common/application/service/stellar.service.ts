@@ -18,11 +18,16 @@ import {
 } from 'stellar-sdk';
 
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import { Method } from '@/modules/method/domain/method.domain';
 
-import { encodeEventToDisplayEvent } from '../mapper/contract.mapper';
+import { StellarMapper } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
 import { EventResponse } from '../types/contract-events';
-import { NETWORK, SOROBAN_SERVER } from '../types/soroban.enum';
+import {
+  CONTRACT_EXECUTABLE_TYPE,
+  NETWORK,
+  SOROBAN_SERVER,
+} from '../types/soroban.enum';
 
 export interface IGeneratedMethod {
   name: string;
@@ -39,6 +44,7 @@ export class StellarService implements IContractService {
   private currentNetwork: string;
   constructor(
     @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
+    @Inject(StellarMapper) private readonly stellarMapper: StellarMapper,
   ) {
     this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
     this.networkPassphrase = Networks.FUTURENET;
@@ -100,6 +106,291 @@ export class StellarService implements IContractService {
         this.currentNetwork = NETWORK.SOROBAN_MAINNET;
         break;
     }
+  }
+
+  getStellarAssetContractFunctions(): IGeneratedMethod[] {
+    return [
+      {
+        name: 'allowance',
+        docs: null,
+        inputs: [
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'spender',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+      },
+      {
+        name: 'authorized',
+        docs: null,
+        inputs: [
+          {
+            name: 'id',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_BOOL',
+          },
+        ],
+      },
+      {
+        name: 'approve',
+        docs: null,
+        inputs: [
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'spender',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+          {
+            name: 'expiration_ledger',
+            type: 'SC_SPEC_TYPE_I32',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'balance',
+        docs: null,
+        inputs: [
+          {
+            name: 'id',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+      },
+      {
+        name: 'burn',
+        docs: null,
+        inputs: [
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'burn_from',
+        docs: null,
+        inputs: [
+          {
+            name: 'spender',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+      },
+      {
+        name: 'clawback',
+        docs: null,
+        inputs: [
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+      },
+      {
+        name: 'decimals',
+        docs: null,
+        inputs: [],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'mint',
+        docs: null,
+        inputs: [
+          {
+            name: 'to',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'name',
+        docs: null,
+        inputs: [],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_STRING',
+          },
+        ],
+      },
+      {
+        name: 'set_admin',
+        docs: null,
+        inputs: [
+          {
+            name: 'new_admin',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'admin',
+        docs: null,
+        inputs: [],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'set_authorized',
+        docs: null,
+        inputs: [
+          {
+            name: 'id',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'authorize',
+            type: 'SC_SPEC_TYPE_BOOL',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'symbol',
+        docs: null,
+        inputs: [],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_STRING',
+          },
+        ],
+      },
+      {
+        name: 'transfer',
+        docs: null,
+        inputs: [
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'to',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+      {
+        name: 'transfer_from',
+        docs: null,
+        inputs: [
+          {
+            name: 'spender',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'from',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'to',
+            type: 'SC_SPEC_TYPE_ADDRESS',
+          },
+          {
+            name: 'amount',
+            type: 'SC_SPEC_TYPE_I128',
+          },
+        ],
+        outputs: [
+          {
+            type: 'SC_SPEC_TYPE_RESULT',
+          },
+        ],
+      },
+    ];
   }
 
   async decodeContractSpecBuffer(buffer) {
@@ -183,7 +474,7 @@ export class StellarService implements IContractService {
     return functionObj;
   }
 
-  async getInstanceValue(contractId: string): Promise<xdr.ContractDataEntry> {
+  async getInstanceValue(contractId: string): Promise<xdr.ContractExecutable> {
     try {
       const instanceKey = xdr.LedgerKey.contractData(
         new xdr.LedgerKeyContractData({
@@ -193,18 +484,22 @@ export class StellarService implements IContractService {
         }),
       );
       const response = await this.server.getLedgerEntries(instanceKey);
-      const dataEntry = response.entries[0].val.contractData();
+      const dataEntry = response.entries[0].val
+        .contractData()
+        .val()
+        .instance()
+        .executable();
       return dataEntry;
     } catch (error) {
       console.log('Error while getting instance value: ', error);
     }
   }
 
-  async getWasmCode(instance: xdr.ScContractInstance): Promise<Buffer> {
+  async getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer> {
     try {
       const codeKey = xdr.LedgerKey.contractCode(
         new xdr.LedgerKeyContractCode({
-          hash: instance.executable().wasmHash(),
+          hash: instance.wasmHash(),
         }),
       );
       const response = await this.server.getLedgerEntries(codeKey);
@@ -215,12 +510,9 @@ export class StellarService implements IContractService {
     }
   }
 
-  async getContractSpecEntries(contractId) {
+  async getContractSpecEntries(instanceValue: xdr.ContractExecutable) {
     try {
-      const instanceValue = await this.getInstanceValue(contractId);
-      const contractCode = await this.getWasmCode(
-        instanceValue.val().instance(),
-      );
+      const contractCode = await this.getWasmCode(instanceValue);
       const wasmModule = new WebAssembly.Module(contractCode);
       const buffer = WebAssembly.Module.customSections(
         wasmModule,
@@ -245,47 +537,22 @@ export class StellarService implements IContractService {
           contractIds: [contractId],
         },
       ],
-      limit: 100,
+      limit: 20,
     });
     return events.reverse();
   }
 
-  async generateMethodsFromContractId(contractId: string) {
-    try {
-      const decodedSections = await this.getContractSpecEntries(contractId);
-
-      const functions = decodedSections
-        .map((decodedSection) =>
-          this.extractFunctionInfo(decodedSection, this.SCSpecTypeMap),
-        )
-        .filter((f) => {
-          return Object.keys(f).length > 0 && f.name.length > 0;
-        });
-
-      return functions;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
-  @UseInterceptors(
-    ResilienceInterceptor(
-      new RetryStrategy({
-        maxRetries: 5,
-      }),
-    ),
-  )
-  async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
-    const account = await this.server.getAccount(publicKey);
-    const contract = new Contract(contractId);
-
+  async getScValFromSmartContract(
+    instanceValue: xdr.ContractExecutable,
+    selectedMethod: Method,
+  ): Promise<xdr.ScVal[]> {
     const maxRetries = 7;
     let retries = 0;
     let specEntries;
 
     while (retries < maxRetries) {
       try {
-        specEntries = await this.getContractSpecEntries(contractId);
+        specEntries = await this.getContractSpecEntries(instanceValue);
         break;
       } catch (error) {
         console.log(
@@ -313,21 +580,76 @@ export class StellarService implements IContractService {
         [param.name]: isU32 ? parseInt(param.value) : param.value,
       };
     }, {});
-    const scArgs = contractSpec.funcArgsToScVals(selectedMethod.name, params);
 
-    let transaction: any = new TransactionBuilder(account, {
+    return contractSpec.funcArgsToScVals(selectedMethod.name, params);
+  }
+
+  async generateMethodsFromContractId(contractId: string) {
+    try {
+      const instanceValue = await this.getInstanceValue(contractId);
+      if (
+        instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
+      ) {
+        return this.getStellarAssetContractFunctions();
+      } else {
+        const decodedSections = await this.getContractSpecEntries(
+          instanceValue,
+        );
+
+        const functions = decodedSections
+          .map((decodedSection) =>
+            this.extractFunctionInfo(decodedSection, this.SCSpecTypeMap),
+          )
+          .filter((f) => {
+            return Object.keys(f).length > 0 && f.name.length > 0;
+          });
+
+        return functions;
+      }
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  @UseInterceptors(
+    ResilienceInterceptor(
+      new RetryStrategy({
+        maxRetries: 5,
+      }),
+    ),
+  )
+  async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
+    const account = await this.server.getAccount(publicKey);
+    const contract = new Contract(contractId);
+    let scArgs: xdr.ScVal[];
+
+    const instanceValue = await this.getInstanceValue(contractId);
+
+    if (
+      instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
+    ) {
+      scArgs =
+        this.stellarMapper.getScValFromStellarAssetContract(selectedMethod);
+    } else {
+      scArgs = await this.getScValFromSmartContract(
+        instanceValue,
+        selectedMethod,
+      );
+    }
+
+    let transaction = new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: this.networkPassphrase,
     })
       .addOperation(contract.call(selectedMethod.name, ...scArgs))
       .setTimeout(60)
       .build();
+
     transaction = await this.server.prepareTransaction(transaction);
     transaction.sign(Keypair.fromSecret(secretKey));
 
     try {
       const response = await this.server._sendTransaction(transaction);
-
       if (response.status === 'ERROR') {
         return response;
       }
@@ -339,16 +661,21 @@ export class StellarService implements IContractService {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
+
       if (newresponse.status === 'SUCCESS') {
         const events = await this.getContractEvents(contractId);
         return {
           method: methodMapped,
-          response: newresponse.returnValue.value(),
+          response: this.stellarMapper.fromScValToDisplayValue(
+            newresponse.returnValue,
+          ),
           status: newresponse.status,
-          events: encodeEventToDisplayEvent(events),
+          events: this.stellarMapper.encodeEventToDisplayEvent(events),
         };
       }
+
       const rawResponse = await this.server._getTransaction(response.hash);
       return {
         STATUS: rawResponse.status,
