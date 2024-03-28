@@ -2,20 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 
+import { StellarMapper } from '../../mapper/contract.mapper';
 import { NETWORK } from '../../types/soroban.enum';
 import { StellarService } from '../stellar.service';
 
 describe('StellarService', () => {
   let service: StellarService;
   let methodMapper: MethodMapper;
+  let stellarMapper: StellarMapper;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StellarService, MethodMapper],
+      providers: [StellarService, MethodMapper, StellarMapper],
     }).compile();
 
     service = module.get<StellarService>(StellarService);
     methodMapper = module.get<MethodMapper>(MethodMapper);
+    stellarMapper = module.get<StellarMapper>(StellarMapper);
   });
 
   describe('verifyNetwork', () => {
