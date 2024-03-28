@@ -17,6 +17,10 @@ export interface IContractService {
   generateMethodsFromContractId(
     contractId: string,
   ): Promise<IGeneratedMethod[]>;
+  generateScArgsToFromContractId(
+    contractId: string,
+    selectedMethod: Method,
+  ): Promise<xdr.ScVal[]>;
   runInvocation(
     publicKey: string,
     secretKey: string,

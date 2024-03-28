@@ -613,6 +613,26 @@ export class StellarService implements IContractService {
     }
   }
 
+  async generateScArgsToFromContractId(
+    contractId: string,
+    selectedMethod: Method,
+  ): Promise<xdr.ScVal[]> {
+    const instanceValue = await this.getInstanceValue(contractId);
+
+    if (
+      instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
+    ) {
+      return this.stellarMapper.getScValFromStellarAssetContract(
+        selectedMethod,
+      );
+    } else {
+      return await this.getScValFromSmartContract(
+        instanceValue,
+        selectedMethod,
+      );
+    }
+  }
+
   @UseInterceptors(
     ResilienceInterceptor(
       new RetryStrategy({
@@ -623,21 +643,11 @@ export class StellarService implements IContractService {
   async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
     const account = await this.server.getAccount(publicKey);
     const contract = new Contract(contractId);
-    let scArgs: xdr.ScVal[];
 
-    const instanceValue = await this.getInstanceValue(contractId);
-
-    if (
-      instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
-    ) {
-      scArgs =
-        this.stellarMapper.getScValFromStellarAssetContract(selectedMethod);
-    } else {
-      scArgs = await this.getScValFromSmartContract(
-        instanceValue,
-        selectedMethod,
-      );
-    }
+    const scArgs = await this.generateScArgsToFromContractId(
+      contractId,
+      selectedMethod,
+    );
 
     let transaction = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -646,7 +656,6 @@ export class StellarService implements IContractService {
       .addOperation(contract.call(selectedMethod.name, ...scArgs))
       .setTimeout(60)
       .build();
-
     transaction = await this.server.prepareTransaction(transaction);
     transaction.sign(Keypair.fromSecret(secretKey));
 
