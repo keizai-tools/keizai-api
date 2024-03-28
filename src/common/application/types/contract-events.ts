@@ -8,8 +8,14 @@ interface BaseEventResponse {
   pagingToken: string;
   inSuccessfulContractCall: boolean;
 }
-export interface EventResponse extends BaseEventResponse {
+export interface EncodeEvent extends BaseEventResponse {
   contractId?: Contract;
   topic: xdr.ScVal[];
   value: xdr.ScVal;
+}
+
+export interface EventResponse extends BaseEventResponse {
+  contractId: string;
+  topic: any[];
+  value: any;
 }
