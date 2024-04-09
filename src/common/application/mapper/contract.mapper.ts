@@ -49,14 +49,16 @@ export class StellarMapper {
     });
   }
 
-  getScValFromStellarAssetContract(selectedMethod: Method): xdr.ScVal[] {
+  getScValFromStellarAssetContract(
+    selectedMethod: Partial<Method>,
+  ): xdr.ScVal[] {
     const params = this.getParamsFromStellarAssetContract(selectedMethod);
     return params.map((param) =>
       nativeToScVal(param.value, { type: param.type }),
     );
   }
 
-  getParamsFromStellarAssetContract(selectedMethod: Method): Param[] {
+  getParamsFromStellarAssetContract(selectedMethod: Partial<Method>): Param[] {
     return selectedMethod.params.map((param) => {
       return {
         value: param.value,
@@ -80,5 +82,10 @@ export class StellarMapper {
       default:
         return value.value();
     }
+  }
+
+  fromTxFailedResponseToDisplayResponse(resultXdr: string): string {
+    return xdr.TransactionResult.fromXDR(resultXdr, 'base64').result().switch()
+      .name;
   }
 }

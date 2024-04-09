@@ -26,6 +26,7 @@ import { EncodeEvent } from '../types/contract-events';
 import {
   CONTRACT_EXECUTABLE_TYPE,
   NETWORK,
+  SOROBAN_CONTRACT_ERROR,
   SOROBAN_SERVER,
 } from '../types/soroban.enum';
 
@@ -104,6 +105,13 @@ export class StellarService implements IContractService {
         this.server = new SorobanRpc.Server(SOROBAN_SERVER.MAINNET);
         this.networkPassphrase = Networks.PUBLIC;
         this.currentNetwork = NETWORK.SOROBAN_MAINNET;
+        break;
+      case NETWORK.SOROBAN_LOCAL:
+        this.server = new SorobanRpc.Server(SOROBAN_SERVER.LOCAL, {
+          allowHttp: true,
+        });
+        this.networkPassphrase = NETWORK.SOROBAN_LOCAL_PASSPHRASE;
+        this.currentNetwork = NETWORK.SOROBAN_LOCAL;
         break;
     }
   }
@@ -546,7 +554,7 @@ export class StellarService implements IContractService {
 
   async getScValFromSmartContract(
     instanceValue: xdr.ContractExecutable,
-    selectedMethod: Method,
+    selectedMethod: Partial<Method>,
   ): Promise<xdr.ScVal[]> {
     const maxRetries = 7;
     let retries = 0;
@@ -615,7 +623,7 @@ export class StellarService implements IContractService {
 
   async generateScArgsToFromContractId(
     contractId: string,
-    selectedMethod: Method,
+    selectedMethod: Partial<Method>,
   ): Promise<xdr.ScVal[]> {
     const instanceValue = await this.getInstanceValue(contractId);
 
@@ -640,7 +648,12 @@ export class StellarService implements IContractService {
       }),
     ),
   )
-  async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
+  async runInvocation(
+    publicKey: string,
+    secretKey: string,
+    contractId: string,
+    selectedMethod: Partial<Method>,
+  ) {
     const account = await this.server.getAccount(publicKey);
     const contract = new Contract(contractId);
 
@@ -649,18 +662,20 @@ export class StellarService implements IContractService {
       selectedMethod,
     );
 
-    let transaction = new TransactionBuilder(account, {
-      fee: BASE_FEE,
-      networkPassphrase: this.networkPassphrase,
-    })
-      .addOperation(contract.call(selectedMethod.name, ...scArgs))
-      .setTimeout(60)
-      .build();
-    transaction = await this.server.prepareTransaction(transaction);
-    transaction.sign(Keypair.fromSecret(secretKey));
-
     try {
+      let transaction = new TransactionBuilder(account, {
+        fee: BASE_FEE,
+        networkPassphrase: this.networkPassphrase,
+      })
+        .addOperation(contract.call(selectedMethod.name, ...scArgs))
+        .setTimeout(60)
+        .build();
+
+      transaction = await this.server.prepareTransaction(transaction);
+      transaction.sign(Keypair.fromSecret(secretKey));
+
       const response = await this.server._sendTransaction(transaction);
+
       if (response.status === 'ERROR') {
         return response;
       }
@@ -690,13 +705,23 @@ export class StellarService implements IContractService {
       const rawResponse = await this.server._getTransaction(response.hash);
       return {
         STATUS: rawResponse.status,
-        // TODO Decode XDRs
-        response: rawResponse,
+        response: this.stellarMapper.fromTxFailedResponseToDisplayResponse(
+          rawResponse.resultXdr,
+        ),
         method: methodMapped,
       };
     } catch (e) {
-      console.log(e);
-      return e;
+      if (e.includes(SOROBAN_CONTRACT_ERROR.HOST_FAILED)) {
+        return {
+          status: 'ERROR',
+          response: {
+            title: SOROBAN_CONTRACT_ERROR.HOST_FAILED,
+            description: e.slice(0, e.indexOf('Backtrace')),
+          },
+        };
+      } else {
+        return e;
+      }
     }
   }
 }
