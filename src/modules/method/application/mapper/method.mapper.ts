@@ -3,7 +3,7 @@ import { MethodResponseDto } from '../dto/method-response.dto';
 import { IMethodValues, IUpdateMethodValues } from '../service/method.service';
 
 export class MethodMapper {
-  fromDtoToEntity(createMethodDto: IMethodValues): Method {
+  fromDtoToEntity(createMethodDto: IMethodValues | Partial<Method>): Method {
     const { name, inputs, outputs, invocationId, params, docs } =
       createMethodDto;
     return new Method(name, inputs, outputs, params, docs, invocationId);
