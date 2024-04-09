@@ -2,12 +2,15 @@ export enum NETWORK {
   SOROBAN_FUTURENET = 'FUTURENET',
   SOROBAN_TESTNET = 'TESTNET',
   SOROBAN_MAINNET = 'MAINNET',
+  SOROBAN_LOCAL = 'LOCAL',
+  SOROBAN_LOCAL_PASSPHRASE = 'Standalone Network ; February 2017',
 }
 
 export enum SOROBAN_SERVER {
   FUTURENET = 'https://rpc-futurenet.stellar.org',
   TESTNET = 'https://soroban-testnet.stellar.org',
   MAINNET = 'https://soroban-rpc.mainnet.stellar.gateway.fm',
+  LOCAL = 'http://localhost:8000/',
 }
 
 export enum CONTRACT_EXECUTABLE_TYPE {
@@ -34,4 +37,8 @@ export enum SC_VAL_TYPE {
   ADDRESS = 'scvAddress',
   VEC = 'scvVec',
   MAP = 'scvMap',
+}
+
+export enum SOROBAN_CONTRACT_ERROR {
+  HOST_FAILED = 'host invocation failed',
 }
