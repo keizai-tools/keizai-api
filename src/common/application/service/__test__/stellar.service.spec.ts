@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { xdr } from 'stellar-sdk';
 
+import { StellarAdapter } from '@/common/infrastructure/stellar/stellar.adapter';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
@@ -18,22 +19,24 @@ const contractExecutable: xdr.ContractExecutable = {
 
 describe('StellarService', () => {
   let service: StellarService;
+  let stellarAdapter: StellarAdapter;
   let methodMapper: MethodMapper;
   let stellarMapper: StellarMapper;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StellarService, MethodMapper, StellarMapper],
+      providers: [StellarService, StellarAdapter, MethodMapper, StellarMapper],
     }).compile();
 
     service = module.get<StellarService>(StellarService);
+    stellarAdapter = module.get<StellarAdapter>(StellarAdapter);
     methodMapper = module.get<MethodMapper>(MethodMapper);
     stellarMapper = module.get<StellarMapper>(StellarMapper);
   });
 
   describe('verifyNetwork', () => {
     it('Should not change the network if selectedNetwork is the same as the current network', () => {
-      const changeNetworkSpy = jest.spyOn(service, 'changeNetwork');
+      const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
 
       const selectedNetwork = NETWORK.SOROBAN_FUTURENET;
       service.verifyNetwork(selectedNetwork);
@@ -42,7 +45,7 @@ describe('StellarService', () => {
     });
 
     it('Should change the network if selectedNetwork is different from the current network', () => {
-      const changeNetworkSpy = jest.spyOn(service, 'changeNetwork');
+      const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
 
       const selectedNetwork = NETWORK.SOROBAN_TESTNET;
       service.verifyNetwork(selectedNetwork);
@@ -54,7 +57,7 @@ describe('StellarService', () => {
   describe('generateMethodsFromContractId', () => {
     it('Should return the stellar asset contract functions', async () => {
       jest
-        .spyOn(service, 'getInstanceValue')
+        .spyOn(stellarAdapter, 'getInstanceValue')
         .mockResolvedValue(contractExecutable);
       jest.spyOn(contractExecutable, 'switch').mockReturnValue({
         name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
@@ -67,14 +70,14 @@ describe('StellarService', () => {
 
       const result = await service.generateMethodsFromContractId('contractId');
 
-      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
       expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
       expect(service.getContractSpecEntries).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
     it('Should return the smart contract functions', async () => {
       jest
-        .spyOn(service, 'getInstanceValue')
+        .spyOn(stellarAdapter, 'getInstanceValue')
         .mockResolvedValue(contractExecutable);
       jest.spyOn(contractExecutable, 'switch').mockReturnValue({
         name: CONTRACT_EXECUTABLE_TYPE.WASM,
@@ -91,7 +94,7 @@ describe('StellarService', () => {
 
       const result = await service.generateMethodsFromContractId('contractId');
 
-      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
       expect(service.getStellarAssetContractFunctions).not.toHaveBeenCalled();
       expect(service.getContractSpecEntries).toHaveBeenCalled();
       expect(result).toEqual([]);
@@ -102,7 +105,7 @@ describe('StellarService', () => {
 
     it('Should return the stellar asset contract arguments', async () => {
       jest
-        .spyOn(service, 'getInstanceValue')
+        .spyOn(stellarAdapter, 'getInstanceValue')
         .mockResolvedValue(contractExecutable);
       jest.spyOn(contractExecutable, 'switch').mockReturnValue({
         name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
@@ -118,14 +121,14 @@ describe('StellarService', () => {
         mockedMethod,
       );
 
-      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
       expect(stellarMapper.getScValFromStellarAssetContract).toHaveBeenCalled();
       expect(service.getScValFromSmartContract).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
     it('Should return the smart contract arguments', async () => {
       jest
-        .spyOn(service, 'getInstanceValue')
+        .spyOn(stellarAdapter, 'getInstanceValue')
         .mockResolvedValue(contractExecutable);
       jest.spyOn(contractExecutable, 'switch').mockReturnValue({
         name: CONTRACT_EXECUTABLE_TYPE.WASM,
@@ -140,7 +143,7 @@ describe('StellarService', () => {
         mockedMethod,
       );
 
-      expect(service.getInstanceValue).toHaveBeenCalled();
+      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
       expect(
         stellarMapper.getScValFromStellarAssetContract,
       ).not.toHaveBeenCalled();
