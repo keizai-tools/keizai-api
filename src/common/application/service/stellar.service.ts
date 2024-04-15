@@ -5,29 +5,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
-import {
-  Address,
-  BASE_FEE,
-  Contract,
-  ContractSpec,
-  Keypair,
-  Networks,
-  SorobanRpc,
-  TransactionBuilder,
-  xdr,
-} from 'stellar-sdk';
+import { xdr } from 'stellar-sdk';
 
+import { StellarAdapter } from '@/common/infrastructure/stellar/stellar.adapter';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { StellarMapper } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
-import { EncodeEvent } from '../types/contract-events';
-import {
-  CONTRACT_EXECUTABLE_TYPE,
-  NETWORK,
-  SOROBAN_SERVER,
-} from '../types/soroban.enum';
+import { CONTRACT_EXECUTABLE_TYPE, NETWORK } from '../types/soroban.enum';
 
 export interface IGeneratedMethod {
   name: string;
@@ -39,15 +25,12 @@ export interface IGeneratedMethod {
 @Injectable()
 export class StellarService implements IContractService {
   private SCSpecTypeMap: { [key: number]: string };
-  private server: SorobanRpc.Server;
-  private networkPassphrase: string;
   private currentNetwork: string;
   constructor(
+    @Inject(StellarAdapter) private readonly stellarAdapter: StellarAdapter,
     @Inject(MethodMapper) private readonly methodMapper: MethodMapper,
     @Inject(StellarMapper) private readonly stellarMapper: StellarMapper,
   ) {
-    this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
-    this.networkPassphrase = Networks.FUTURENET;
     this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
     this.SCSpecTypeMap = {
       0: 'SC_SPEC_TYPE_VAL',
@@ -79,32 +62,9 @@ export class StellarService implements IContractService {
   }
 
   verifyNetwork(selectedNetwork: string): void {
-    if (selectedNetwork === this.currentNetwork) {
-      this.server;
-      this.networkPassphrase;
-      this.currentNetwork;
-    } else {
-      this.changeNetwork(selectedNetwork);
-    }
-  }
-
-  changeNetwork(selectedNetwork: string): void {
-    switch (selectedNetwork) {
-      case NETWORK.SOROBAN_FUTURENET:
-        this.server = new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET);
-        this.networkPassphrase = Networks.FUTURENET;
-        this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
-        break;
-      case NETWORK.SOROBAN_TESTNET:
-        this.server = new SorobanRpc.Server(SOROBAN_SERVER.TESTNET);
-        this.networkPassphrase = Networks.TESTNET;
-        this.currentNetwork = NETWORK.SOROBAN_TESTNET;
-        break;
-      case NETWORK.SOROBAN_MAINNET:
-        this.server = new SorobanRpc.Server(SOROBAN_SERVER.MAINNET);
-        this.networkPassphrase = Networks.PUBLIC;
-        this.currentNetwork = NETWORK.SOROBAN_MAINNET;
-        break;
+    if (selectedNetwork !== this.currentNetwork) {
+      this.stellarAdapter.changeNetwork(selectedNetwork);
+      this.currentNetwork = selectedNetwork;
     }
   }
 
@@ -393,7 +353,9 @@ export class StellarService implements IContractService {
     ];
   }
 
-  async decodeContractSpecBuffer(buffer) {
+  async decodeContractSpecBuffer(
+    buffer: ArrayBuffer,
+  ): Promise<xdr.ScSpecEntry[]> {
     const arrayBuffer = new Uint8Array(buffer);
     const decodedData = [];
     let offset = 0;
@@ -403,10 +365,8 @@ export class StellarService implements IContractService {
       for (let length = 1; length <= arrayBuffer.length - offset; length++) {
         const subArray = arrayBuffer.subarray(offset, offset + length) as any;
         try {
-          const partialDecodedData = xdr.ScSpecEntry.fromXDR(
-            subArray,
-            'base64',
-          );
+          const partialDecodedData =
+            this.stellarAdapter.getScSpecEntryFromXDR(subArray);
 
           decodedData.push(partialDecodedData);
           offset += length;
@@ -427,8 +387,8 @@ export class StellarService implements IContractService {
     return decodedData;
   }
 
-  extractFunctionInfo(decodedSection, SCSpecTypeMap) {
-    const functionObj: IGeneratedMethod = {
+  extractFunctionInfo(decodedSection): IGeneratedMethod {
+    const functionObj = {
       name: '',
       docs: null,
       inputs: [],
@@ -458,7 +418,8 @@ export class StellarService implements IContractService {
         const inputNameBuffer = input._attributes.name;
         const inputName = inputNameBuffer.toString('utf-8');
         const inputTypeValue = input._attributes.type._switch.value;
-        const inputTypeName = SCSpecTypeMap[inputTypeValue] || 'Unknown Type';
+        const inputTypeName =
+          this.SCSpecTypeMap[inputTypeValue] || 'Unknown Type';
         return { name: inputName, type: inputTypeName };
       });
 
@@ -466,7 +427,8 @@ export class StellarService implements IContractService {
       const outputs = decodedSection._value._attributes.outputs;
       functionObj.outputs = outputs.map((output) => {
         const outputTypeValue = output._switch.value;
-        const outputTypeName = SCSpecTypeMap[outputTypeValue] || 'Unknown Type';
+        const outputTypeName =
+          this.SCSpecTypeMap[outputTypeValue] || 'Unknown Type';
         return { type: outputTypeName };
       });
     }
@@ -474,79 +436,25 @@ export class StellarService implements IContractService {
     return functionObj;
   }
 
-  async getInstanceValue(contractId: string): Promise<xdr.ContractExecutable> {
-    try {
-      const instanceKey = xdr.LedgerKey.contractData(
-        new xdr.LedgerKeyContractData({
-          contract: new Address(contractId).toScAddress(),
-          key: xdr.ScVal.scvLedgerKeyContractInstance(),
-          durability: xdr.ContractDataDurability.persistent(),
-        }),
-      );
-      const response = await this.server.getLedgerEntries(instanceKey);
-      const dataEntry = response.entries[0].val
-        .contractData()
-        .val()
-        .instance()
-        .executable();
-      return dataEntry;
-    } catch (error) {
-      console.log('Error while getting instance value: ', error);
-    }
-  }
-
-  async getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer> {
-    try {
-      const codeKey = xdr.LedgerKey.contractCode(
-        new xdr.LedgerKeyContractCode({
-          hash: instance.wasmHash(),
-        }),
-      );
-      const response = await this.server.getLedgerEntries(codeKey);
-      const wasmCode = response.entries[0].val.contractCode().code();
-      return wasmCode;
-    } catch (error) {
-      console.log('Error while getting wasm code: ', error);
-    }
-  }
-
   async getContractSpecEntries(
     instanceValue: xdr.ContractExecutable,
-  ): Promise<any[]> {
+  ): Promise<xdr.ScSpecEntry[]> {
     try {
-      const contractCode = await this.getWasmCode(instanceValue);
+      const contractCode = await this.stellarAdapter.getWasmCode(instanceValue);
       const wasmModule = new WebAssembly.Module(contractCode);
       const buffer = WebAssembly.Module.customSections(
         wasmModule,
         'contractspecv0',
       )[0];
-      const decodedSections = await this.decodeContractSpecBuffer(buffer);
-      return decodedSections;
+      return await this.decodeContractSpecBuffer(buffer);
     } catch (error) {
       throw new Error(error);
     }
   }
 
-  async getContractEvents(contractId: string): Promise<EncodeEvent[]> {
-    const oneDayEarlierLedger = 9999;
-    const { sequence } = await this.server.getLatestLedger();
-    const newStartLedger = sequence - oneDayEarlierLedger;
-
-    const { events } = await this.server.getEvents({
-      startLedger: newStartLedger,
-      filters: [
-        {
-          contractIds: [contractId],
-        },
-      ],
-      limit: 20,
-    });
-    return events.reverse();
-  }
-
   async getScValFromSmartContract(
     instanceValue: xdr.ContractExecutable,
-    selectedMethod: Method,
+    selectedMethod: Partial<Method>,
   ): Promise<xdr.ScVal[]> {
     const maxRetries = 7;
     let retries = 0;
@@ -570,7 +478,7 @@ export class StellarService implements IContractService {
       throw new RequestTimeoutException('Unable to get contract spec entries.');
     }
 
-    const contractSpec = new ContractSpec(specEntries);
+    const contractSpec = this.stellarAdapter.getContractSpec(specEntries);
 
     const params = selectedMethod.params.reduce((acc, param) => {
       const paramValue = selectedMethod.inputs.find(
@@ -588,26 +496,22 @@ export class StellarService implements IContractService {
 
   async generateMethodsFromContractId(contractId: string) {
     try {
-      const instanceValue = await this.getInstanceValue(contractId);
+      const instanceValue = await this.stellarAdapter.getInstanceValue(
+        contractId,
+      );
       if (
         instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
       ) {
         return this.getStellarAssetContractFunctions();
-      } else {
-        const decodedSections = await this.getContractSpecEntries(
-          instanceValue,
-        );
-
-        const functions = decodedSections
-          .map((decodedSection) =>
-            this.extractFunctionInfo(decodedSection, this.SCSpecTypeMap),
-          )
-          .filter((f) => {
-            return Object.keys(f).length > 0 && f.name.length > 0;
-          });
-
-        return functions;
       }
+
+      const decodedSections = await this.getContractSpecEntries(instanceValue);
+
+      return decodedSections
+        .map((decodedSection) => this.extractFunctionInfo(decodedSection))
+        .filter((f) => {
+          return Object.keys(f).length > 0 && f.name.length > 0;
+        });
     } catch (error) {
       throw new Error(error);
     }
@@ -615,9 +519,11 @@ export class StellarService implements IContractService {
 
   async generateScArgsToFromContractId(
     contractId: string,
-    selectedMethod: Method,
+    selectedMethod: Partial<Method>,
   ): Promise<xdr.ScVal[]> {
-    const instanceValue = await this.getInstanceValue(contractId);
+    const instanceValue = await this.stellarAdapter.getInstanceValue(
+      contractId,
+    );
 
     if (
       instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
@@ -625,12 +531,9 @@ export class StellarService implements IContractService {
       return this.stellarMapper.getScValFromStellarAssetContract(
         selectedMethod,
       );
-    } else {
-      return await this.getScValFromSmartContract(
-        instanceValue,
-        selectedMethod,
-      );
     }
+
+    return await this.getScValFromSmartContract(instanceValue, selectedMethod);
   }
 
   @UseInterceptors(
@@ -640,35 +543,39 @@ export class StellarService implements IContractService {
       }),
     ),
   )
-  async runInvocation(publicKey, secretKey, contractId, selectedMethod) {
-    const account = await this.server.getAccount(publicKey);
-    const contract = new Contract(contractId);
-
-    const scArgs = await this.generateScArgsToFromContractId(
-      contractId,
-      selectedMethod,
-    );
-
-    let transaction = new TransactionBuilder(account, {
-      fee: BASE_FEE,
-      networkPassphrase: this.networkPassphrase,
-    })
-      .addOperation(contract.call(selectedMethod.name, ...scArgs))
-      .setTimeout(60)
-      .build();
-    transaction = await this.server.prepareTransaction(transaction);
-    transaction.sign(Keypair.fromSecret(secretKey));
-
+  async runInvocation(
+    publicKey: string,
+    secretKey: string,
+    contractId: string,
+    selectedMethod: Partial<Method>,
+  ) {
     try {
-      const response = await this.server._sendTransaction(transaction);
+      const scArgs = await this.generateScArgsToFromContractId(
+        contractId,
+        selectedMethod,
+      );
+
+      const transaction = await this.stellarAdapter.prepareTransaction(
+        publicKey,
+        contractId,
+        selectedMethod.name,
+        scArgs,
+      );
+
+      this.stellarAdapter.signTransaction(transaction, secretKey);
+
+      const response = await this.stellarAdapter.rawSendTransaction(
+        transaction,
+      );
+
       if (response.status === 'ERROR') {
         return response;
       }
 
-      let newresponse = await this.server.getTransaction(response.hash);
+      let newresponse = await this.stellarAdapter.getTransaction(response.hash);
 
       while (newresponse.status === 'NOT_FOUND') {
-        newresponse = await this.server.getTransaction(response.hash);
+        newresponse = await this.stellarAdapter.getTransaction(response.hash);
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
@@ -676,7 +583,7 @@ export class StellarService implements IContractService {
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
 
       if (newresponse.status === 'SUCCESS') {
-        const events = await this.getContractEvents(contractId);
+        const events = await this.stellarAdapter.getContractEvents(contractId);
         return {
           method: methodMapped,
           response: this.stellarMapper.fromScValToDisplayValue(
@@ -687,7 +594,10 @@ export class StellarService implements IContractService {
         };
       }
 
-      const rawResponse = await this.server._getTransaction(response.hash);
+      const rawResponse = await this.stellarAdapter.rawGetTransaction(
+        response.hash,
+      );
+
       return {
         STATUS: rawResponse.status,
         // TODO Decode XDRs

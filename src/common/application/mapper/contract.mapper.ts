@@ -2,7 +2,7 @@ import { nativeToScVal, scValToNative, xdr } from 'stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 
-import { EncodeEvent, EventResponse } from '../types/contract-events';
+import { EncodeEvent, EventResponse } from '../types/soroban';
 import { SC_VAL_TYPE } from '../types/soroban.enum';
 
 type Param = {
@@ -49,14 +49,16 @@ export class StellarMapper {
     });
   }
 
-  getScValFromStellarAssetContract(selectedMethod: Method): xdr.ScVal[] {
+  getScValFromStellarAssetContract(
+    selectedMethod: Partial<Method>,
+  ): xdr.ScVal[] {
     const params = this.getParamsFromStellarAssetContract(selectedMethod);
     return params.map((param) =>
       nativeToScVal(param.value, { type: param.type }),
     );
   }
 
-  getParamsFromStellarAssetContract(selectedMethod: Method): Param[] {
+  getParamsFromStellarAssetContract(selectedMethod: Partial<Method>): Param[] {
     return selectedMethod.params.map((param) => {
       return {
         value: param.value,
