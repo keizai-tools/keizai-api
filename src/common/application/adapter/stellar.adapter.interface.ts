@@ -1,4 +1,4 @@
-import { ContractSpec, Transaction, xdr } from 'stellar-sdk';
+import { ContractSpec, Transaction, xdr } from '@stellar/stellar-sdk';
 
 import {
   EncodeEvent,
