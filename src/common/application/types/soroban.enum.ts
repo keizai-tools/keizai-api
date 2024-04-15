@@ -35,3 +35,19 @@ export enum SC_VAL_TYPE {
   VEC = 'scvVec',
   MAP = 'scvMap',
 }
+
+export enum SOROBAN_CONTRACT_ERROR {
+  HOST_FAILED = 'host invocation failed',
+  HOST_ERROR = 'HostError',
+}
+
+export enum GetTransactionStatus {
+  SUCCESS = 'SUCCESS',
+  NOT_FOUND = 'NOT_FOUND',
+  FAILED = 'FAILED',
+}
+
+export enum SendTransactionStatus {
+  ERROR = 'ERROR',
+  PENDING = 'PENDING',
+}
