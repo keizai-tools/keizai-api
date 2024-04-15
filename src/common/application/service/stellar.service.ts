@@ -4,8 +4,8 @@ import {
   RequestTimeoutException,
   UseInterceptors,
 } from '@nestjs/common';
+import { xdr } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
-import { xdr } from 'stellar-sdk';
 
 import { StellarAdapter } from '@/common/infrastructure/stellar/stellar.adapter';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
@@ -13,7 +13,14 @@ import { Method } from '@/modules/method/domain/method.domain';
 
 import { StellarMapper } from '../mapper/contract.mapper';
 import { IContractService } from '../repository/contract.interface.service';
-import { CONTRACT_EXECUTABLE_TYPE, NETWORK } from '../types/soroban.enum';
+import { ContractErrorResponse, RunInvocationResponse } from '../types/soroban';
+import {
+  CONTRACT_EXECUTABLE_TYPE,
+  GetTransactionStatus,
+  NETWORK,
+  SOROBAN_CONTRACT_ERROR,
+  SendTransactionStatus,
+} from '../types/soroban.enum';
 
 export interface IGeneratedMethod {
   name: string;
@@ -548,7 +555,7 @@ export class StellarService implements IContractService {
     secretKey: string,
     contractId: string,
     selectedMethod: Partial<Method>,
-  ) {
+  ): Promise<RunInvocationResponse | ContractErrorResponse> {
     try {
       const scArgs = await this.generateScArgsToFromContractId(
         contractId,
@@ -561,28 +568,33 @@ export class StellarService implements IContractService {
         selectedMethod.name,
         scArgs,
       );
-
       this.stellarAdapter.signTransaction(transaction, secretKey);
 
       const response = await this.stellarAdapter.rawSendTransaction(
         transaction,
       );
 
-      if (response.status === 'ERROR') {
-        return response;
+      const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
+
+      if (response.status === SendTransactionStatus.ERROR) {
+        return {
+          status: response.status,
+          response: this.stellarMapper.fromTxResultToDisplayResponse(
+            response.errorResultXdr,
+          ),
+          method: methodMapped,
+        };
       }
 
       let newresponse = await this.stellarAdapter.getTransaction(response.hash);
 
-      while (newresponse.status === 'NOT_FOUND') {
+      while (newresponse.status === GetTransactionStatus.NOT_FOUND) {
         newresponse = await this.stellarAdapter.getTransaction(response.hash);
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
-
-      if (newresponse.status === 'SUCCESS') {
+      if (newresponse.status === GetTransactionStatus.SUCCESS) {
         const events = await this.stellarAdapter.getContractEvents(contractId);
         return {
           method: methodMapped,
@@ -599,14 +611,20 @@ export class StellarService implements IContractService {
       );
 
       return {
-        STATUS: rawResponse.status,
-        // TODO Decode XDRs
-        response: rawResponse,
+        status: rawResponse.status,
+        response: this.stellarMapper.fromTxResultToDisplayResponse(
+          rawResponse.resultXdr,
+        ),
         method: methodMapped,
       };
-    } catch (e) {
-      console.log(e);
-      return e;
+    } catch (error) {
+      if (
+        error.includes(SOROBAN_CONTRACT_ERROR.HOST_FAILED) ||
+        error.includes(SOROBAN_CONTRACT_ERROR.HOST_ERROR)
+      ) {
+        return this.stellarMapper.fromContractErrorToDisplayResponse(error);
+      }
+      return error;
     }
   }
 }
