@@ -11,7 +11,7 @@ import {
   xdr,
 } from 'stellar-sdk';
 
-import { IStellarAdapter } from '@/common/application/repository/stellar.adapter.interface';
+import { IStellarAdapter } from '@/common/application/adapter/stellar.adapter.interface';
 import {
   EncodeEvent,
   GetTransactionResponse,
