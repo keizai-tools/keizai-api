@@ -95,6 +95,7 @@ export class StellarMapper {
   }
 
   fromContractErrorToDisplayResponse(error: string): ContractErrorResponse {
+    // This regex separates the cause and the event of the error
     const regex = /Caused by:(.*?)(?=Backtrace|$)/s;
     const match = error.match(regex);
 
