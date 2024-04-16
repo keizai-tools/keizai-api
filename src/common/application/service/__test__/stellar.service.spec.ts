@@ -1,27 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
-import { xdr } from 'stellar-sdk';
 
 import { StellarAdapter } from '@/common/infrastructure/stellar/stellar.adapter';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { StellarMapper } from '../../mapper/contract.mapper';
-import { CONTRACT_EXECUTABLE_TYPE, NETWORK } from '../../types/soroban.enum';
+import {
+  CONTRACT_EXECUTABLE_TYPE,
+  GetTransactionStatus,
+  NETWORK,
+  SendTransactionStatus,
+} from '../../types/soroban.enum';
 import { StellarService } from '../stellar.service';
-
-const contractExecutable: xdr.ContractExecutable = {
-  switch: jest.fn(),
-  wasmHash: jest.fn(),
-  value: jest.fn(),
-  toXDR: jest.fn(),
-};
+import {
+  contractExecutable,
+  getTxFailed,
+  rawGetTxFailed,
+  rawSendTxError,
+  rawSendTxPending,
+} from './stellar.service.mocks';
 
 describe('StellarService', () => {
   let service: StellarService;
   let stellarAdapter: StellarAdapter;
   let methodMapper: MethodMapper;
   let stellarMapper: StellarMapper;
+  const mockedMethod = new Method('mock', [], [], [], 'mock');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -101,8 +106,9 @@ describe('StellarService', () => {
     });
   });
   describe('generateScArgsToFromContractId', () => {
-    const mockedMethod = new Method('mock', [], [], [], 'mock');
-
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
     it('Should return the stellar asset contract arguments', async () => {
       jest
         .spyOn(stellarAdapter, 'getInstanceValue')
@@ -149,6 +155,101 @@ describe('StellarService', () => {
       ).not.toHaveBeenCalled();
       expect(service.getScValFromSmartContract).toHaveBeenCalled();
       expect(result).toEqual([]);
+    });
+  });
+  describe('RunInvocation', () => {
+    const setupCommonMocks = () => {
+      jest
+        .spyOn(service, 'generateScArgsToFromContractId')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(stellarAdapter, 'prepareTransaction')
+        .mockImplementation(jest.fn());
+      jest.spyOn(stellarAdapter, 'signTransaction').mockReturnValue();
+    };
+
+    it('Should return a transaction with status error', async () => {
+      setupCommonMocks();
+      jest
+        .spyOn(stellarMapper, 'fromTxResultToDisplayResponse')
+        .mockReturnValue('txError');
+      jest
+        .spyOn(stellarAdapter, 'rawSendTransaction')
+        .mockResolvedValue(rawSendTxError);
+
+      const result = await service.runInvocation(
+        'publicKey',
+        'secretKey',
+        'contractId',
+        mockedMethod,
+      );
+
+      expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
+      expect(stellarMapper.fromTxResultToDisplayResponse).toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: SendTransactionStatus.ERROR,
+          response: 'txError',
+        }),
+      );
+    });
+
+    it('Should return a failed transaction', async () => {
+      setupCommonMocks();
+      jest
+        .spyOn(stellarAdapter, 'rawSendTransaction')
+        .mockResolvedValue(rawSendTxPending);
+      jest
+        .spyOn(stellarMapper, 'fromTxResultToDisplayResponse')
+        .mockReturnValue('txFailed');
+      jest
+        .spyOn(stellarAdapter, 'getTransaction')
+        .mockResolvedValue(getTxFailed);
+      jest
+        .spyOn(stellarAdapter, 'rawGetTransaction')
+        .mockResolvedValue(rawGetTxFailed);
+
+      const result = await service.runInvocation(
+        'publicKey',
+        'secretKey',
+        'contractId',
+        mockedMethod,
+      );
+
+      expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
+      expect(stellarAdapter.getTransaction).toHaveBeenCalled();
+      expect(stellarAdapter.rawGetTransaction).toHaveBeenCalled();
+      expect(stellarMapper.fromTxResultToDisplayResponse).toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: GetTransactionStatus.FAILED,
+          response: 'txFailed',
+        }),
+      );
+    });
+
+    it('Should throw an error when try to run invocation', async () => {
+      setupCommonMocks();
+      jest
+        .spyOn(stellarAdapter, 'rawSendTransaction')
+        .mockRejectedValue(
+          'Caused by:\n    HostError: Error(Contract, #2)\n    \n',
+        );
+
+      const result = await service.runInvocation(
+        'publicKey',
+        'secretKey',
+        'contractId',
+        mockedMethod,
+      );
+
+      expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: SendTransactionStatus.ERROR,
+          title: 'host invocation failed',
+        }),
+      );
     });
   });
 });

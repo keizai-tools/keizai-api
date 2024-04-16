@@ -1,14 +1,19 @@
-import { nativeToScVal, scValToNative, xdr } from 'stellar-sdk';
+import { nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 
-import { EncodeEvent, EventResponse } from '../types/soroban';
-import { SC_VAL_TYPE } from '../types/soroban.enum';
+import {
+  ContractErrorResponse,
+  EncodeEvent,
+  EventResponse,
+  Param,
+} from '../types/soroban';
+import {
+  SC_VAL_TYPE,
+  SOROBAN_CONTRACT_ERROR,
+  SendTransactionStatus,
+} from '../types/soroban.enum';
 
-type Param = {
-  value: string;
-  type: any;
-};
 export class StellarMapper {
   SCSpecTypeMap = {
     SC_SPEC_TYPE_BOOL: 'b',
@@ -82,5 +87,30 @@ export class StellarMapper {
       default:
         return value.value();
     }
+  }
+
+  fromTxResultToDisplayResponse(resultXdr: string): string {
+    return xdr.TransactionResult.fromXDR(resultXdr, 'base64').result().switch()
+      .name;
+  }
+
+  fromContractErrorToDisplayResponse(error: string): ContractErrorResponse {
+    // This regex separates the cause and the event of the error
+    const regex = /Caused by:(.*?)(?=Backtrace|$)/s;
+    const match = error.match(regex);
+
+    if (match) {
+      return {
+        status: SendTransactionStatus.ERROR,
+        title: SOROBAN_CONTRACT_ERROR.HOST_FAILED,
+        response: match[0],
+      };
+    }
+
+    return {
+      status: SendTransactionStatus.ERROR,
+      title: SOROBAN_CONTRACT_ERROR.HOST_FAILED,
+      response: error,
+    };
   }
 }

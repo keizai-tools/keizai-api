@@ -1,8 +1,9 @@
-import { xdr } from 'stellar-sdk';
+import { xdr } from '@stellar/stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { IGeneratedMethod } from '../service/stellar.service';
+import { ContractErrorResponse, RunInvocationResponse } from '../types/soroban';
 
 export interface IContractService {
   verifyNetwork(selectedNetwork: string): void;
@@ -28,7 +29,7 @@ export interface IContractService {
     secretKey: string,
     contractId: string,
     method: Partial<Method>,
-  );
+  ): Promise<RunInvocationResponse | ContractErrorResponse>;
 }
 
 export const CONTRACT_SERVICE = 'CONTRACT_SERVICE';

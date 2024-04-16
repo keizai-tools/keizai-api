@@ -1,12 +1,13 @@
 import {
   Contract,
+  EventType,
   Memo,
   MemoType,
   Operation,
   SorobanRpc,
   Transaction as Tx,
   xdr,
-} from 'stellar-sdk';
+} from '@stellar/stellar-sdk';
 
 export type Transaction = Tx<Memo<MemoType>, Operation[]>;
 
@@ -20,7 +21,7 @@ export type RawGetTransactionResponse =
 
 interface BaseEventResponse {
   id: string;
-  type: 'contract' | 'system' | 'diagnostic';
+  type: EventType;
   ledger: number;
   ledgerClosedAt: string;
   pagingToken: string;
@@ -37,7 +38,14 @@ export interface EventResponse extends BaseEventResponse {
   topic: any[];
   value: any;
 }
-export interface SorobanContractErrorResponse {
+
+export interface RunInvocationResponse {
+  status: string;
+  response: string | number;
+  method: Method;
+  events?: EventResponse[];
+}
+export interface ContractErrorResponse {
   status: string;
   title: string;
   response: string;

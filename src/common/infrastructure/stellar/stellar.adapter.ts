@@ -9,7 +9,7 @@ import {
   SorobanRpc,
   TransactionBuilder,
   xdr,
-} from 'stellar-sdk';
+} from '@stellar/stellar-sdk';
 
 import { IStellarAdapter } from '@/common/application/adapter/stellar.adapter.interface';
 import {
@@ -118,22 +118,18 @@ export class StellarAdapter implements IStellarAdapter {
     methodName: string,
     scArgs: xdr.ScVal[],
   ): Promise<Transaction> {
-    try {
-      const account = await this.server.getAccount(publicKey);
-      const contract = new Contract(contractId);
+    const account = await this.server.getAccount(publicKey);
+    const contract = new Contract(contractId);
 
-      const transaction = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: this.networkPassphrase,
-      })
-        .addOperation(contract.call(methodName, ...scArgs))
-        .setTimeout(60)
-        .build();
+    const transaction = new TransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: this.networkPassphrase,
+    })
+      .addOperation(contract.call(methodName, ...scArgs))
+      .setTimeout(60)
+      .build();
 
-      return await this.server.prepareTransaction(transaction);
-    } catch (error) {
-      return error;
-    }
+    return await this.server.prepareTransaction(transaction);
   }
 
   signTransaction(tx: Transaction, secretKey: string): void {
