@@ -48,6 +48,14 @@ export class AuthService {
     }
   }
 
+  async resendVerificationCode(email: string) {
+    try {
+      return await this.cognitoService.resendVerificationCode(email);
+    } catch (error) {
+      exceptionsCognitoErrors(error, 'resendVerificationCode');
+    }
+  }
+
   async findOneByexternalId(id: string) {
     const userResponse = await this.userRepository.findOneByexternalId(id);
     if (!userResponse) {

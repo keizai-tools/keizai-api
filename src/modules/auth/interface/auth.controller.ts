@@ -19,6 +19,11 @@ export class AuthController {
     return await this.authService.login(authLoginUserDto);
   }
 
+  @Post('resend/verification')
+  async resendVerificationCode(@Body() username: string) {
+    return await this.authService.resendVerificationCode(username);
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('account/:externalId')
   async getUserData(@Param('externalId') id: string) {

@@ -52,7 +52,6 @@ export class CognitoService implements ICognitoService {
           });
         },
       );
-
       if (
         process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
         process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
@@ -116,6 +115,25 @@ export class CognitoService implements ICognitoService {
         onFailure: (error) => {
           reject(error);
         },
+      });
+    });
+  }
+
+  async resendVerificationCode(email: string) {
+    const userData = {
+      Username: email,
+      Pool: this.userPool,
+    };
+
+    const cognitoUser = new CognitoUser(userData);
+    console.log({ cognitoUser });
+    return new Promise((resolve, reject) => {
+      cognitoUser.resendConfirmationCode((err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
       });
     });
   }
