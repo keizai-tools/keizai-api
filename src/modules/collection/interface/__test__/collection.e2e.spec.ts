@@ -274,7 +274,7 @@ describe('Collection - [/collection]', () => {
     describe('Create one  - [POST /collection]', () => {
       it('should create a new collection with a team id', async () => {
         const response = await request(app.getHttpServer())
-          .post('/collection')
+          .post(`${team0Route}/collection/`)
           .send({
             name: 'team test',
             teamId: 'team0',
