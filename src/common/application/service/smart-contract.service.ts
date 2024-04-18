@@ -60,7 +60,9 @@ export class SmartContractService implements ISmartContractService {
           success = true;
           break;
         } catch (error) {
-          // Log or handle the error
+          throw new RequestTimeoutException(
+            'Unable to decode contract spec buffer.',
+          );
         }
       }
       if (!success) {
@@ -83,23 +85,19 @@ export class SmartContractService implements ISmartContractService {
     };
 
     if (decodedSection._switch.name === 'scSpecEntryFunctionV0') {
-      // Extract and convert the name of the function to a string
       const functionNameBuffer = decodedSection._value._attributes.name;
       const functionName = functionNameBuffer.toString('utf-8');
       functionObj.name = functionName;
 
-      // Extract and store the function documentation if available
       const functionDocBuffer = decodedSection._value._attributes.doc;
       const functionDoc = functionDocBuffer.toString('utf-8');
       if (functionDoc) {
         functionObj.docs = functionDoc;
       }
 
-      // Initialize arrays for inputs and outputs
       functionObj.inputs = [];
       functionObj.outputs = [];
 
-      // Process inputs
       const inputs = decodedSection._value._attributes.inputs;
       functionObj.inputs = inputs.map((input) => {
         const inputNameBuffer = input._attributes.name;
@@ -110,7 +108,6 @@ export class SmartContractService implements ISmartContractService {
         return { name: inputName, type: inputTypeName };
       });
 
-      // Process outputs
       const outputs = decodedSection._value._attributes.outputs;
       functionObj.outputs = outputs.map((output) => {
         const outputTypeValue = output._switch.value;
