@@ -18,6 +18,7 @@ import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/envi
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
+import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
@@ -25,6 +26,15 @@ import { CollectionService } from '../application/service/collection.service';
 @UseGuards(JwtAuthGuard, AuthTeamGuard)
 export class CollectionTeamController {
   constructor(private readonly collectionService: CollectionService) {}
+
+  @UseGuards(AdminRoleGuard)
+  @Post('/')
+  async create(
+    @Body() collectionDto: CreateCollectionDto,
+    @Param('teamId') teamId: string,
+  ): Promise<CollectionResponseDto> {
+    return this.collectionService.createByTeam(collectionDto, teamId);
+  }
 
   @UseGuards(AdminRoleGuard)
   @Post('/:id/environments')
