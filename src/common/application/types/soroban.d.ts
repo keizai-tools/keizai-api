@@ -9,6 +9,10 @@ import {
   xdr,
 } from '@stellar/stellar-sdk';
 
+export type ContractExecutable = xdr.ContractExecutable;
+export type ScSpecEntry = xdr.ScSpecEntry;
+export type ScVal = xdr.ScVal;
+
 export type Transaction = Tx<Memo<MemoType>, Operation[]>;
 
 export type GetTransactionResponse = SorobanRpc.Api.GetTransactionResponse;
