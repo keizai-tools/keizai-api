@@ -3,17 +3,14 @@ items:
   team0:
     id: 'team0'
     name: 'team0'
-    adminId: 'user0'
-    users: []
+    users: [user0]
 
   team1:
     id: 'team1'
     name: 'team1'
-    adminId: 'user1'
-    users: ['user0']
+    users: ['user1, user0']
 
   team2:
     id: 'team2'
     name: 'team2'
-    adminId: 'user1'
-    users: []
+    users: ['user1']

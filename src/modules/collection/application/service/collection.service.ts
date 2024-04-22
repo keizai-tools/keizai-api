@@ -182,16 +182,33 @@ export class CollectionService {
     return collection.folders;
   }
 
-  async create(
+  async createByUser(
     collectionDto: CreateCollectionDto,
     user: IUserResponse,
   ): Promise<CollectionResponseDto> {
     const collectionData: ICollectionValues = {
       name: collectionDto.name,
-      userId: collectionDto.teamId ? null : user.id,
-      teamId: collectionDto.teamId ?? null,
+      userId: user.id,
+      teamId: null,
     };
+    return this.create(collectionData);
+  }
 
+  async createByTeam(
+    collectionDto: CreateCollectionDto,
+    teamId: string,
+  ): Promise<CollectionResponseDto> {
+    const collectionData: ICollectionValues = {
+      name: collectionDto.name,
+      userId: null,
+      teamId,
+    };
+    return this.create(collectionData);
+  }
+
+  async create(
+    collectionData: ICollectionValues,
+  ): Promise<CollectionResponseDto> {
     const collection = this.collectionMapper.fromDtoToEntity(collectionData);
     try {
       const collectionSaved = await this.collectionRepository.save(collection);

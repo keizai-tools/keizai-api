@@ -34,7 +34,7 @@ export class CollectionController {
     @Body() collectionDto: CreateCollectionDto,
     @AuthUser() user: IUserResponse,
   ): Promise<CollectionResponseDto> {
-    return this.collectionService.create(collectionDto, user);
+    return this.collectionService.createByUser(collectionDto, user);
   }
 
   @Post('/:id/environments')
