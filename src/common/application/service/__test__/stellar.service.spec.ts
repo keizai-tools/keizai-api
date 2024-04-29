@@ -12,9 +12,7 @@ import {
   NETWORK,
   SendTransactionStatus,
 } from '../../types/soroban.enum';
-import { ContractService } from '../contract.service';
-import { StellarAssetContractService } from '../sac-contract.service';
-import { SmartContractService } from '../smart-contract.service';
+import { StellarService } from '../stellar.service';
 import {
   contractExecutable,
   getTxFailed,
@@ -24,35 +22,21 @@ import {
 } from './stellar.service.mocks';
 
 describe('StellarService', () => {
-  let service: ContractService;
+  let service: StellarService;
   let stellarAdapter: StellarAdapter;
   let methodMapper: MethodMapper;
   let stellarMapper: StellarMapper;
-  let smartContractService: SmartContractService;
-  let stellarAssetContractService: StellarAssetContractService;
   const mockedMethod = new Method('mock', [], [], [], 'mock');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ContractService,
-        StellarAdapter,
-        MethodMapper,
-        StellarMapper,
-        SmartContractService,
-        StellarAssetContractService,
-      ],
+      providers: [StellarService, StellarAdapter, MethodMapper, StellarMapper],
     }).compile();
 
-    service = module.get<ContractService>(ContractService);
+    service = module.get<StellarService>(StellarService);
     stellarAdapter = module.get<StellarAdapter>(StellarAdapter);
     methodMapper = module.get<MethodMapper>(MethodMapper);
     stellarMapper = module.get<StellarMapper>(StellarMapper);
-    smartContractService =
-      module.get<SmartContractService>(SmartContractService);
-    stellarAssetContractService = module.get<StellarAssetContractService>(
-      StellarAssetContractService,
-    );
   });
 
   describe('verifyNetwork', () => {
@@ -85,15 +69,15 @@ describe('StellarService', () => {
         value: 1,
       });
       jest
-        .spyOn(stellarAssetContractService, 'getStellarAssetContractFunctions')
+        .spyOn(service, 'getStellarAssetContractFunctions')
         .mockReturnValue([]);
+      jest.spyOn(service, 'getContractSpecEntries');
 
       const result = await service.generateMethodsFromContractId('contractId');
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
-      expect(
-        stellarAssetContractService.getStellarAssetContractFunctions,
-      ).toHaveBeenCalled();
+      expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
+      expect(service.getContractSpecEntries).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
     it('Should return the smart contract functions', async () => {
@@ -104,21 +88,20 @@ describe('StellarService', () => {
         name: CONTRACT_EXECUTABLE_TYPE.WASM,
         value: 0,
       });
-      jest.spyOn(
-        stellarAssetContractService,
-        'getStellarAssetContractFunctions',
-      );
-      jest
-        .spyOn(smartContractService, 'getSmartContractFunctions')
-        .mockResolvedValue([]);
+      jest.spyOn(service, 'getStellarAssetContractFunctions');
+      jest.spyOn(service, 'getContractSpecEntries').mockResolvedValue([]);
+      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
+        name: '',
+        docs: '',
+        inputs: [],
+        outputs: [],
+      });
 
       const result = await service.generateMethodsFromContractId('contractId');
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
-      expect(
-        stellarAssetContractService.getStellarAssetContractFunctions,
-      ).not.toHaveBeenCalled();
-      expect(smartContractService.getSmartContractFunctions).toHaveBeenCalled();
+      expect(service.getStellarAssetContractFunctions).not.toHaveBeenCalled();
+      expect(service.getContractSpecEntries).toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
@@ -135,9 +118,9 @@ describe('StellarService', () => {
         value: 1,
       });
       jest
-        .spyOn(stellarAssetContractService, 'getScValFromStellarAssetContract')
+        .spyOn(stellarMapper, 'getScValFromStellarAssetContract')
         .mockReturnValue([]);
-      jest.spyOn(smartContractService, 'getScValFromSmartContract');
+      jest.spyOn(service, 'getScValFromSmartContract');
 
       const result = await service.generateScArgsToFromContractId(
         'contractId',
@@ -145,12 +128,8 @@ describe('StellarService', () => {
       );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
-      expect(
-        stellarAssetContractService.getScValFromStellarAssetContract,
-      ).toHaveBeenCalled();
-      expect(
-        smartContractService.getScValFromSmartContract,
-      ).not.toHaveBeenCalled();
+      expect(stellarMapper.getScValFromStellarAssetContract).toHaveBeenCalled();
+      expect(service.getScValFromSmartContract).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
     it('Should return the smart contract arguments', async () => {
@@ -161,13 +140,9 @@ describe('StellarService', () => {
         name: CONTRACT_EXECUTABLE_TYPE.WASM,
         value: 0,
       });
-      jest.spyOn(
-        stellarAssetContractService,
-        'getScValFromStellarAssetContract',
-      );
-      jest
-        .spyOn(smartContractService, 'getScValFromSmartContract')
-        .mockResolvedValue([]);
+      jest.spyOn(stellarMapper, 'getScValFromStellarAssetContract');
+      jest.spyOn(service, 'getContractSpecEntries').mockResolvedValue([]);
+      jest.spyOn(service, 'getScValFromSmartContract').mockResolvedValue([]);
 
       const result = await service.generateScArgsToFromContractId(
         'contractId',
@@ -176,9 +151,9 @@ describe('StellarService', () => {
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
       expect(
-        stellarAssetContractService.getScValFromStellarAssetContract,
+        stellarMapper.getScValFromStellarAssetContract,
       ).not.toHaveBeenCalled();
-      expect(smartContractService.getScValFromSmartContract).toHaveBeenCalled();
+      expect(service.getScValFromSmartContract).toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
