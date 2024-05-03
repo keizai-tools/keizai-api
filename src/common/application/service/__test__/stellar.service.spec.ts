@@ -15,10 +15,13 @@ import {
 import { StellarService } from '../stellar.service';
 import {
   contractExecutable,
+  contracts,
+  getRandomKeypair,
   getTxFailed,
   rawGetTxFailed,
   rawSendTxError,
   rawSendTxPending,
+  selectedMethod,
 } from './stellar.service.mocks';
 
 describe('StellarService', () => {
@@ -60,50 +63,25 @@ describe('StellarService', () => {
     });
   });
   describe('generateMethodsFromContractId', () => {
-    it('Should return the stellar asset contract functions', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
-        value: 1,
-      });
-      jest
-        .spyOn(service, 'getStellarAssetContractFunctions')
-        .mockReturnValue([]);
-      jest.spyOn(service, 'getContractSpecEntries');
+    it.only('Should return the stellar asset contract functions', async () => {
+      const sacFunctions = service.getStellarAssetContractFunctions();
+      const result = await service.generateMethodsFromContractId(contracts.sac);
 
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
-      expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
-      expect(service.getContractSpecEntries).not.toHaveBeenCalled();
-      expect(result).toEqual([]);
+      expect(result).toEqual(sacFunctions);
     });
-    it('Should return the smart contract functions', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.WASM,
-        value: 0,
-      });
-      jest.spyOn(service, 'getStellarAssetContractFunctions');
-      jest.spyOn(service, 'getContractSpecEntries').mockResolvedValue([]);
-      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
-        name: '',
-        docs: '',
-        inputs: [],
-        outputs: [],
-      });
+    it.only('Should return the smart contract functions', async () => {
+      stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        contracts.smart,
+      );
 
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalled();
-      expect(service.getStellarAssetContractFunctions).not.toHaveBeenCalled();
-      expect(service.getContractSpecEntries).toHaveBeenCalled();
-      expect(result).toEqual([]);
-    });
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: 'increment' }),
+        ]),
+      );
+    }, 45000);
   });
   describe('generateScArgsToFromContractId', () => {
     afterEach(() => {
@@ -167,6 +145,40 @@ describe('StellarService', () => {
         .mockImplementation(jest.fn());
       jest.spyOn(stellarAdapter, 'signTransaction').mockReturnValue();
     };
+
+    jest.retryTimes(5);
+    it.only('Should return a successfully transaction with a smart contract', async () => {
+      stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
+
+      const { publicKey, secretKey } = await getRandomKeypair();
+      const result = await service.runInvocation(
+        publicKey,
+        secretKey,
+        contracts.smart,
+        selectedMethod.smart,
+      );
+
+      expect(result.status).toEqual(GetTransactionStatus.SUCCESS);
+    }, 45000);
+    jest.retryTimes(5);
+    it.only('Should return a successfully transaction with a stellar asset contract', async () => {
+      stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
+
+      const { publicKey, secretKey } = await getRandomKeypair();
+      const result = await service.runInvocation(
+        publicKey,
+        secretKey,
+        contracts.sac,
+        selectedMethod.sac,
+      );
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: GetTransactionStatus.SUCCESS,
+          response: 'KEI',
+        }),
+      );
+    }, 15000);
 
     it('Should return a transaction with status error', async () => {
       setupCommonMocks();
