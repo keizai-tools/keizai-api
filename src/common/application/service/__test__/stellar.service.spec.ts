@@ -63,13 +63,13 @@ describe('StellarService', () => {
     });
   });
   describe('generateMethodsFromContractId', () => {
-    it.only('Should return the stellar asset contract functions', async () => {
+    it('Should return the stellar asset contract functions', async () => {
       const sacFunctions = service.getStellarAssetContractFunctions();
       const result = await service.generateMethodsFromContractId(contracts.sac);
 
       expect(result).toEqual(sacFunctions);
     });
-    it.only('Should return the smart contract functions', async () => {
+    it('Should return the smart contract functions', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
       const result = await service.generateMethodsFromContractId(
@@ -147,7 +147,7 @@ describe('StellarService', () => {
     };
 
     jest.retryTimes(5);
-    it.only('Should return a successfully transaction with a smart contract', async () => {
+    it('Should return a successfully transaction with a smart contract', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
       const { publicKey, secretKey } = await getRandomKeypair();
@@ -161,7 +161,7 @@ describe('StellarService', () => {
       expect(result.status).toEqual(GetTransactionStatus.SUCCESS);
     }, 45000);
     jest.retryTimes(5);
-    it.only('Should return a successfully transaction with a stellar asset contract', async () => {
+    it('Should return a successfully transaction with a stellar asset contract', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
       const { publicKey, secretKey } = await getRandomKeypair();
