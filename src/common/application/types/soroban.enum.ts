@@ -8,6 +8,7 @@ export enum SOROBAN_SERVER {
   FUTURENET = 'https://rpc-futurenet.stellar.org',
   TESTNET = 'https://soroban-testnet.stellar.org',
   MAINNET = 'https://soroban-rpc.mainnet.stellar.gateway.fm',
+  FRIENDBOT_TESNET = 'https://friendbot.stellar.org?addr=',
 }
 
 export enum CONTRACT_EXECUTABLE_TYPE {

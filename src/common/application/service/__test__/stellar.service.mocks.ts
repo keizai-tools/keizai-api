@@ -1,7 +1,9 @@
-import { xdr } from '@stellar/stellar-sdk';
+import { Keypair, xdr } from '@stellar/stellar-sdk';
+import axios from 'axios';
 
 import {
   GetTransactionStatus,
+  SOROBAN_SERVER,
   SendTransactionStatus,
 } from '../../types/soroban.enum';
 
@@ -51,3 +53,50 @@ export const rawSendTxError = {
   latestLedger: 0,
   latestLedgerCloseTime: 0,
 };
+
+export const selectedMethod = {
+  smart: {
+    name: 'increment',
+    inputs: [],
+    outputs: [
+      {
+        type: 'SC_SPEC_TYPE_U32',
+      },
+    ],
+    params: [],
+    docs: null,
+    id: '41e62067',
+  },
+  sac: {
+    name: 'symbol',
+    inputs: [],
+    outputs: [
+      {
+        type: 'SC_SPEC_TYPE_STRING',
+      },
+    ],
+    params: [],
+    docs: null,
+    id: '00d501f0-46cf-4c50-83f9-41ca299ff6a1',
+  },
+};
+
+export const contracts = {
+  sac: 'CDI7KTHGYGX6U76745F74WKBS7N7TUSIADWJ3L4WFXCJF2LQT63M4YJW',
+  smart: 'CBW5BTKZ6G2TLM646PGYMJLS6UMJOJI55ZHS34P4Q2S7Z7GSSJGR2OXA',
+};
+
+export async function getRandomKeypair() {
+  const keypair = Keypair.random();
+
+  const response = await axios.get(
+    `${SOROBAN_SERVER.FRIENDBOT_TESNET}${keypair.publicKey()}`,
+  );
+
+  if (response) {
+    return {
+      publicKey: keypair.publicKey(),
+      secretKey: keypair.secret(),
+    };
+  }
+}
