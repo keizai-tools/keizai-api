@@ -1,4 +1,5 @@
 import { Keypair, xdr } from '@stellar/stellar-sdk';
+import axios from 'axios';
 
 import {
   GetTransactionStatus,
@@ -88,7 +89,7 @@ export const contracts = {
 export async function getRandomKeypair() {
   const keypair = Keypair.random();
 
-  const response = await fetch(
+  const response = await axios.get(
     `${SOROBAN_SERVER.FRIENDBOT_TESNET}${keypair.publicKey()}`,
   );
 
