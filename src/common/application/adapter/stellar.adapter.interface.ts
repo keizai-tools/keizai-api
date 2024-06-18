@@ -1,4 +1,4 @@
-import { ContractSpec, Transaction, xdr } from '@stellar/stellar-sdk';
+import { Transaction, contract, xdr } from '@stellar/stellar-sdk';
 
 import {
   EncodeEvent,
@@ -8,7 +8,7 @@ import {
 
 export interface IStellarAdapter {
   changeNetwork(selectedNetwork: string): void;
-  getContractSpec(specEntries: xdr.ScSpecEntry[]): ContractSpec;
+  getContractSpec(specEntries: xdr.ScSpecEntry[]): contract.Spec;
   getScSpecEntryFromXDR(input: string): xdr.ScSpecEntry;
   getInstanceValue(contractId: string): Promise<xdr.ContractExecutable>;
   getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer>;

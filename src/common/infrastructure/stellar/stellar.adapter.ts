@@ -3,11 +3,11 @@ import {
   Address,
   BASE_FEE,
   Contract,
-  ContractSpec,
   Keypair,
   Networks,
   SorobanRpc,
   TransactionBuilder,
+  contract,
   xdr,
 } from '@stellar/stellar-sdk';
 
@@ -51,8 +51,8 @@ export class StellarAdapter implements IStellarAdapter {
     }
   }
 
-  getContractSpec(entries: xdr.ScSpecEntry[]): ContractSpec {
-    return new ContractSpec(entries);
+  getContractSpec(entries: xdr.ScSpecEntry[]): contract.Spec {
+    return new contract.Spec(entries);
   }
 
   getScSpecEntryFromXDR(input: string): xdr.ScSpecEntry {

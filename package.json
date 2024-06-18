@@ -48,7 +48,7 @@
     "@nestjs/platform-express": "^10.3.8",
     "@nestjs/swagger": "^7.1.14",
     "@nestjs/typeorm": "^10.0.0",
-    "@stellar/stellar-sdk": "^11.3.0",
+    "@stellar/stellar-sdk": "^12.1.0",
     "amazon-cognito-identity-js": "^6.3.6",
     "axios": "^1.6.8",
     "better-sqlite3": "^7.6.2",
