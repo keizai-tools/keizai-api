@@ -21,8 +21,10 @@ import {
 } from '@/common/application/types/soroban';
 import {
   NETWORK,
+  SOROBAN_CONTRACT_ERROR,
   SOROBAN_SERVER,
 } from '@/common/application/types/soroban.enum';
+import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 
 @Injectable()
 export class StellarAdapter implements IStellarAdapter {
@@ -69,6 +71,11 @@ export class StellarAdapter implements IStellarAdapter {
         }),
       );
       const response = await this.server.getLedgerEntries(instanceKey);
+
+      if (response.entries.length === 0) {
+        throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
+      }
+      
       const dataEntry = response.entries[0].val
         .contractData()
         .val()
@@ -88,6 +95,11 @@ export class StellarAdapter implements IStellarAdapter {
         }),
       );
       const response = await this.server.getLedgerEntries(codeKey);
+
+      if (response.entries.length === 0) {
+        throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
+      }
+
       const wasmCode = response.entries[0].val.contractCode().code();
       return wasmCode;
     } catch (error) {
