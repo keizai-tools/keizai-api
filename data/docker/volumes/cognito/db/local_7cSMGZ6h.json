@@ -1,55 +1,5 @@
 {
-  "Users": {
-    "jorge.luis@test.com": {
-      "Attributes": [
-        {
-          "Name": "sub",
-          "Value": "3714b600-6198-4e98-86aa-6c2d6190c746"
-        },
-        {
-          "Name": "given_name",
-          "Value": "Jorge"
-        },
-        {
-          "Name": "family_name",
-          "Value": "Luis"
-        },
-        {
-          "Name": "email",
-          "Value": "jorge.luis@test.com"
-        }
-      ],
-      "Enabled": true,
-      "Password": "Jorge123456+",
-      "RefreshTokens": [
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOnVzZXJuYW1lIjoiam9yZ2UubHVpc0B0ZXN0LmNvbSIsImVtYWlsIjoiam9yZ2UubHVpc0B0ZXN0LmNvbSIsImlhdCI6MTY4Nzc4OTc5NywianRpIjoiMjZkYzliNmUtZDg1ZS00MDFiLWI2MzMtZDg0Y2NhMGNiZjE3IiwiZXhwIjoxNjg4Mzk0NTk3LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkyMjkvbG9jYWxfN2NTTUdaNmgifQ.P6MDGxTca3GmGtFP6HwCQsckj1dyEXLbPoYnvZsTuqKq4iQeiZynBxJCskECU93sReM3-jLnesPyhysIl8MqNBnnTzZE_vluYER6LIWI3c9-G2mZRIdSAz1v1IrKNqtH-S4AjPFM9fggwnEnasYi-lC0MbKuGZDglzqU-H_o79sbkSGiMhp5Prw5qBQhwZTqOVPaOxMcdq5sPFlu9P4JPfetfdK9AMdloGi3cVzqGg-dqLBR2oX2Z9ce2RVd4Xu1cXJedHMLtjgdnF9mjGJBf0jZ-zJKLMl8qy7E8g4srqGdOkgIuA3j0j4jFwZhZK1axqCdWJXLbDWEpP51GNzL4A"
-      ],
-      "UserCreateDate": "2023-06-26T14:25:38.644Z",
-      "UserLastModifiedDate": "2023-06-26T14:25:38.644Z",
-      "Username": "jorge.luis@test.com",
-      "UserStatus": "VERIFIED",
-      "ConfirmationCode": "768113"
-    },
-    "demo2@keizai.dev": {
-      "Attributes": [
-        {
-          "Name": "sub",
-          "Value": "03da41a0-d4e5-4ac4-abb9-6c1a3cbfde52"
-        }
-      ],
-      "Enabled": true,
-      "Password": "demo2Password",
-      "RefreshTokens": [
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOnVzZXJuYW1lIjoidGFtbWFyb2l2YW5AZ21haWwuY29tIiwiaWF0IjoxNjk4ODA4NDEyLCJqdGkiOiI4YWMxODg5Ny0yZWJlLTQ1ZDQtYWQ5ZC1hODg3NWFjYjFiMjYiLCJleHAiOjE2OTk0MTMyMTIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6OTIyOS9sb2NhbF83Y1NNR1o2aCJ9.tDDBxClDy8-jNChFI551CGcQs-802yqYWJvQFXGOp8K8iKCs5zAbtR_mx6Fp-Rf3QhAudZ0DyvxoosPjceoeFzvRoRWv5XW9mueD3lPxGure3f5WamIzSz0qZtfdUPA7jH7a_Av2ok5iKY_cJZ0bOQHF6sm7e6dKr1yiG48LatDGCpgzx0Gkz2JuhYDJBJATwoGj35nUYyIlkrb1tbIvMAAYbTkxZm54bR3UTFyZxnLmQg8puvdxTmTW-0ic0yGTihs2PfuVaWDZM41JMDxJ8CorxkFoJF9d9uqf6xqY7echIyxtasJjpIbQoRdIXNwmeGpeA-gnraY3RxUYrRrczw",
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOnVzZXJuYW1lIjoidGFtbWFyb2l2YW5AZ21haWwuY29tIiwiaWF0IjoxNjk4ODgzNDU4LCJqdGkiOiI2YWMzN2UwOS0yYTk2LTQ0ODAtYTZhOC03NmI3MjBhZDhkYmQiLCJleHAiOjE2OTk0ODgyNTgsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6OTIyOS9sb2NhbF83Y1NNR1o2aCJ9.IA0rs3s3GDMulzXepZ6Bw9CkSTfNZQAOgJiA-MHTRFDwIYx_6l96QjR_l7_yicc_jabPxYXPkGNtAhdzIcyuS9VtJUo6VHLFF0hLROi43yhcC4rpKyzRyq_Lh-lG9j5WMLmqV-jzDtz73i5r5toM1iWiRcmdm7kiI7KZ6WYG9uOLzNcMprxcDU7FdieKO1_VSC7dgoKol4t4Gw0Js7_UmhtHmvF288s-LXi0Gqfk3GBgJJC_Hvh2nGDpAUcLXTssDNeL0d-bssPDJyAOdQrgSmF9W_Wrt7WwcugBXx-kiNpMQFQVl7X_TRJ2trHPf0Tup1L5kt1sOqE3mwRyUh202A"
-      ],
-      "UserCreateDate": "2023-11-01T03:12:35.871Z",
-      "UserLastModifiedDate": "2023-11-01T03:12:35.871Z",
-      "Username": "demo2@keizai.dev",
-      "UserStatus": "VERIFIED",
-      "ConfirmationCode": "574436"
-    }
-  },
+  "Users": {},
   "Options": {
     "Policies": {
       "PasswordPolicy": {
@@ -288,10 +238,6 @@
       "UnusedAccountValidityDays": 7
     },
     "UsernameAttributes": ["email"],
-    "Arn": "arn:aws:cognito-idp:local:local:userpool/local_7cSMGZ6h",
-    "CreationDate": "2023-01-16T03:23:22.103Z",
-    "Id": "local_7cSMGZ6h",
-    "LastModifiedDate": "2023-01-16T03:23:22.103Z",
-    "Name": "local"
+    "Id": "local_7cSMGZ6h"
   }
 }
