@@ -5,26 +5,30 @@ import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper'
 
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
+import { ICollectionMapper } from '../interface/collection.mapper.interface';
 import {
   ICollectionValues,
   IUpdateCollectionValues,
-} from '../service/collection.service';
+} from '../interface/collection.service.interface';
 
-export class CollectionMapper {
+export class CollectionMapper implements ICollectionMapper {
   constructor(
     @Inject(FolderMapper)
     private readonly folderMapper: FolderMapper,
     @Inject(EnviromentMapper)
     private readonly enviromentMapper: EnviromentMapper,
   ) {}
+
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
     const { name, userId, teamId } = collectionData;
     return new Collection(name, userId, teamId);
   }
+
   fromUpdateDtoToEntity(collectionData: IUpdateCollectionValues): Collection {
     const { name, userId, teamId, id } = collectionData;
     return new Collection(name, userId, teamId, id);
   }
+
   fromEntityToDto(collection: Collection): CollectionResponseDto {
     const { name, id, folders, enviroments } = collection;
     const foldersMapped = folders?.map((folder) => {
