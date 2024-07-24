@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ICollectionRepository } from '../../application/repository/collection.repository';
+import { ICollectionRepository } from '../../application/interface/collection.repository.interface';
 import { Collection } from '../../domain/collection.domain';
 import { CollectionSchema } from './collection.schema';
 
@@ -95,7 +95,23 @@ export class CollectionRepository implements ICollectionRepository {
   }
 
   async update(collection: Collection): Promise<Collection> {
-    return await this.repository.preload(collection);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Collection, {
+        where: { id: collection.id },
+      });
+      if (existingCollection)
+        await queryRunner.manager.update(Collection, collection.id, collection);
+      await queryRunner.commitTransaction();
+      return await this.findOne(collection.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {
