@@ -1,36 +1,43 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AuthMapper } from './application/mapper/user.mapper';
-import { COGNITO_SERVICE } from './application/repository/cognito.interface.service';
-import { USER_REPOSITORY } from './application/repository/user.repository.interface';
-import { AuthService } from './application/service/auth.service';
-import { CognitoService } from './infrastructure/cognito/aws.cognito.service';
-import { JwtStrategy } from './infrastructure/jwt/jwt.strategy';
-import { UserSchema } from './infrastructure/persistence/user.schema';
-import { UserRepository } from './infrastructure/persistence/user.typeorm.repository';
+import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { CognitoService } from '@/common/cognito/service/cognito.service';
+import { CommonModule } from '@/common/common.module';
+import { AuthService } from '@/modules/auth/application/service/auth.service';
+
+import { UserModule } from '../user/user.module';
+import { AccessTokenGuard } from './application/guard/access_token.guard';
+import { AuthenticationGuard } from './application/guard/authentication.guard';
+import { AUTH_SERVICE } from './application/interfaces/auth.service.interfaces';
+import { JWT_STRATEGY } from './application/interfaces/jwt.strategy.interfaces';
+import { JwtStrategy } from './application/strategy/jwt.strategy';
 import { AuthController } from './interface/auth.controller';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([UserSchema]),
+    PassportModule,
+    forwardRef(() => CommonModule),
+    forwardRef(() => UserModule),
   ],
-  controllers: [AuthController],
   providers: [
-    AuthService,
     {
-      provide: COGNITO_SERVICE,
+      provide: JWT_STRATEGY,
+      useClass: JwtStrategy,
+    },
+    AccessTokenGuard,
+    { provide: APP_GUARD, useClass: AuthenticationGuard },
+    AuthController,
+    {
+      provide: AUTH_SERVICE,
+      useClass: AuthService,
+    },
+    {
+      provide: COGNITO_AUTH,
       useClass: CognitoService,
     },
-    {
-      provide: USER_REPOSITORY,
-      useClass: UserRepository,
-    },
-    AuthMapper,
-    JwtStrategy,
   ],
-  exports: [AuthService],
+  controllers: [AuthController],
 })
 export class AuthModule {}
