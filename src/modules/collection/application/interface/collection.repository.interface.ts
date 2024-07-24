@@ -1,8 +1,10 @@
-import { IBaseRepository } from '@/common/application/base.repository';
-
 import { Collection } from '../../domain/collection.domain';
 
-export interface ICollectionRepository extends IBaseRepository<Collection> {
+export const COLLECTION_REPOSITORY = 'COLLECTION_REPOSITORY';
+
+export interface ICollectionRepository {
+  findOne(id: string): Promise<Collection>;
+  save(collection: Collection): Promise<Collection>;
   findAllByUser(userId: string): Promise<Collection[]>;
   findAllByTeam(teamId: string): Promise<Collection[]>;
   findOneByCollectionAndUserId(id: string, userId: string): Promise<Collection>;
@@ -10,5 +12,3 @@ export interface ICollectionRepository extends IBaseRepository<Collection> {
   update(collection: Collection): Promise<Collection>;
   delete(id: string): Promise<boolean>;
 }
-
-export const COLLECTION_REPOSITORY = 'COLLECTION_REPOSITORY';
