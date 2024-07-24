@@ -7,80 +7,89 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { Enviroment } from '@/modules/enviroment/domain/enviroment.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { AuthType } from '@/modules/user/domain/auth_type.enum';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
 import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
+@Auth(AuthType.Bearer)
 @Controller('collection')
-@UseGuards(JwtAuthGuard)
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}
 
   @Post('/')
   async create(
     @Body() collectionDto: CreateCollectionDto,
-    @AuthUser() user: IUserResponse,
-  ): Promise<CollectionResponseDto> {
-    return this.collectionService.createByUser(collectionDto, user);
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<CollectionResponseDto> {
+    return this.collectionService.createByUser(collectionDto, data.payload);
   }
 
   @Post('/:id/environments')
   async createAllEnvironments(
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
     @Param('id') id: string,
-    @AuthUser() user: IUserResponse,
-  ): Promise<EnviromentResponseDto[]> {
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<EnviromentResponseDto[]> {
     return this.collectionService.createAllEnvironmentsByUser(
       id,
       createEnvironmentsDto,
-      user.id,
+      data.payload.id,
     );
   }
 
   @Get('/')
   async findAllByUser(
-    @AuthUser() user: IUserResponse,
-  ): Promise<CollectionResponseDto[]> {
-    return await this.collectionService.findAllByUser(user.id);
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<CollectionResponseDto[]> {
+    return await this.collectionService.findAllByUser(data.payload.id);
   }
 
   @Get('/:id')
   async findOne(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-  ): Promise<CollectionResponseDto> {
-    return this.collectionService.findOneByCollectionAndUserId(id, user.id);
+  ): IPromiseResponse<CollectionResponseDto> {
+    return this.collectionService.findOneByCollectionAndUserId(
+      id,
+      data.payload.id,
+    );
   }
 
   @Get('/:id/folders')
   async findFoldersByCollection(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-  ): Promise<FolderResponseDto[]> {
-    return this.collectionService.findFoldersByCollectionUserId(id, user.id);
+  ): IPromiseResponse<FolderResponseDto[]> {
+    return this.collectionService.findFoldersByCollectionUserId(
+      id,
+      data.payload.id,
+    );
   }
 
   @Get('/:id/environments')
   async findEnvironmentsByCollection(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-  ): Promise<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnviromentResponseDto[]> {
     return this.collectionService.findEnvironmentsByCollectionAndUserId(
       id,
-      user.id,
+      data.payload.id,
     );
   }
 
@@ -88,7 +97,7 @@ export class CollectionController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ) {
+  ): IPromiseResponse<Enviroment> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,
@@ -97,19 +106,28 @@ export class CollectionController {
 
   @Patch('/')
   async update(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() collectionDto: UpdateCollectionDto,
-  ): Promise<CollectionResponseDto> {
-    return this.collectionService.updateCollectionUser(collectionDto, user.id);
+  ): IPromiseResponse<CollectionResponseDto> {
+    return this.collectionService.updateCollectionUser(
+      collectionDto,
+      data.payload.id,
+    );
   }
 
   @Delete('/:id')
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string): IPromiseResponse<boolean> {
     return this.collectionService.delete(id);
   }
 
   @Delete('/:id/environments')
-  async deleteAll(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.collectionService.deleteAllEnvironmentsByUser(id, user.id);
+  async deleteAll(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<boolean> {
+    return this.collectionService.deleteAllEnvironmentsByUser(
+      id,
+      data.payload.id,
+    );
   }
 }
