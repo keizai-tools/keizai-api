@@ -6,12 +6,13 @@ import { MethodMapper } from '@/modules/method/application/mapper/method.mapper'
 import { Invocation } from '../../domain/invocation.domain';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
+import { IInvocationMapper } from '../interface/invocation.mapper.interface';
 import {
   IInvocationValues,
   IUpdateInvocationValues,
-} from '../service/invocation.service';
+} from '../interface/invocation.service.interface';
 
-export class InvocationMapper {
+export class InvocationMapper implements IInvocationMapper {
   constructor(
     @Inject(forwardRef(() => FolderMapper))
     private readonly folderMapper: FolderMapper,
