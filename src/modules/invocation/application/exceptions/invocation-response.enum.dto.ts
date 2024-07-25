@@ -15,4 +15,10 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_FAIL_SELECTING_METHOD_WITHOUT_CONTRACT = 'Method selection requires a loaded contract',
   INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD = 'Invocation failed: Ensure a method is selected, authentication keys are provided, and all required parameters are set.',
   INVOCATION_FAILED_TO_RUN_PRE_INVOCATION = 'Pre invocation script failed. Verified if the pre-invocation script is valid.',
+  INVOCATION_DELETED = 'Invocation deleted',
+  INVOCATION_UPDATED = 'Invocation updated',
+  METHODS_FOUND = 'Methods found',
+  INVOCATION_FOUND = 'Invocation found',
+  INVOCATION_CREATED = 'Invocation created',
+  INVOCATION_RUN = 'Invocation run',
 }
