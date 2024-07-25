@@ -1,14 +1,18 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CommonModule } from '@/common/common.module';
+
 import { CollectionModule } from '../collection/collection.module';
 import { InvocationModule } from '../invocation/invocation.module';
 import { TeamModule } from '../team/team.module';
+import { FOLDER_MAPPER } from './application/interface/folder.mapper.interface';
+import { FOLDER_REPOSITORY } from './application/interface/folder.repository.interface';
+import { FOLDER_SERVICE } from './application/interface/folder.service.interface';
 import { FolderMapper } from './application/mapper/folder.mapper';
-import { FOLDER_REPOSITORY } from './application/repository/folder.repository';
 import { FolderService } from './application/service/folder.service';
+import { FolderRepository } from './infrastructure/persistence/folder.repository';
 import { FolderSchema } from './infrastructure/persistence/folder.schema';
-import { FolderRepository } from './infrastructure/persistence/folder.typeorm.repository';
 import { FolderTeamController } from './interface/folder-team.controller';
 import { FolderUserController } from './interface/folder.controller';
 
@@ -17,20 +21,33 @@ import { FolderUserController } from './interface/folder.controller';
     TypeOrmModule.forFeature([FolderSchema]),
     forwardRef(() => CollectionModule),
     forwardRef(() => InvocationModule),
+    forwardRef(() => CommonModule),
     TeamModule,
   ],
   controllers: [FolderUserController, FolderTeamController],
   providers: [
-    FolderService,
-    FolderMapper,
+    {
+      provide: FOLDER_SERVICE,
+      useClass: FolderService,
+    },
+    {
+      provide: FOLDER_MAPPER,
+      useClass: FolderMapper,
+    },
     {
       provide: FOLDER_REPOSITORY,
       useClass: FolderRepository,
     },
   ],
   exports: [
-    FolderService,
-    FolderMapper,
+    {
+      provide: FOLDER_SERVICE,
+      useClass: FolderService,
+    },
+    {
+      provide: FOLDER_MAPPER,
+      useClass: FolderMapper,
+    },
     {
       provide: FOLDER_REPOSITORY,
       useClass: FolderRepository,
