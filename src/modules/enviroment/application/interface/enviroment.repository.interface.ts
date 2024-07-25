@@ -2,6 +2,8 @@ import { DeleteResult } from 'typeorm';
 
 import { Enviroment } from '../../domain/enviroment.domain';
 
+export const ENVIROMENT_REPOSITORY = 'ENVIROMENT_REPOSITORY';
+
 export interface IEnviromentRepository {
   save(enviroment: Enviroment): Promise<Enviroment>;
   findOne(id: string): Promise<Enviroment>;
@@ -14,5 +16,3 @@ export interface IEnviromentRepository {
   deleteAll(ids: string[]): Promise<DeleteResult>;
   saveAll(environments: Enviroment[]): Promise<Enviroment[]>;
 }
-
-export const ENVIROMENT_REPOSITORY = 'ENVIROMENT_REPOSITORY';
