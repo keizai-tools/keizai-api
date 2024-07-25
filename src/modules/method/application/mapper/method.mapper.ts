@@ -1,8 +1,12 @@
 import { Method } from '../../domain/method.domain';
 import { MethodResponseDto } from '../dto/method-response.dto';
-import { IMethodValues, IUpdateMethodValues } from '../service/method.service';
+import { IMethodMapper } from '../interface/method.mapper.interface';
+import {
+  IMethodValues,
+  IUpdateMethodValues,
+} from '../interface/method.service.interface';
 
-export class MethodMapper {
+export class MethodMapper implements IMethodMapper {
   fromDtoToEntity(createMethodDto: IMethodValues | Partial<Method>): Method {
     const { name, inputs, outputs, invocationId, params, docs } =
       createMethodDto;
