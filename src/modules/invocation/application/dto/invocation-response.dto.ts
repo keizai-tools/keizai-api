@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { MethodResponseDto } from '@/modules/method/application/dto/method-response.dto';
 
