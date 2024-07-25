@@ -10,25 +10,32 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class SuccessResponseInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      map((data) => {
-        const ctx = context.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest();
+      map(
+        (data: {
+          statusCode?: number;
+          message: string;
+          data?: unknown;
+          errors?: unknown;
+        }) => {
+          const ctx = context.switchToHttp();
+          const response = ctx.getResponse<Response>();
+          const request = ctx.getRequest();
 
-        if (data.statusCode) {
-          response.status(data.statusCode);
-        }
+          if (data.statusCode) {
+            response.status(data.statusCode);
+          }
 
-        const transformedData = this.transformBigInt(data);
+          const transformedData = this.transformBigInt(data);
 
-        return {
-          ...transformedData,
-          timestamp: new Date().toISOString(),
-          path: request.url,
-        };
-      }),
+          return {
+            ...transformedData,
+            timestamp: new Date().toISOString(),
+            path: request.url,
+          };
+        },
+      ),
     );
   }
 

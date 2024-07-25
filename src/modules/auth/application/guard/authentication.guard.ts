@@ -7,14 +7,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { AuthTypeGuardMap } from '@/common/cognito/application/interface/authentication_guard.interface';
-import { AuthType } from '@/common/cognito/domain/auth_type.enum';
 import {
-  type IResponseService,
+  IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
 
+import { AuthType } from '../../domain/auth_type.enum';
 import { AUTH_TYPE_KEY } from '../decorator/auth.decorator';
+import { AuthTypeGuardMap } from '../interface/authentication_guard.interface';
 import { AccessTokenGuard } from './access_token.guard';
 
 @Injectable()
