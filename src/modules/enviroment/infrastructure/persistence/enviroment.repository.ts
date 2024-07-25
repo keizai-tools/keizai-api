@@ -64,7 +64,23 @@ export class EnviromentRepository implements IEnviromentRepository {
   }
 
   async update(enviroment: Enviroment): Promise<Enviroment> {
-    return await this.repository.preload(enviroment);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Enviroment, {
+        where: { id: enviroment.id },
+      });
+      if (existingCollection)
+        await queryRunner.manager.update(Enviroment, enviroment.id, enviroment);
+      await queryRunner.commitTransaction();
+      return await this.findOne(enviroment.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {
