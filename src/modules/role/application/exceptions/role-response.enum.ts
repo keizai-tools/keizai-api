@@ -5,4 +5,9 @@ export enum ROLE_RESPONSE {
   ROLE_FAILED_SAVED = 'Could not save the role, please try again',
   ROLE_FAILED_UPDATED = 'Could not update the role, please try again',
   ROLE_FAILED_DELETED = 'Could not delete the role, please try again',
+  USERS_FOUND_BY_USER_ID = 'User roles found by user ID',
+  USER_FOUND_BY_USER_AND_ID = 'User role found by user and ID',
+  ROLE_SAVED = 'Role saved successfully',
+  ROLE_UPDATED = 'Role updated successfully',
+  ROLE_DELETED = 'Role deleted successfully',
 }
