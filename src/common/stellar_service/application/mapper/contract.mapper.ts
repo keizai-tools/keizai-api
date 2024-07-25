@@ -76,18 +76,14 @@ export class StellarMapper implements IStellarMapper {
   }
 
   fromScValToDisplayValue(value: xdr.ScVal) {
-    switch (value.switch().name) {
-      case SC_VAL_TYPE.STRING:
-        return scValToNative(value);
-      case SC_VAL_TYPE.ADDRESS:
-        return scValToNative(value);
-      case SC_VAL_TYPE.I128:
-        return Number(scValToNative(value));
-      case SC_VAL_TYPE.BOOL:
-        return scValToNative(value);
-      default:
-        return value.value();
-    }
+    const displayValueMap = {
+      [SC_VAL_TYPE.STRING]: scValToNative(value),
+      [SC_VAL_TYPE.ADDRESS]: scValToNative(value),
+      [SC_VAL_TYPE.I128]: Number(scValToNative(value)),
+      [SC_VAL_TYPE.BOOL]: scValToNative(value),
+    };
+
+    return displayValueMap[value.switch().name] || value.value();
   }
 
   fromTxResultToDisplayResponse(resultXdr: string): string {
