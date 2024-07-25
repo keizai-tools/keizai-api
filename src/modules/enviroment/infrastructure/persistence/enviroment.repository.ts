@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
 
-import { IEnviromentRepository } from '../../application/repository/enviroment.repository';
+import { IEnviromentRepository } from '../../application/interface/enviroment.repository.interface';
 import { Enviroment } from '../../domain/enviroment.domain';
 import { EnviromentSchema } from './enviroment.schema';
 
