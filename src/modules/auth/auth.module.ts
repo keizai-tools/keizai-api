@@ -10,8 +10,8 @@ import { AuthService } from '@/modules/auth/application/service/auth.service';
 import { UserModule } from '../user/user.module';
 import { AccessTokenGuard } from './application/guard/access_token.guard';
 import { AuthenticationGuard } from './application/guard/authentication.guard';
-import { AUTH_SERVICE } from './application/interfaces/auth.service.interfaces';
-import { JWT_STRATEGY } from './application/interfaces/jwt.strategy.interfaces';
+import { AUTH_SERVICE } from './application/interface/auth.service.interface';
+import { JWT_STRATEGY } from './application/interface/jwt.strategy.interface';
 import { JwtStrategy } from './application/strategy/jwt.strategy';
 import { AuthController } from './interface/auth.controller';
 
