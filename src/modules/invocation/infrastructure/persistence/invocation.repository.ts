@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IInvocationRepository } from '../../application/repository/invocation.repository';
+import { IInvocationRepository } from '../../application/interface/invocation.repository.interface';
 import { Invocation } from '../../domain/invocation.domain';
 import { InvocationSchema } from './invocation.schema';
 
@@ -62,7 +62,24 @@ export class InvocationRepository implements IInvocationRepository {
   }
 
   async update(invocation: Invocation): Promise<Invocation> {
-    return await this.repository.preload(invocation);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Invocation, {
+        where: { id: invocation.id },
+      });
+
+      if (existingCollection)
+        await queryRunner.manager.update(Invocation, invocation.id, invocation);
+      await queryRunner.commitTransaction();
+      return await this.findOne(invocation.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {
