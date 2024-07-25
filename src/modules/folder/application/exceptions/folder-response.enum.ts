@@ -7,4 +7,9 @@ export enum FOLDER_RESPONSE {
   FOLDER_FAILED_SAVE = 'Could not save folder, please try again',
   FOLDER_FAILED_DELETED = 'Could not deleted folder, please try again',
   FOLDER_FAILED_UPDATED = 'Could not updated folder, please try again',
+  FOLDER_CREATED = 'Folder created',
+  FOLDER_FOUND = 'Folder found',
+  INVOCATIONS_FOUND = 'Invocations found',
+  FOLDER_UPDATED = 'Folder updated',
+  FOLDER_DELETED = 'Folder deleted',
 }
