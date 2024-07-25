@@ -389,7 +389,13 @@ export class CognitoService implements ICognitoAuthService {
         process.env.COGNITO_LOCAL_PATH,
         'utf-8',
       );
-      const jsonData: any = JSON.parse(data);
+      const jsonData: {
+        Users: {
+          [key: string]: {
+            ConfirmationCode: string;
+          };
+        };
+      } = JSON.parse(data);
       const code: string | undefined =
         jsonData.Users?.[email]?.ConfirmationCode;
       return code;

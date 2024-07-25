@@ -8,16 +8,16 @@ import { SessionRefreshDetailsDto } from '@/common/cognito/application/dto/sessi
 import { UserConfirmationDetailsDto } from '@/common/cognito/application/dto/user_confirmation_details.dto';
 import { UserLoginCredentialsDto } from '@/common/cognito/application/dto/user_login_credentials.dto';
 import { UserRegistrationDetailsDto } from '@/common/cognito/application/dto/user_registration_details.dto';
-import { AuthType } from '@/common/cognito/domain/auth_type.enum';
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { IAuthController } from '../application/interfaces/auth.controller.interface';
+import { IAuthController } from '../application/interface/auth.controller.interface';
 import {
   AUTH_SERVICE,
   IAuthService,
-} from '../application/interfaces/auth.service.interfaces';
+} from '../application/interface/auth.service.interface';
+import { AuthType } from '../domain/auth_type.enum';
 
 @Controller('auth')
 @ApiTags('auth')

@@ -18,7 +18,7 @@ import { ServiceMessage } from '@/modules/user/application/message/user.message'
 import { User } from '@/modules/user/domain/user.domain';
 import { JWT_AUTOMATED_TESTS_SECRET } from '@/test/test.constants';
 
-import { IJwtStrategy } from '../interfaces/jwt.strategy.interfaces';
+import { IJwtStrategy } from '../interface/jwt.strategy.interface';
 
 @Injectable()
 export class JwtStrategy

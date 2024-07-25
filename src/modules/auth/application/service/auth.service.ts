@@ -27,7 +27,7 @@ import {
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { IAuthService } from '../interfaces/auth.service.interfaces';
+import { IAuthService } from '../interface/auth.service.interface';
 
 @Injectable()
 export class AuthService implements IAuthService {

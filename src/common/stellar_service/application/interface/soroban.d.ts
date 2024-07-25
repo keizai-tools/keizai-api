@@ -35,8 +35,8 @@ export interface EncodeEvent extends BaseEventResponse {
 
 export interface EventResponse extends BaseEventResponse {
   contractId: string;
-  topic: any[];
-  value: any;
+  topic: unknown[];
+  value: unknown;
 }
 
 export interface RunInvocationResponse {
@@ -53,5 +53,5 @@ export interface ContractErrorResponse {
 
 export type Param = {
   value: string;
-  type: any;
+  type: unknown;
 };

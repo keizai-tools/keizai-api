@@ -14,7 +14,8 @@ import {
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
-import { ContractFunctions } from '../application/domain/contract_functions';
+import { ContractFunctions } from '../application/domain/ContractFunctions.array';
+import { SCSpecTypeMap } from '../application/domain/SCSpecTypeMap.object';
 import {
   CONTRACT_EXECUTABLE_TYPE,
   GetTransactionStatus,
@@ -23,6 +24,7 @@ import {
   SendTransactionStatus,
 } from '../application/domain/soroban.enum';
 import {
+  type IDecodedSection,
   IGeneratedMethod,
   IStellarService,
 } from '../application/interface/contract.service.interface';
@@ -55,33 +57,7 @@ export class StellarService implements IStellarService {
   ) {
     this.responseService.setContext(StellarService.name);
     this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
-    this.SCSpecTypeMap = {
-      0: 'SC_SPEC_TYPE_VAL',
-      1: 'SC_SPEC_TYPE_BOOL',
-      2: 'SC_SPEC_TYPE_VOID',
-      3: 'SC_SPEC_TYPE_ERROR',
-      4: 'SC_SPEC_TYPE_U32',
-      5: 'SC_SPEC_TYPE_I32',
-      6: 'SC_SPEC_TYPE_U64',
-      7: 'SC_SPEC_TYPE_I64',
-      8: 'SC_SPEC_TYPE_TIMEPOINT',
-      9: 'SC_SPEC_TYPE_DURATION',
-      10: 'SC_SPEC_TYPE_U128',
-      11: 'SC_SPEC_TYPE_I128',
-      12: 'SC_SPEC_TYPE_U256',
-      13: 'SC_SPEC_TYPE_I256',
-      14: 'SC_SPEC_TYPE_BYTES',
-      16: 'SC_SPEC_TYPE_STRING',
-      17: 'SC_SPEC_TYPE_SYMBOL',
-      19: 'SC_SPEC_TYPE_ADDRESS',
-      1000: 'SC_SPEC_TYPE_OPTION',
-      1001: 'SC_SPEC_TYPE_RESULT',
-      1002: 'SC_SPEC_TYPE_VEC',
-      1004: 'SC_SPEC_TYPE_MAP',
-      1005: 'SC_SPEC_TYPE_TUPLE',
-      1006: 'SC_SPEC_TYPE_BYTES_N',
-      2000: 'SC_SPEC_TYPE_UDT',
-    };
+    this.SCSpecTypeMap = SCSpecTypeMap;
   }
 
   verifyNetwork(selectedNetwork: string): void {
@@ -138,7 +114,7 @@ export class StellarService implements IStellarService {
     }
   }
 
-  extractFunctionInfo(decodedSection): IGeneratedMethod {
+  extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod {
     try {
       const functionObj = {
         name: '',
@@ -162,14 +138,18 @@ export class StellarService implements IStellarService {
         functionObj.outputs = [];
 
         const inputs = decodedSection._value._attributes.inputs;
-        functionObj.inputs = inputs.map((input) => {
-          const inputNameBuffer = input._attributes.name;
-          const inputName = inputNameBuffer.toString('utf-8');
-          const inputTypeValue = input._attributes.type._switch.value;
-          const inputTypeName =
-            this.SCSpecTypeMap[inputTypeValue] || 'Unknown Type';
-          return { name: inputName, type: inputTypeName };
-        });
+        functionObj.inputs = inputs.map(
+          (input: {
+            _attributes: { name: Buffer; type: { _switch: { value: number } } };
+          }) => {
+            const inputNameBuffer = input._attributes.name;
+            const inputName = inputNameBuffer.toString('utf-8');
+            const inputTypeValue = input._attributes.type._switch.value;
+            const inputTypeName =
+              this.SCSpecTypeMap[inputTypeValue] || 'Unknown Type';
+            return { name: inputName, type: inputTypeName };
+          },
+        );
 
         const outputs = decodedSection._value._attributes.outputs;
         functionObj.outputs = outputs.map((output) => {
@@ -211,7 +191,7 @@ export class StellarService implements IStellarService {
     try {
       const maxRetries = 7;
       let retries = 0;
-      let specEntries;
+      let specEntries: xdr.ScSpecEntry[];
 
       while (retries < maxRetries) {
         try {
@@ -267,7 +247,9 @@ export class StellarService implements IStellarService {
       const decodedSections = await this.getContractSpecEntries(instanceValue);
 
       return decodedSections
-        .map((decodedSection) => this.extractFunctionInfo(decodedSection))
+        .map((decodedSection) =>
+          this.extractFunctionInfo(decodedSection as IDecodedSection),
+        )
         .filter((f) => {
           return Object.keys(f).length > 0 && f.name.length > 0;
         });
@@ -347,22 +329,22 @@ export class StellarService implements IStellarService {
         };
       }
 
-      let newresponse = await this.stellarAdapter.getTransaction(response.hash);
+      let newResponse = await this.stellarAdapter.getTransaction(response.hash);
 
-      while (newresponse.status === GetTransactionStatus.NOT_FOUND) {
-        newresponse = await this.stellarAdapter.getTransaction(response.hash);
+      while (newResponse.status === GetTransactionStatus.NOT_FOUND) {
+        newResponse = await this.stellarAdapter.getTransaction(response.hash);
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      if (newresponse.status === GetTransactionStatus.SUCCESS) {
+      if (newResponse.status === GetTransactionStatus.SUCCESS) {
         const events = await this.stellarAdapter.getContractEvents(contractId);
         return {
           method: methodMapped,
           response: this.stellarMapper.fromScValToDisplayValue(
-            newresponse.returnValue,
+            newResponse.returnValue,
           ),
-          status: newresponse.status,
+          status: newResponse.status,
           events: this.stellarMapper.encodeEventToDisplayEvent(events),
         };
       }
