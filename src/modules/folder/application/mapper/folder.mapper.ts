@@ -4,9 +4,13 @@ import { InvocationMapper } from '@/modules/invocation/application/mapper/invoca
 
 import { Folder } from '../../domain/folder.domain';
 import { FolderResponseDto } from '../dto/folder-response.dto';
-import { IFolderValues, IUpdateFolderValues } from '../service/folder.service';
+import { IFolderMapper } from '../interface/folder.mapper.interface';
+import {
+  IFolderValues,
+  IUpdateFolderValues,
+} from '../interface/folder.service.interface';
 
-export class FolderMapper {
+export class FolderMapper implements IFolderMapper {
   constructor(
     @Inject(forwardRef(() => InvocationMapper))
     private readonly invocationMapper: InvocationMapper,
