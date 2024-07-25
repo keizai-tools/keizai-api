@@ -1,10 +1,10 @@
 import { DeleteResult } from 'typeorm';
 
-import { IBaseRepository } from '@/common/application/base.repository';
-
 import { Enviroment } from '../../domain/enviroment.domain';
 
-export interface IEnviromentRepository extends IBaseRepository<Enviroment> {
+export interface IEnviromentRepository {
+  save(enviroment: Enviroment): Promise<Enviroment>;
+  findOne(id: string): Promise<Enviroment>;
   findOneByEnvAndUserId(id: string, userId: string): Promise<Enviroment>;
   findOneByEnvAndTeamId(id: string, teamId: string): Promise<Enviroment>;
   findOneByName(name: string, collectionId: string): Promise<Enviroment>;
