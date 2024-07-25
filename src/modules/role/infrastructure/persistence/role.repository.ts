@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IUserRoleToTeamRepository } from '../../application/repository/role.repository';
+import { IUserRoleToTeamRepository } from '../../application/interface/role.repository.interface';
 import { UserRoleToTeam } from '../../domain/role.domain';
 import { UserRoleToTeamSchema } from './role.schema';
 
@@ -60,7 +60,30 @@ export class UserRoleToTeamRepository implements IUserRoleToTeamRepository {
   }
 
   async update(userRoleToTeam: UserRoleToTeam): Promise<UserRoleToTeam> {
-    return await this.repository.preload(userRoleToTeam);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(
+        UserRoleToTeam,
+        {
+          where: { id: userRoleToTeam.id },
+        },
+      );
+      if (existingCollection)
+        await queryRunner.manager.update(
+          UserRoleToTeam,
+          userRoleToTeam.id,
+          userRoleToTeam,
+        );
+      await queryRunner.commitTransaction();
+      return await this.findOne(userRoleToTeam.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {
