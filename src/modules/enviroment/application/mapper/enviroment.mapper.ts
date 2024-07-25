@@ -1,11 +1,12 @@
 import { Enviroment } from '../../domain/enviroment.domain';
 import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
+import { IEnviromentMapper } from '../interface/enviroment.mapper.interface';
 import {
   IEnviromentValues,
   IUpdateEnviromentValues,
-} from '../service/enviroment.service';
+} from '../interface/enviroment.service.interface';
 
-export class EnviromentMapper {
+export class EnviromentMapper implements IEnviromentMapper {
   fromDtoToEntity(createEnviromentDto: IEnviromentValues): Enviroment {
     const { name, value, collectionId } = createEnviromentDto;
     return new Enviroment(name, value, collectionId);
