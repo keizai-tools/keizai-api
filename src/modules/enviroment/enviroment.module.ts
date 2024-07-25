@@ -1,6 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CommonModule } from '@/common/common.module';
+
 import { CollectionModule } from '../collection/collection.module';
 import { TeamModule } from '../team/team.module';
 import { EnviromentMapper } from './application/mapper/enviroment.mapper';
@@ -15,6 +17,7 @@ import { EnviromentTeamController } from './interface/environment-team.controlle
   imports: [
     TypeOrmModule.forFeature([EnviromentSchema]),
     forwardRef(() => CollectionModule),
+    forwardRef(() => CommonModule),
     TeamModule,
   ],
   controllers: [EnviromentUserController, EnviromentTeamController],
