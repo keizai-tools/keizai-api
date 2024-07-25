@@ -1,6 +1,6 @@
 import { EntitySchema } from 'typeorm';
 
-import { baseColumnSchemas } from '@/common/infrastructure/persistence/base.schema';
+import { baseColumnSchemas } from '@/common/base/infrastructure/persistence/base.schema';
 
 import { Method } from '../../domain/method.domain';
 
