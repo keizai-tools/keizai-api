@@ -3,15 +3,17 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common';
 
 import {
-  type IPromiseResponse,
-  type IResponseService,
+  IPromiseResponse,
+  IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { CollectionService } from '@/modules/collection/application/service/collection.service';
+import {
+  COLLECTION_SERVICE,
+  ICollectionService,
+} from '@/modules/collection/application/interface/collection.service.interface';
 
 import { Enviroment } from '../../domain/enviroment.domain';
 import { CreateEnvironmentsDto } from '../dto/create-all-environments.dto';
@@ -19,33 +21,31 @@ import { CreateEnviromentDto } from '../dto/create-enviroment.dto';
 import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
 import { ENVIROMENT_RESPONSE } from '../exceptions/enviroment-response.enum';
-import { EnviromentMapper } from '../mapper/enviroment.mapper';
+import {
+  ENVIROMENT_MAPPER,
+  type IEnviromentMapper,
+} from '../interface/enviroment.mapper.interface';
 import {
   ENVIROMENT_REPOSITORY,
   IEnviromentRepository,
-} from '../repository/enviroment.repository';
-
-export interface IEnviromentValues {
-  name: string;
-  value: string;
-  collectionId: string;
-}
-
-export interface IUpdateEnviromentValues extends Partial<IEnviromentValues> {
-  id: string;
-}
+} from '../interface/enviroment.repository.interface';
+import {
+  IEnviromentService,
+  IEnviromentValues,
+  IUpdateEnviromentValues,
+} from '../interface/enviroment.service.interface';
 
 @Injectable()
-export class EnviromentService {
+export class EnviromentService implements IEnviromentService {
   constructor(
-    @Inject(EnviromentMapper)
-    private readonly enviromentMapper: EnviromentMapper,
+    @Inject(ENVIROMENT_MAPPER)
+    private readonly enviromentMapper: IEnviromentMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
-    @Inject(forwardRef(() => CollectionService))
-    private readonly collectionService: CollectionService,
+    @Inject(COLLECTION_SERVICE)
+    private readonly collectionService: ICollectionService,
   ) {
     this.responseService.setContext(EnviromentService.name);
   }
