@@ -1,7 +1,13 @@
 import { Inject, forwardRef } from '@nestjs/common';
 
-import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
-import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import {
+  FOLDER_MAPPER,
+  IFolderMapper,
+} from '@/modules/folder/application/interface/folder.mapper.interface';
+import {
+  IMethodMapper,
+  METHOD_MAPPER,
+} from '@/modules/method/application/interface/method.mapper.interface';
 
 import { Invocation } from '../../domain/invocation.domain';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
@@ -14,10 +20,10 @@ import {
 
 export class InvocationMapper implements IInvocationMapper {
   constructor(
-    @Inject(forwardRef(() => FolderMapper))
-    private readonly folderMapper: FolderMapper,
-    @Inject(MethodMapper)
-    private readonly methodMapper: MethodMapper,
+    @Inject(forwardRef(() => FOLDER_MAPPER))
+    private readonly folderMapper: IFolderMapper,
+    @Inject(METHOD_MAPPER)
+    private readonly methodMapper: IMethodMapper,
   ) {}
 
   fromDtoToEntity(createInvocationDto: IInvocationValues): Invocation {
