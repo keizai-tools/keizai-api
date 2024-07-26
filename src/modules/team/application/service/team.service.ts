@@ -6,102 +6,156 @@ import {
   forwardRef,
 } from '@nestjs/common';
 
-import { AuthService } from '@/modules/auth/application/service/auth.service';
-import { User } from '@/modules/auth/domain/user.domain';
-import { IUserResponse } from '@/modules/auth/infrastructure/decorators/auth.decorators';
+import {
+  type IPromiseResponse,
+  type IResponseService,
+  RESPONSE_SERVICE,
+} from '@/common/response_service/interface/response.interface';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
 import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
+import {
+  type IUserService,
+  USER_SERVICE,
+} from '@/modules/user/application/interfaces/user.service.interfaces';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../dto/create-team.dto';
+import type { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
-import { TeamMapper } from '../mapper/team.mapper';
 import {
-  ITeamRepository,
+  type ITeamRepository,
   TEAM_REPOSITORY,
-} from '../repository/team.repository';
-
-export interface ITeamData {
-  name: string;
-  users?: User[];
-}
-
-export interface IUpdateTeamData extends ITeamData {
-  id: string;
-}
+} from '../interface/team.repository.interface';
+import type {
+  ITeamData,
+  ITeamService,
+  IUpdateTeamData,
+} from '../interface/team.service.interface';
+import { TeamMapper } from '../mapper/team.mapper';
 
 @Injectable()
-export class TeamService {
+export class TeamService implements ITeamService {
   constructor(
+    @Inject(RESPONSE_SERVICE)
+    private readonly responseService: IResponseService,
     private readonly teamMapper: TeamMapper,
     @Inject(TEAM_REPOSITORY)
     private readonly teamRepository: ITeamRepository,
     @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
-    @Inject(forwardRef(() => AuthService))
-    private readonly userService: AuthService,
     @Inject(forwardRef(() => InvitationService))
     private readonly invitationService: InvitationService,
     @Inject(forwardRef(() => UserRoleOnTeamService))
     private readonly userRoleOnTeamService: UserRoleOnTeamService,
-  ) {}
-
-  async findAllByUser(userId: string) {
-    const teams = await this.teamRepository.findAllByUser(userId);
-
-    if (!teams) {
-      throw new NotFoundException(TEAM_RESPONSE.TEAMS_NOT_FOUND);
-    }
-
-    return teams.map((team) => this.teamMapper.fromEntityToDto(team));
+    @Inject(USER_SERVICE)
+    private readonly userService: IUserService,
+  ) {
+    this.responseService.setContext(TeamService.name);
   }
 
-  async findOne(id: string) {
-    const team = await this.teamRepository.findOne(id);
+  async findAllByUser(userId: string): IPromiseResponse<TeamResponseDto[]> {
+    try {
+      const teams = await this.teamRepository.findAllByUser(userId);
 
-    if (!team) {
-      throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+      if (!teams) {
+        throw new NotFoundException(TEAM_RESPONSE.TEAMS_NOT_FOUND);
+      }
+
+      return this.responseService.createResponse({
+        payload: teams.map((team) => this.teamMapper.fromEntityToDto(team)),
+        message: TEAM_RESPONSE.TEAMS_FOUND_BY_USER,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
     }
+  }
 
-    return this.teamMapper.fromEntityToDto(team);
+  async findOne(id: string): IPromiseResponse<TeamResponseDto> {
+    try {
+      const team = await this.teamRepository.findOne(id);
+
+      if (!team) {
+        throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+      }
+
+      return this.responseService.createResponse({
+        payload: this.teamMapper.fromEntityToDto(team),
+        message: TEAM_RESPONSE.TEAM_FOUND_BY_ID,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async findOneByIds(teamId: string, adminId: string) {
-    const team = await this.teamRepository.findOneByIds(teamId, adminId);
-    if (!team) {
-      throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID);
-    }
+    try {
+      const team = await this.teamRepository.findOneByIds(teamId, adminId);
+      if (!team) {
+        throw new NotFoundException(
+          TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
 
-    return this.teamMapper.fromEntityToDto(team);
+      return this.teamMapper.fromEntityToDto(team);
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async findCollectionsByTeam(teamId: string) {
-    return await this.collectionService.findAllByTeam(teamId);
+    try {
+      return await this.collectionService.findAllByTeam(teamId);
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  async create(createTeamDto: CreateTeamDto, user: IUserResponse) {
-    const users = await this.userService.findAllByEmails(
-      createTeamDto.usersEmails,
-    );
-
-    const teamData: ITeamData = {
-      name: createTeamDto.name,
-      users,
-    };
-
-    const team = this.teamMapper.fromDtoToEntity(teamData);
-
+  async create(
+    createTeamDto: CreateTeamDto,
+    user: User,
+  ): IPromiseResponse<TeamResponseDto> {
     try {
+      const { payload } = await this.userService.findAllByEmails(
+        createTeamDto.usersEmails,
+      );
+
+      const teamData: ITeamData = {
+        name: createTeamDto.name,
+        users: payload,
+      };
+
+      const team = this.teamMapper.fromDtoToEntity(teamData);
+
       const teamSaved = await this.teamRepository.save(team);
 
-      await this.createAllInvitations(users, teamSaved.id, user.id);
-      await this.createAllUserRole(users, teamSaved.id, user.id);
+      const invitations = await this.createAllInvitations(
+        payload,
+        teamSaved.id,
+        user.id,
+      );
 
-      return this.teamMapper.fromEntityToDto(teamSaved);
+      const roles = await this.createAllUserRole(
+        payload,
+        teamSaved.id,
+        user.id,
+      );
+
+      if (!invitations || !roles) {
+        throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_SAVE);
+      }
+
+      return this.responseService.createResponse({
+        payload: this.teamMapper.fromEntityToDto(teamSaved),
+        message: TEAM_RESPONSE.TEAM_CREATED,
+        type: 'CREATED',
+      });
     } catch (error) {
-      throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_SAVE);
+      this.handleError(error);
     }
   }
 
@@ -110,85 +164,118 @@ export class TeamService {
     teamId: string,
     fromUserId: string,
   ): Promise<ResponseInvitationDto[]> {
-    const invitationsToSave = users.map((user) => {
-      return {
-        teamId,
-        fromUserId,
-        toUserId: user.id,
-        status: 'PENDING',
-      };
-    });
-    return await this.invitationService.createAll(invitationsToSave);
+    try {
+      const invitationsToSave = users.map((user) => {
+        return {
+          teamId,
+          fromUserId,
+          toUserId: user.id,
+          status: 'PENDING',
+        };
+      });
+      return await this.invitationService.createAll(invitationsToSave);
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async createAllUserRole(users: User[], teamId: string, ownerId?: string) {
-    const userRoleToSave = users.map((user) => {
-      return {
-        teamId,
-        userId: user.id,
-        role: 'ADMIN',
-      };
-    });
-
-    if (ownerId) {
-      userRoleToSave.push({
-        teamId,
-        userId: ownerId,
-        role: 'OWNER',
+    try {
+      const userRoleToSave = users.map((user) => {
+        return {
+          teamId,
+          userId: user.id,
+          role: 'ADMIN',
+        };
       });
-    }
 
-    return await this.userRoleOnTeamService.createAll(userRoleToSave);
+      if (ownerId) {
+        userRoleToSave.push({
+          teamId,
+          userId: ownerId,
+          role: 'OWNER',
+        });
+      }
+
+      return await this.userRoleOnTeamService.createAll(userRoleToSave);
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  async update(updateTeamDto: UpdateTeamDto, adminId: string) {
-    const teamData: IUpdateTeamData = {
-      name: updateTeamDto.name,
-      id: updateTeamDto.id,
-    };
+  async update(
+    updateTeamDto: UpdateTeamDto,
+    adminId: string,
+  ): IPromiseResponse<TeamResponseDto> {
+    try {
+      const teamData: IUpdateTeamData = {
+        name: updateTeamDto.name,
+        id: updateTeamDto.id,
+      };
 
-    const team = await this.findOne(updateTeamDto.id);
+      const team = await this.findOne(updateTeamDto.id);
 
-    if (!team) {
-      throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID);
+      if (!team) {
+        throw new NotFoundException(
+          TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
+
+      const { payload } = await this.userService.findAllByEmails(
+        updateTeamDto.usersEmails,
+      );
+
+      if (payload.length !== 0) {
+        await this.createAllInvitations(payload, teamData.id, adminId);
+        await this.createAllUserRole(payload, teamData.id);
+      }
+
+      const teamMapped = this.teamMapper.fromUpdateDtoToEntity(teamData);
+      const teamUpdated = await this.teamRepository.update(teamMapped);
+
+      if (!teamUpdated) {
+        throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_UPDATE);
+      }
+
+      return this.responseService.createResponse({
+        payload: this.teamMapper.fromEntityToDto(teamUpdated),
+        message: TEAM_RESPONSE.TEAM_UPDATED,
+        type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
     }
-
-    const users = await this.userService.findAllByEmails(
-      updateTeamDto.usersEmails,
-    );
-
-    if (users.length !== 0) {
-      await this.createAllInvitations(users, teamData.id, adminId);
-      await this.createAllUserRole(users, teamData.id);
-    }
-
-    const teamMapped = this.teamMapper.fromUpdateDtoToEntity(teamData);
-    const teamUpdated = await this.teamRepository.update(teamMapped);
-
-    if (!teamUpdated) {
-      throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_UPDATE);
-    }
-
-    const teamSaved = await this.teamRepository.save(teamUpdated);
-    if (!teamSaved) {
-      throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_SAVE);
-    }
-
-    return this.teamMapper.fromEntityToDto(teamSaved);
   }
 
-  async delete(teamId: string, adminId: string) {
-    const team = await this.findOneByIds(teamId, adminId);
+  async delete(teamId: string, adminId: string): IPromiseResponse<boolean> {
+    try {
+      const team = await this.findOneByIds(teamId, adminId);
 
-    if (!team) {
-      throw new NotFoundException(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID);
+      if (!team) {
+        throw new NotFoundException(
+          TEAM_RESPONSE.TEAM_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
+
+      const teamDeleted = await this.teamRepository.delete(teamId);
+      if (!teamDeleted) {
+        throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_DELETED);
+      }
+
+      return this.responseService.createResponse({
+        payload: teamDeleted,
+        message: TEAM_RESPONSE.TEAM_DELETED,
+        type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
     }
+  }
 
-    const teamDeleted = await this.teamRepository.delete(teamId);
-    if (!teamDeleted) {
-      throw new BadRequestException(TEAM_RESPONSE.TEAM_FAILED_DELETED);
-    }
-
-    return teamDeleted;
+  private handleError(error: Error): void {
+    this.responseService.errorHandler({
+      type: 'INTERNAL_SERVER_ERROR',
+      error,
+    });
   }
 }
