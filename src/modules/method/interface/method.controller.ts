@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -20,12 +21,18 @@ import { User } from '@/modules/user/domain/user.domain';
 import { CreateMethodDto } from '../application/dto/create-method.dto';
 import { MethodResponseDto } from '../application/dto/method-response.dto';
 import { UpdateMethodDto } from '../application/dto/update-method.dto';
-import { MethodService } from '../application/service/method.service';
+import {
+  IMethodService,
+  METHOD_SERVICE,
+} from '../application/interface/method.service.interface';
 
 @Auth(AuthType.Bearer)
 @Controller('method')
 export class MethodUserController {
-  constructor(private readonly methodService: MethodService) {}
+  constructor(
+    @Inject(METHOD_SERVICE)
+    private readonly methodService: IMethodService,
+  ) {}
 
   @Post('')
   async create(
