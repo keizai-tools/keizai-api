@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -20,13 +21,19 @@ import { User } from '@/modules/user/domain/user.domain';
 import { CreateUserRoleToTeamDto } from '../application/dto/create-user-role.dto';
 import { ResponseUserRoletoTeamDto } from '../application/dto/response-user-role.dto';
 import { UpdateUserRoleToTeamDto } from '../application/dto/update-user-role.dto';
-import { UserRoleOnTeamService } from '../application/service/role.service';
+import {
+  IUserRoleOnTeamService,
+  USER_ROLE_TO_TEAM_SERVICE,
+} from '../application/interface/role.service.interface';
 import { UserRoleToTeam } from '../domain/role.domain';
 
 @Auth(AuthType.Bearer)
 @Controller('role')
 export class UserRoleToTeamController {
-  constructor(private readonly userRoleOnTeamService: UserRoleOnTeamService) {}
+  constructor(
+    @Inject(USER_ROLE_TO_TEAM_SERVICE)
+    private readonly userRoleOnTeamService: IUserRoleOnTeamService,
+  ) {}
 
   @Get('/')
   async findAllByUser(
