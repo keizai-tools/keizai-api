@@ -6,9 +6,13 @@ import { UserRoleToTeamMapper } from '@/modules/role/application/mapper/role.map
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
-import { ITeamData, IUpdateTeamData } from '../service/team.service';
+import { ITeamMapper } from '../interface/team.mapper.interface';
+import {
+  ITeamData,
+  IUpdateTeamData,
+} from '../interface/team.service.interface';
 
-export class TeamMapper {
+export class TeamMapper implements ITeamMapper {
   constructor(
     @Inject(CollectionMapper)
     private readonly collectionMapper: CollectionMapper,
