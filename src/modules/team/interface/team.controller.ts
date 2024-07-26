@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -19,12 +20,18 @@ import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../application/dto/create-team.dto';
 import { TeamResponseDto } from '../application/dto/response-team.dto';
-import { TeamService } from '../application/service/team.service';
+import {
+  ITeamService,
+  TEAM_SERVICE,
+} from '../application/interface/team.service.interface';
 
 @Auth(AuthType.Bearer)
 @Controller('team')
 export class TeamController {
-  constructor(private readonly teamService: TeamService) {}
+  constructor(
+    @Inject(TEAM_SERVICE)
+    private readonly teamService: ITeamService,
+  ) {}
 
   @Get('/')
   async findAllByUser(
