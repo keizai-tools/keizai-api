@@ -27,7 +27,6 @@ import { UserRoleToTeamController } from './interface/role.controller';
       provide: USER_ROLE_TO_TEAM_MAPPER,
       useClass: UserRoleToTeamMapper,
     },
-    ,
     {
       provide: USER_ROLE_TO_TEAM_REPOSITORY,
       useClass: UserRoleToTeamRepository,
