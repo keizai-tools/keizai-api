@@ -20,20 +20,27 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import {
+  ENVIROMENT_SERVICE,
+  IEnviromentService,
+} from '@/modules/enviroment/application/interface/enviroment.service.interface';
 import {
   FOLDER_SERVICE,
   IFolderService,
 } from '@/modules/folder/application/interface/folder.service.interface';
-import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import {
+  IMethodMapper,
+  METHOD_MAPPER,
+} from '@/modules/method/application/interface/method.mapper.interface';
 import {
   IMethodRepository,
   METHOD_REPOSITORY,
-} from '@/modules/method/application/repository/method.interface.repository';
+} from '@/modules/method/application/interface/method.repository.interface';
 import {
+  IMethodService,
   IMethodValues,
-  MethodService,
-} from '@/modules/method/application/service/method.service';
+  METHOD_SERVICE,
+} from '@/modules/method/application/interface/method.service.interface';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { Invocation } from '../../domain/invocation.domain';
@@ -76,10 +83,12 @@ export class InvocationService implements IInvocationService {
     private readonly contractService: IStellarService,
     @Inject(INVOCATION_EXCEPTION)
     private readonly invocationException: IInvocationException,
-    @Inject(forwardRef(() => MethodMapper))
-    private readonly methodMapper: MethodMapper,
-    private readonly methodService: MethodService,
-    private readonly enviromentService: EnviromentService,
+    @Inject(forwardRef(() => METHOD_MAPPER))
+    private readonly methodMapper: IMethodMapper,
+    @Inject(forwardRef(() => METHOD_SERVICE))
+    private readonly methodService: IMethodService,
+    @Inject(forwardRef(() => ENVIROMENT_SERVICE))
+    private readonly enviromentService: IEnviromentService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }
