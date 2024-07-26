@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -11,7 +12,7 @@ import {
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
-import type {
+import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
@@ -20,11 +21,17 @@ import { Method } from '@/modules/method/domain/method.domain';
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
 import { InvocationResponseDto } from '../application/dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
-import { InvocationService } from '../application/service/invocation.service';
+import {
+  IInvocationService,
+  INVOCATION_SERVICE,
+} from '../application/interface/invocation.service.interface';
 
 @Controller('/team/:teamId/invocation')
 export class InvocationTeamController {
-  constructor(private readonly invocationService: InvocationService) {}
+  constructor(
+    @Inject(INVOCATION_SERVICE)
+    private readonly invocationService: IInvocationService,
+  ) {}
 
   @Post('')
   async create(
