@@ -7,51 +7,61 @@ import {
 } from '@nestjs/common';
 
 import {
-  type IPromiseResponse,
-  type IResponseService,
+  IPromiseResponse,
+  IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { CollectionService } from '@/modules/collection/application/service/collection.service';
-import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
-import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
-import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
 import {
-  type IUserService,
+  COLLECTION_SERVICE,
+  ICollectionService,
+} from '@/modules/collection/application/interface/collection.service.interface';
+import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
+import {
+  IInvitationService,
+  INVITATION_SERVICE,
+} from '@/modules/invitation/application/interface/invitation.service.interface';
+import {
+  IUserRoleOnTeamService,
+  USER_ROLE_TO_TEAM_SERVICE,
+} from '@/modules/role/application/interface/role.service.interface';
+import {
+  IUserService,
   USER_SERVICE,
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../dto/create-team.dto';
-import type { TeamResponseDto } from '../dto/response-team.dto';
+import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
+import { ITeamMapper, TEAM_MAPPER } from '../interface/team.mapper.interface';
 import {
-  type ITeamRepository,
+  ITeamRepository,
   TEAM_REPOSITORY,
 } from '../interface/team.repository.interface';
-import type {
+import {
   ITeamData,
   ITeamService,
   IUpdateTeamData,
 } from '../interface/team.service.interface';
-import { TeamMapper } from '../mapper/team.mapper';
 
 @Injectable()
 export class TeamService implements ITeamService {
   constructor(
+    @Inject(forwardRef(() => USER_ROLE_TO_TEAM_SERVICE))
+    private readonly userRoleOnTeamService: IUserRoleOnTeamService,
+    @Inject(forwardRef(() => COLLECTION_SERVICE))
+    private readonly collectionService: ICollectionService,
+    @Inject(forwardRef(() => INVITATION_SERVICE))
+    private readonly invitationService: IInvitationService,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
-    private readonly teamMapper: TeamMapper,
     @Inject(TEAM_REPOSITORY)
     private readonly teamRepository: ITeamRepository,
-    @Inject(forwardRef(() => CollectionService))
-    private readonly collectionService: CollectionService,
-    @Inject(forwardRef(() => InvitationService))
-    private readonly invitationService: InvitationService,
-    @Inject(forwardRef(() => UserRoleOnTeamService))
-    private readonly userRoleOnTeamService: UserRoleOnTeamService,
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
+    @Inject(TEAM_MAPPER)
+    private readonly teamMapper: ITeamMapper,
   ) {
     this.responseService.setContext(TeamService.name);
   }
