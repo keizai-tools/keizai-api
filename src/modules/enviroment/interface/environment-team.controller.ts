@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -16,12 +17,18 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateEnviromentDto } from '../application/dto/create-enviroment.dto';
 import { EnviromentResponseDto } from '../application/dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
-import { EnviromentService } from '../application/service/enviroment.service';
+import {
+  ENVIROMENT_SERVICE,
+  IEnviromentService,
+} from '../application/interface/enviroment.service.interface';
 
 @Auth(AuthType.Bearer)
 @Controller('/team/:teamId/environment')
 export class EnviromentTeamController {
-  constructor(private readonly enviromentService: EnviromentService) {}
+  constructor(
+    @Inject(ENVIROMENT_SERVICE)
+    private readonly enviromentService: IEnviromentService,
+  ) {}
 
   @Post('/')
   async create(
