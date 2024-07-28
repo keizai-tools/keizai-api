@@ -3,7 +3,7 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import { IMethodValues } from '@/modules/method/application/service/method.service';
+import type { IMethodValues } from '@/modules/method/application/interface/method.service.interface';
 import type { Method } from '@/modules/method/domain/method.domain';
 
 import { Invocation } from '../../domain/invocation.domain';
