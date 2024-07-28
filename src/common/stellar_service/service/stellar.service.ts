@@ -11,7 +11,10 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import {
+  IMethodMapper,
+  METHOD_MAPPER,
+} from '@/modules/method/application/interface/method.mapper.interface';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { ContractFunctions } from '../application/domain/ContractFunctions.array';
@@ -24,7 +27,7 @@ import {
   SendTransactionStatus,
 } from '../application/domain/soroban.enum';
 import {
-  type IDecodedSection,
+  IDecodedSection,
   IGeneratedMethod,
   IStellarService,
 } from '../application/interface/contract.service.interface';
@@ -52,8 +55,8 @@ export class StellarService implements IStellarService {
     private readonly stellarAdapter: IStellarAdapter,
     @Inject(CONTRACT_MAPPER)
     private readonly stellarMapper: IStellarMapper,
-    @Inject(MethodMapper)
-    private readonly methodMapper: MethodMapper,
+    @Inject(METHOD_MAPPER)
+    private readonly methodMapper: IMethodMapper,
   ) {
     this.responseService.setContext(StellarService.name);
     this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
