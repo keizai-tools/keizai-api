@@ -3,8 +3,8 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import type { IMethodValues } from '@/modules/method/application/interface/method.service.interface';
-import type { Method } from '@/modules/method/domain/method.domain';
+import { IMethodValues } from '@/modules/method/application/interface/method.service.interface';
+import { Method } from '@/modules/method/domain/method.domain';
 
 import { Invocation } from '../../domain/invocation.domain';
 import { CreateInvocationDto } from '../dto/create-invocation.dto';
