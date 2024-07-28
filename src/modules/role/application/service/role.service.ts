@@ -17,7 +17,7 @@ import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
 import { UpdateUserRoleToTeamDto } from '../dto/update-user-role.dto';
 import { ROLE_RESPONSE } from '../exceptions/role-response.enum';
 import {
-  type IUserRoleToTeamMapper,
+   IUserRoleToTeamMapper,
   USER_ROLE_TO_TEAM_MAPPER,
 } from '../interface/role.mapper.interface';
 import {
