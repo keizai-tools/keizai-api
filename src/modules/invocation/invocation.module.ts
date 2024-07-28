@@ -14,8 +14,8 @@ import { INVOCATION_REPOSITORY } from './application/interface/invocation.reposi
 import { INVOCATION_SERVICE } from './application/interface/invocation.service.interface';
 import { InvocationMapper } from './application/mapper/invocation.mapper';
 import { InvocationService } from './application/service/invocation.service';
-import { InvocationSchema } from './infrastructure/persistence/invocation.schema';
 import { InvocationRepository } from './infrastructure/persistence/invocation.repository';
+import { InvocationSchema } from './infrastructure/persistence/invocation.schema';
 import { InvocationTeamController } from './interface/invocation-team.controller';
 import { InvocationUserController } from './interface/invocation.controller';
 
@@ -26,7 +26,7 @@ import { InvocationUserController } from './interface/invocation.controller';
     forwardRef(() => MethodModule),
     forwardRef(() => FolderModule),
     forwardRef(() => EnviromentModule),
-    TeamModule,
+    forwardRef(() => TeamModule),
   ],
   controllers: [InvocationUserController, InvocationTeamController],
   providers: [
