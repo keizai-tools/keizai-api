@@ -14,7 +14,10 @@ import {
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import {
+  ENVIROMENT_SERVICE,
+  IEnviromentService,
+} from '@/modules/enviroment/application/interface/enviroment.service.interface';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -30,8 +33,8 @@ import {
 } from '../interface/collection.repository.interface';
 import {
   ICollectionService,
-  type ICollectionValues,
-  type IUpdateCollectionValues,
+  ICollectionValues,
+  IUpdateCollectionValues,
 } from '../interface/collection.service.interface';
 import { CollectionMapper } from '../mapper/collection.mapper';
 
@@ -44,8 +47,8 @@ export class CollectionService implements ICollectionService {
     private readonly responseService: IResponseService,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
-    @Inject(forwardRef(() => EnviromentService))
-    private readonly environmentService: EnviromentService,
+    @Inject(forwardRef(() => ENVIROMENT_SERVICE))
+    private readonly environmentService: IEnviromentService,
   ) {
     this.responseService.setContext(CollectionService.name);
   }
@@ -203,7 +206,7 @@ export class CollectionService implements ICollectionService {
   async findEnvironmentByCollectionId(
     collectionId: string,
     environmentName: string,
-  ) {
+  ): IPromiseResponse<EnviromentResponseDto> {
     try {
       const environment = await this.environmentService.findByNames(
         [environmentName],
