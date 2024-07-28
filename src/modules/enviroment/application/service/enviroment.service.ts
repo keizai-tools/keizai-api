@@ -23,7 +23,7 @@ import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
 import { ENVIROMENT_RESPONSE } from '../exceptions/enviroment-response.enum';
 import {
   ENVIROMENT_MAPPER,
-  type IEnviromentMapper,
+   IEnviromentMapper,
 } from '../interface/enviroment.mapper.interface';
 import {
   ENVIROMENT_REPOSITORY,
