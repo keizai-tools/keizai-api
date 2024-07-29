@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -16,18 +15,12 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateMethodDto } from '../application/dto/create-method.dto';
 import { MethodResponseDto } from '../application/dto/method-response.dto';
 import { UpdateMethodDto } from '../application/dto/update-method.dto';
-import {
-  IMethodService,
-  METHOD_SERVICE,
-} from '../application/interface/method.service.interface';
+import { MethodService } from '../application/service/method.service';
 
 @Auth(AuthType.Bearer)
 @Controller('/team/:teamId/method')
 export class MethodTeamController {
-  constructor(
-    @Inject(METHOD_SERVICE)
-    private readonly methodService: IMethodService,
-  ) {}
+  constructor(private readonly methodService: MethodService) {}
 
   @Post('')
   async create(
