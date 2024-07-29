@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -22,18 +21,12 @@ import { User } from '@/modules/user/domain/user.domain';
 import { CreateFolderDto } from '../application/dto/create-folder.dto';
 import { FolderResponseDto } from '../application/dto/folder-response.dto';
 import { UpdateFolderDto } from '../application/dto/update-folder.dto';
-import {
-  FOLDER_SERVICE,
-  IFolderService,
-} from '../application/interface/folder.service.interface';
+import { FolderService } from '../application/service/folder.service';
 
 @Auth(AuthType.Bearer)
 @Controller('folder')
 export class FolderUserController {
-  constructor(
-    @Inject(FOLDER_SERVICE)
-    private readonly folderService: IFolderService,
-  ) {}
+  constructor(private readonly folderService: FolderService) {}
 
   @Post('')
   async create(
