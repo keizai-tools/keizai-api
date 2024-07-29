@@ -27,7 +27,7 @@ import {
   ENVIROMENT_REPOSITORY,
   IEnviromentRepository,
 } from '../interface/enviroment.repository.interface';
-import type { EnviromentMapper } from '../mapper/enviroment.mapper';
+import { EnviromentMapper } from '../mapper/enviroment.mapper';
 
 @Injectable()
 export class EnviromentService {
