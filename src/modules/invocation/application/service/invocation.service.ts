@@ -20,18 +20,8 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import {
-  ENVIROMENT_SERVICE,
-  IEnviromentService,
-} from '@/modules/enviroment/application/interface/enviroment.service.interface';
-import {
-  FOLDER_SERVICE,
-  IFolderService,
-} from '@/modules/folder/application/interface/folder.service.interface';
-import {
-  IMethodMapper,
-  METHOD_MAPPER,
-} from '@/modules/method/application/interface/method.mapper.interface';
+import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import { FolderService } from '@/modules/folder/application/service/folder.service';
 import {
   IMethodRepository,
   METHOD_REPOSITORY,
@@ -41,6 +31,7 @@ import {
   IMethodValues,
   METHOD_SERVICE,
 } from '@/modules/method/application/interface/method.service.interface';
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { Invocation } from '../../domain/invocation.domain';
@@ -48,47 +39,36 @@ import { CreateInvocationDto } from '../dto/create-invocation.dto';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
 import { INVOCATION_RESPONSE } from '../exceptions/invocation-response.enum.dto';
+import { InvocationException } from '../exceptions/invocation.exceptions';
 import {
-  IInvocationException,
-  INVOCATION_EXCEPTION,
-} from '../interface/invocation.exceptions.interface';
-import {
-  IInvocationMapper,
-  INVOCATION_MAPPER,
-} from '../interface/invocation.mapper.interface';
+  IInvocationValues,
+  IUpdateInvocationValues,
+} from '../interface/invocation.base.interface';
 import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
 } from '../interface/invocation.repository.interface';
-import {
-  IInvocationService,
-  IInvocationValues,
-  IUpdateInvocationValues,
-} from '../interface/invocation.service.interface';
+import { InvocationMapper } from '../mapper/invocation.mapper';
 
 @Injectable()
-export class InvocationService implements IInvocationService {
+export class InvocationService {
   constructor(
-    @Inject(INVOCATION_MAPPER)
-    private readonly invocationMapper: IInvocationMapper,
+    private readonly invocationMapper: InvocationMapper,
     @Inject(INVOCATION_REPOSITORY)
     private readonly invocationRepository: IInvocationRepository,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
-    @Inject(FOLDER_SERVICE)
-    private readonly folderService: IFolderService,
+    @Inject(forwardRef(() => FolderService))
+    private readonly folderService: FolderService,
     @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IStellarService,
-    @Inject(INVOCATION_EXCEPTION)
-    private readonly invocationException: IInvocationException,
-    @Inject(forwardRef(() => METHOD_MAPPER))
-    private readonly methodMapper: IMethodMapper,
-    @Inject(forwardRef(() => METHOD_SERVICE))
-    private readonly methodService: IMethodService,
-    @Inject(forwardRef(() => ENVIROMENT_SERVICE))
-    private readonly enviromentService: IEnviromentService,
+    private readonly invocationException: InvocationException,
+    @Inject(forwardRef(() => MethodMapper))
+    private readonly methodMapper: MethodMapper,
+    private readonly methodService: MethodService,
+    private readonly enviromentService: EnviromentService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }

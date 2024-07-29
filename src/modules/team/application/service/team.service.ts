@@ -34,19 +34,18 @@ import { CreateTeamDto } from '../dto/create-team.dto';
 import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
-import { ITeamMapper, TEAM_MAPPER } from '../interface/team.mapper.interface';
+import type {
+  ITeamData,
+  IUpdateTeamData,
+} from '../interface/team.base.interface';
 import {
   ITeamRepository,
   TEAM_REPOSITORY,
 } from '../interface/team.repository.interface';
-import {
-  ITeamData,
-  ITeamService,
-  IUpdateTeamData,
-} from '../interface/team.service.interface';
+import { TeamMapper } from '../mapper/team.mapper';
 
 @Injectable()
-export class TeamService implements ITeamService {
+export class TeamService {
   constructor(
     @Inject(forwardRef(() => USER_ROLE_TO_TEAM_SERVICE))
     private readonly userRoleOnTeamService: IUserRoleOnTeamService,

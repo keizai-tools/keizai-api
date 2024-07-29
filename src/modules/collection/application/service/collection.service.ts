@@ -26,22 +26,19 @@ import { CollectionResponseDto } from '../dto/collection-response.dto';
 import { CreateCollectionDto } from '../dto/create-collection.dto';
 import { UpdateCollectionDto } from '../dto/update-collection.dto';
 import { COLLECTION_RESPONSE } from '../exceptions/collection-response.enum';
-import { COLLECTION_MAPPER } from '../interface/collection.mapper.interface';
+import {
+  ICollectionValues,
+  IUpdateCollectionValues,
+} from '../interface/collection.base.interface';
 import {
   COLLECTION_REPOSITORY,
   ICollectionRepository,
 } from '../interface/collection.repository.interface';
-import {
-  ICollectionService,
-  ICollectionValues,
-  IUpdateCollectionValues,
-} from '../interface/collection.service.interface';
 import { CollectionMapper } from '../mapper/collection.mapper';
 
 @Injectable()
-export class CollectionService implements ICollectionService {
+export class CollectionService {
   constructor(
-    @Inject(COLLECTION_MAPPER)
     private readonly collectionMapper: CollectionMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,

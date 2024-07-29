@@ -1,12 +1,11 @@
 import { UserRoleToTeam } from '../../domain/role.domain';
 import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
-import { IUserRoleToTeamMapper } from '../interface/role.mapper.interface';
 import {
   IUpdateUserRoleToTeamData,
   UserRoleToTeamData,
-} from '../interface/role.service.interface';
+} from '../interface/role.base.interface';
 
-export class UserRoleToTeamMapper implements IUserRoleToTeamMapper {
+export class UserRoleToTeamMapper {
   fromDtoToEntity(userRoleData: UserRoleToTeamData): UserRoleToTeam {
     const { teamId, userId, role } = userRoleData;
     return new UserRoleToTeam(teamId, userId, role);

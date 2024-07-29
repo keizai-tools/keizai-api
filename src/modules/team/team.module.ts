@@ -8,9 +8,7 @@ import { CollectionModule } from '../collection/collection.module';
 import { InvitationModule } from '../invitation/invitation.module';
 import { UserRoleToTeamModule } from '../role/role.module';
 import { UserModule } from '../user/user.module';
-import { TEAM_MAPPER } from './application/interface/team.mapper.interface';
 import { TEAM_REPOSITORY } from './application/interface/team.repository.interface';
-import { TEAM_SERVICE } from './application/interface/team.service.interface';
 import { TeamMapper } from './application/mapper/team.mapper';
 import { TeamService } from './application/service/team.service';
 import { TeamRepository } from './infrastructure/persistence/team.repository';
@@ -29,24 +27,13 @@ import { TeamController } from './interface/team.controller';
   ],
   controllers: [TeamController],
   providers: [
-    {
-      provide: TEAM_MAPPER,
-      useClass: TeamMapper,
-    },
-    {
-      provide: TEAM_SERVICE,
-      useClass: TeamService,
-    },
+    TeamMapper,
+    TeamService,
     {
       provide: TEAM_REPOSITORY,
       useClass: TeamRepository,
     },
   ],
-  exports: [
-    {
-      provide: TEAM_SERVICE,
-      useClass: TeamService,
-    },
-  ],
+  exports: [TeamService],
 })
 export class TeamModule {}

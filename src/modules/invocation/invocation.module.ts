@@ -8,10 +8,7 @@ import { FolderModule } from '../folder/folder.module';
 import { MethodModule } from '../method/method.module';
 import { TeamModule } from '../team/team.module';
 import { InvocationException } from './application/exceptions/invocation.exceptions';
-import { INVOCATION_EXCEPTION } from './application/interface/invocation.exceptions.interface';
-import { INVOCATION_MAPPER } from './application/interface/invocation.mapper.interface';
 import { INVOCATION_REPOSITORY } from './application/interface/invocation.repository.interface';
-import { INVOCATION_SERVICE } from './application/interface/invocation.service.interface';
 import { InvocationMapper } from './application/mapper/invocation.mapper';
 import { InvocationService } from './application/service/invocation.service';
 import { InvocationRepository } from './infrastructure/persistence/invocation.repository';
@@ -30,32 +27,17 @@ import { InvocationUserController } from './interface/invocation.controller';
   ],
   controllers: [InvocationUserController, InvocationTeamController],
   providers: [
-    {
-      provide: INVOCATION_EXCEPTION,
-      useClass: InvocationException,
-    },
-    {
-      provide: INVOCATION_SERVICE,
-      useClass: InvocationService,
-    },
-    {
-      provide: INVOCATION_MAPPER,
-      useClass: InvocationMapper,
-    },
+    InvocationException,
+    InvocationService,
+    InvocationMapper,
     {
       provide: INVOCATION_REPOSITORY,
       useClass: InvocationRepository,
     },
   ],
   exports: [
-    {
-      provide: INVOCATION_SERVICE,
-      useClass: InvocationService,
-    },
-    {
-      provide: INVOCATION_MAPPER,
-      useClass: InvocationMapper,
-    },
+    InvocationService,
+    InvocationMapper,
     {
       provide: INVOCATION_REPOSITORY,
       useClass: InvocationRepository,

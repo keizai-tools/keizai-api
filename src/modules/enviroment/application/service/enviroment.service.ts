@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import {
@@ -10,10 +11,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  COLLECTION_SERVICE,
-  ICollectionService,
-} from '@/modules/collection/application/interface/collection.service.interface';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { Enviroment } from '../../domain/enviroment.domain';
 import { CreateEnvironmentsDto } from '../dto/create-all-environments.dto';
@@ -22,30 +20,25 @@ import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
 import { ENVIROMENT_RESPONSE } from '../exceptions/enviroment-response.enum';
 import {
-  ENVIROMENT_MAPPER,
-   IEnviromentMapper,
-} from '../interface/enviroment.mapper.interface';
+  IEnviromentValues,
+  IUpdateEnviromentValues,
+} from '../interface/enviroment.base.interface';
 import {
   ENVIROMENT_REPOSITORY,
   IEnviromentRepository,
 } from '../interface/enviroment.repository.interface';
-import {
-  IEnviromentService,
-  IEnviromentValues,
-  IUpdateEnviromentValues,
-} from '../interface/enviroment.service.interface';
+import type { EnviromentMapper } from '../mapper/enviroment.mapper';
 
 @Injectable()
-export class EnviromentService implements IEnviromentService {
+export class EnviromentService {
   constructor(
-    @Inject(ENVIROMENT_MAPPER)
-    private readonly enviromentMapper: IEnviromentMapper,
+    private readonly enviromentMapper: EnviromentMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
-    @Inject(COLLECTION_SERVICE)
-    private readonly collectionService: ICollectionService,
+    @Inject(forwardRef(() => CollectionService))
+    private readonly collectionService: CollectionService,
   ) {
     this.responseService.setContext(EnviromentService.name);
   }

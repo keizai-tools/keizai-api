@@ -12,13 +12,12 @@ import {
 import { Invocation } from '../../domain/invocation.domain';
 import { InvocationResponseDto } from '../dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
-import { IInvocationMapper } from '../interface/invocation.mapper.interface';
 import {
   IInvocationValues,
   IUpdateInvocationValues,
-} from '../interface/invocation.service.interface';
+} from '../interface/invocation.base.interface';
 
-export class InvocationMapper implements IInvocationMapper {
+export class InvocationMapper {
   constructor(
     @Inject(forwardRef(() => FOLDER_MAPPER))
     private readonly folderMapper: IFolderMapper,

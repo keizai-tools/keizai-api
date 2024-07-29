@@ -15,13 +15,9 @@ import {
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
-import { ITeamMapper } from '../interface/team.mapper.interface';
-import {
-  ITeamData,
-  IUpdateTeamData,
-} from '../interface/team.service.interface';
+import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
 
-export class TeamMapper implements ITeamMapper {
+export class TeamMapper {
   constructor(
     @Inject(COLLECTION_MAPPER)
     private readonly collectionMapper: ICollectionMapper,
