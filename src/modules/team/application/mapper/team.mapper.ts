@@ -1,17 +1,8 @@
 import { Inject, forwardRef } from '@nestjs/common';
 
-import {
-  COLLECTION_MAPPER,
-  ICollectionMapper,
-} from '@/modules/collection/application/interface/collection.mapper.interface';
-import {
-  IInvitationMapper,
-  INVITATION_MAPPER,
-} from '@/modules/invitation/application/interface/invitation.mapper.interface';
-import {
-  IUserRoleToTeamMapper,
-  USER_ROLE_TO_TEAM_MAPPER,
-} from '@/modules/role/application/interface/role.mapper.interface';
+import { CollectionMapper } from '@/modules/collection/application/mapper/collection.mapper';
+import { InvitationMapper } from '@/modules/invitation/application/mapper/invitation.mapper';
+import { UserRoleToTeamMapper } from '@/modules/role/application/mapper/role.mapper';
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
@@ -19,12 +10,12 @@ import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
 
 export class TeamMapper {
   constructor(
-    @Inject(COLLECTION_MAPPER)
-    private readonly collectionMapper: ICollectionMapper,
-    @Inject(INVITATION_MAPPER)
-    private readonly invitationMapper: IInvitationMapper,
-    @Inject(forwardRef(() => USER_ROLE_TO_TEAM_MAPPER))
-    private readonly userRoleToTeamMapper: IUserRoleToTeamMapper,
+    @Inject(forwardRef(() => CollectionMapper))
+    private readonly collectionMapper: CollectionMapper,
+    @Inject(forwardRef(() => InvitationMapper))
+    private readonly invitationMapper: InvitationMapper,
+    @Inject(forwardRef(() => UserRoleToTeamMapper))
+    private readonly userRoleToTeamMapper: UserRoleToTeamMapper,
   ) {}
 
   fromDtoToEntity(teamData: ITeamData): Team {
