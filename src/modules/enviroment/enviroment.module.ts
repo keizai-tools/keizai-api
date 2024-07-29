@@ -24,7 +24,6 @@ import { EnviromentTeamController } from './interface/environment-team.controlle
   providers: [
     EnviromentMapper,
     EnviromentService,
-    ,
     {
       provide: ENVIROMENT_REPOSITORY,
       useClass: EnviromentRepository,
