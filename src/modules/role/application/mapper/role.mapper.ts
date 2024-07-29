@@ -3,7 +3,7 @@ import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
 import {
   IUpdateUserRoleToTeamData,
   UserRoleToTeamData,
-} from '../service/role.service';
+} from '../interface/role.base.interface';
 
 export class UserRoleToTeamMapper {
   fromDtoToEntity(userRoleData: UserRoleToTeamData): UserRoleToTeam {
@@ -17,6 +17,7 @@ export class UserRoleToTeamMapper {
     const { teamId, userId, role, id } = userRoleData;
     return new UserRoleToTeam(teamId, userId, role, id);
   }
+
   fromEntityToDto(userRole: UserRoleToTeam): ResponseUserRoletoTeamDto {
     const { id, teamId, userId, role } = userRole;
     return new ResponseUserRoletoTeamDto(id, teamId, userId, role);

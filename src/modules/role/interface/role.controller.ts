@@ -6,56 +6,70 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateUserRoleToTeamDto } from '../application/dto/create-user-role.dto';
+import { ResponseUserRoletoTeamDto } from '../application/dto/response-user-role.dto';
 import { UpdateUserRoleToTeamDto } from '../application/dto/update-user-role.dto';
 import { UserRoleOnTeamService } from '../application/service/role.service';
+import { UserRoleToTeam } from '../domain/role.domain';
 
+@Auth(AuthType.Bearer)
 @Controller('role')
 export class UserRoleToTeamController {
   constructor(private readonly userRoleOnTeamService: UserRoleOnTeamService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
-  async findAllByUser(@AuthUser() user: IUserResponse) {
+  async findAllByUser(
+    @CurrentUser() user: User,
+  ): IPromiseResponse<ResponseUserRoletoTeamDto[]> {
     return this.userRoleOnTeamService.findAllByUser(user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async findOneByIds(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.userRoleOnTeamService.findOneByIds(id, user.id);
+  async findOneByIds(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<ResponseUserRoletoTeamDto> {
+    return this.userRoleOnTeamService.findOneByIds(id, data.payload.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
   async create(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() createUserRoleToTeamDto: CreateUserRoleToTeamDto,
-  ) {
-    return this.userRoleOnTeamService.create(createUserRoleToTeamDto, user.id);
+  ): IPromiseResponse<UserRoleToTeam> {
+    return this.userRoleOnTeamService.create(
+      createUserRoleToTeamDto,
+      data.payload.id,
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/')
   async update(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() updateUserRoleToTeamDto: UpdateUserRoleToTeamDto,
-  ) {
-    return this.userRoleOnTeamService.update(updateUserRoleToTeamDto, user.id);
+  ): IPromiseResponse<UserRoleToTeam> {
+    return this.userRoleOnTeamService.update(
+      updateUserRoleToTeamDto,
+      data.payload.id,
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  async delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.userRoleOnTeamService.delete(id, user.id);
+  async delete(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<boolean> {
+    return this.userRoleOnTeamService.delete(id, data.payload.id);
   }
 }

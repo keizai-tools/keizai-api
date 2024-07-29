@@ -1,6 +1,6 @@
-import { Base } from '@/common/domain/base.domain';
-import { User } from '@/modules/auth/domain/user.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { Team } from '@/modules/team/domain/team.domain';
+import { User } from '@/modules/user/domain/user.domain';
 
 export class UserRoleToTeam extends Base {
   id?: string;
