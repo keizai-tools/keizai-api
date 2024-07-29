@@ -10,8 +10,6 @@ import { AuthService } from '@/modules/auth/application/service/auth.service';
 import { UserModule } from '../user/user.module';
 import { AccessTokenGuard } from './application/guard/access_token.guard';
 import { AuthenticationGuard } from './application/guard/authentication.guard';
-import { AUTH_SERVICE } from './application/interface/auth.service.interface';
-import { JWT_STRATEGY } from './application/interface/jwt.strategy.interface';
 import { JwtStrategy } from './application/strategy/jwt.strategy';
 import { AuthController } from './interface/auth.controller';
 
@@ -23,20 +21,17 @@ import { AuthController } from './interface/auth.controller';
   ],
   providers: [
     {
-      provide: JWT_STRATEGY,
-      useClass: JwtStrategy,
-    },
-    AccessTokenGuard,
-    { provide: APP_GUARD, useClass: AuthenticationGuard },
-    AuthController,
-    {
-      provide: AUTH_SERVICE,
-      useClass: AuthService,
+      provide: APP_GUARD,
+      useClass: AuthenticationGuard,
     },
     {
       provide: COGNITO_AUTH,
       useClass: CognitoService,
     },
+    AccessTokenGuard,
+    AuthController,
+    JwtStrategy,
+    AuthService,
   ],
   controllers: [AuthController],
 })

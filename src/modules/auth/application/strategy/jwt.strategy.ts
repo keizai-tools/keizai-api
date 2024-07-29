@@ -18,13 +18,8 @@ import { ServiceMessage } from '@/modules/user/application/message/user.message'
 import { User } from '@/modules/user/domain/user.domain';
 import { JWT_AUTOMATED_TESTS_SECRET } from '@/test/test.constants';
 
-import { IJwtStrategy } from '../interface/jwt.strategy.interface';
-
 @Injectable()
-export class JwtStrategy
-  extends PassportStrategy(Strategy)
-  implements IJwtStrategy
-{
+export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
