@@ -3,6 +3,7 @@ import {
   Injectable,
   RequestTimeoutException,
   UseInterceptors,
+  forwardRef,
 } from '@nestjs/common';
 import { xdr } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
@@ -11,10 +12,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  IMethodMapper,
-  METHOD_MAPPER,
-} from '@/modules/method/application/interface/method.mapper.interface';
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { ContractFunctions } from '../application/domain/ContractFunctions.array';
@@ -55,8 +53,8 @@ export class StellarService implements IStellarService {
     private readonly stellarAdapter: IStellarAdapter,
     @Inject(CONTRACT_MAPPER)
     private readonly stellarMapper: IStellarMapper,
-    @Inject(METHOD_MAPPER)
-    private readonly methodMapper: IMethodMapper,
+    @Inject(forwardRef(() => MethodMapper))
+    private readonly methodMapper: MethodMapper,
   ) {
     this.responseService.setContext(StellarService.name);
     this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
