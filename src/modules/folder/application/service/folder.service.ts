@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import {
@@ -10,10 +11,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  COLLECTION_SERVICE,
-  ICollectionService,
-} from '@/modules/collection/application/interface/collection.service.interface';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -22,30 +20,25 @@ import { FolderResponseDto } from '../dto/folder-response.dto';
 import { UpdateFolderDto } from '../dto/update-folder.dto';
 import { FOLDER_RESPONSE } from '../exceptions/folder-response.enum';
 import {
-  FOLDER_MAPPER,
-  IFolderMapper,
-} from '../interface/folder.mapper.interface';
+  IFolderValues,
+  IUpdateFolderValues,
+} from '../interface/folder.base.interface';
 import {
   FOLDER_REPOSITORY,
   IFolderRepository,
 } from '../interface/folder.repository.interface';
-import {
-  IFolderService,
-  IFolderValues,
-  IUpdateFolderValues,
-} from '../interface/folder.service.interface';
+import { FolderMapper } from '../mapper/folder.mapper';
 
 @Injectable()
-export class FolderService implements IFolderService {
+export class FolderService {
   constructor(
-    @Inject(FOLDER_MAPPER)
-    private readonly folderMapper: IFolderMapper,
+    private readonly folderMapper: FolderMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(FOLDER_REPOSITORY)
     private readonly folderRepository: IFolderRepository,
-    @Inject(COLLECTION_SERVICE)
-    private readonly collectionService: ICollectionService,
+    @Inject(forwardRef(() => CollectionService))
+    private readonly collectionService: CollectionService,
   ) {
     this.responseService.setContext(FolderService.name);
   }
