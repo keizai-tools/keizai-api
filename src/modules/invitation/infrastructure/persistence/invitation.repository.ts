@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IInvitationRepository } from '../../application/repository/invitation.repository';
+import { IInvitationRepository } from '../../application/interface/invitation.repository.interface';
 import { Invitation } from '../../domain/invitation.domain';
 import { InvitationSchema } from './invitation.schema';
 
@@ -40,7 +40,23 @@ export class InvitationRepository implements IInvitationRepository {
   }
 
   async update(invitation: Invitation): Promise<Invitation> {
-    return await this.repository.preload(invitation);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Invitation, {
+        where: { id: invitation.id },
+      });
+      if (existingCollection)
+        await queryRunner.manager.update(Invitation, invitation.id, invitation);
+      await queryRunner.commitTransaction();
+      return await this.findOne(invitation.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {
