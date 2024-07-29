@@ -1,13 +1,15 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CommonModule } from '@/common/common.module';
+
 import { InvocationModule } from '../invocation/invocation.module';
 import { TeamModule } from '../team/team.module';
+import { METHOD_REPOSITORY } from './application/interface/method.repository.interface';
 import { MethodMapper } from './application/mapper/method.mapper';
-import { METHOD_REPOSITORY } from './application/repository/method.interface.repository';
 import { MethodService } from './application/service/method.service';
+import { MethodRepository } from './infrastructure/persistence/method.repository';
 import { MethodSchema } from './infrastructure/persistence/method.schema';
-import { MethodRepository } from './infrastructure/persistence/method.typeorm.repository';
 import { MethodTeamController } from './interface/method-team.controller';
 import { MethodUserController } from './interface/method.controller';
 
@@ -15,6 +17,8 @@ import { MethodUserController } from './interface/method.controller';
   imports: [
     TypeOrmModule.forFeature([MethodSchema]),
     forwardRef(() => InvocationModule),
+    forwardRef(() => CommonModule),
+
     TeamModule,
   ],
   controllers: [MethodUserController, MethodTeamController],
@@ -26,6 +30,13 @@ import { MethodUserController } from './interface/method.controller';
       useClass: MethodRepository,
     },
   ],
-  exports: [MethodMapper, METHOD_REPOSITORY, MethodService],
+  exports: [
+    MethodService,
+    MethodMapper,
+    {
+      provide: METHOD_REPOSITORY,
+      useClass: MethodRepository,
+    },
+  ],
 })
 export class MethodModule {}

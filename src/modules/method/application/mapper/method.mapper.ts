@@ -1,6 +1,9 @@
 import { Method } from '../../domain/method.domain';
 import { MethodResponseDto } from '../dto/method-response.dto';
-import { IMethodValues, IUpdateMethodValues } from '../service/method.service';
+import {
+  IMethodValues,
+  IUpdateMethodValues,
+} from '../interface/method.base.interface';
 
 export class MethodMapper {
   fromDtoToEntity(createMethodDto: IMethodValues | Partial<Method>): Method {

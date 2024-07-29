@@ -1,6 +1,6 @@
 import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 
 export class MethodResponseDto extends Base {
   @IsNotEmpty()

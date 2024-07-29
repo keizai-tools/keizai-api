@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
 
-import { IMethodRepository } from '../../application/repository/method.interface.repository';
+import { IMethodRepository } from '../../application/interface/method.repository.interface';
 import { Method } from '../../domain/method.domain';
 import { MethodSchema } from './method.schema';
 
@@ -55,7 +55,23 @@ export class MethodRepository implements IMethodRepository {
   }
 
   async update(param: Method): Promise<Method> {
-    return await this.repository.preload(param);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Method, {
+        where: { id: param.id },
+      });
+      if (existingCollection)
+        await queryRunner.manager.update(Method, param.id, param);
+      await queryRunner.commitTransaction();
+      return await this.findOne(param.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {

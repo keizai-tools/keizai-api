@@ -1,4 +1,4 @@
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 export class Method extends Base {

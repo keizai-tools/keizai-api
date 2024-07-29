@@ -9,4 +9,8 @@ export enum METHOD_RESPONSE {
   METHOD_NOT_UPDATED = 'Method not updated',
   METHOD_INVOCATION_NOT_FOUND = 'Invocation not found',
   METHODS_NOT_DELETED = 'Error when try to remove methods',
+  METHOD_DELETED = 'Method deleted',
+  METHOD_UPDATED = 'Method updated',
+  METHOD_FOUND = 'Method found',
+  METHOD_CREATED = 'Method created',
 }
