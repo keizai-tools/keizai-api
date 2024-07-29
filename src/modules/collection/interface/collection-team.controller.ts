@@ -7,14 +7,14 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 
-import { AdminRoleGuard } from '@/modules/auth/infrastructure/guard/admin-role.guard';
-import { AuthTeamGuard } from '@/modules/auth/infrastructure/guard/auth-team.guard';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { Enviroment } from '@/modules/enviroment/domain/enviroment.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
@@ -22,27 +22,25 @@ import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
+@Auth(AuthType.Bearer)
 @Controller('/team/:teamId/collection')
-@UseGuards(JwtAuthGuard, AuthTeamGuard)
 export class CollectionTeamController {
   constructor(private readonly collectionService: CollectionService) {}
 
-  @UseGuards(AdminRoleGuard)
   @Post('/')
   async create(
     @Body() collectionDto: CreateCollectionDto,
     @Param('teamId') teamId: string,
-  ): Promise<CollectionResponseDto> {
+  ): IPromiseResponse<CollectionResponseDto> {
     return this.collectionService.createByTeam(collectionDto, teamId);
   }
 
-  @UseGuards(AdminRoleGuard)
   @Post('/:id/environments')
   async createAllEnvironments(
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
     @Param('id') id: string,
     @Param('teamId') teamId: string,
-  ): Promise<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnviromentResponseDto[]> {
     return this.collectionService.createAllEnvironmentsByTeam(
       id,
       createEnvironmentsDto,
@@ -51,7 +49,9 @@ export class CollectionTeamController {
   }
 
   @Get('/')
-  async findCollectionsByTeam(@Param('teamId') teamId: string) {
+  async findCollectionsByTeam(
+    @Param('teamId') teamId: string,
+  ): IPromiseResponse<CollectionResponseDto[]> {
     return await this.collectionService.findAllByTeam(teamId);
   }
 
@@ -59,7 +59,7 @@ export class CollectionTeamController {
   async findOne(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
-  ): Promise<CollectionResponseDto> {
+  ): IPromiseResponse<CollectionResponseDto> {
     return this.collectionService.findOneByCollectionAndTeamId(id, teamId);
   }
 
@@ -67,7 +67,7 @@ export class CollectionTeamController {
   async findFoldersByCollection(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
-  ): Promise<FolderResponseDto[]> {
+  ): IPromiseResponse<FolderResponseDto[]> {
     return this.collectionService.findFoldersByCollectionTeamId(id, teamId);
   }
 
@@ -75,7 +75,7 @@ export class CollectionTeamController {
   async findEnvironmentsByCollection(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
-  ): Promise<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnviromentResponseDto[]> {
     return this.collectionService.findEnvironmentsByCollectionAndTeamId(
       id,
       teamId,
@@ -86,31 +86,31 @@ export class CollectionTeamController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ) {
+  ): IPromiseResponse<Enviroment> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,
     );
   }
 
-  @UseGuards(AdminRoleGuard)
   @Patch('/')
   async update(
     @Param('teamId') teamId: string,
     @Body() collectionDto: UpdateCollectionDto,
-  ): Promise<CollectionResponseDto> {
+  ): IPromiseResponse<CollectionResponseDto> {
     return this.collectionService.updateCollectionTeam(collectionDto, teamId);
   }
 
-  @UseGuards(AdminRoleGuard)
   @Delete('/:id')
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string): IPromiseResponse<boolean> {
     return this.collectionService.delete(id);
   }
 
-  @UseGuards(AdminRoleGuard)
   @Delete('/:id/environments')
-  async deleteAll(@Param('teamId') teamId: string, @Param('id') id: string) {
+  async deleteAll(
+    @Param('teamId') teamId: string,
+    @Param('id') id: string,
+  ): IPromiseResponse<boolean> {
     return this.collectionService.deleteAllEnvironmentsByTeam(id, teamId);
   }
 }
