@@ -9,7 +9,7 @@ import { UpdateInvocationDto } from '../dto/update-invocation.dto';
 import {
   IInvocationValues,
   IUpdateInvocationValues,
-} from '../service/invocation.service';
+} from '../interface/invocation.base.interface';
 
 export class InvocationMapper {
   constructor(

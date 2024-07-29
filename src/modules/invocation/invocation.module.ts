@@ -8,11 +8,11 @@ import { FolderModule } from '../folder/folder.module';
 import { MethodModule } from '../method/method.module';
 import { TeamModule } from '../team/team.module';
 import { InvocationException } from './application/exceptions/invocation.exceptions';
+import { INVOCATION_REPOSITORY } from './application/interface/invocation.repository.interface';
 import { InvocationMapper } from './application/mapper/invocation.mapper';
-import { INVOCATION_REPOSITORY } from './application/repository/invocation.repository';
 import { InvocationService } from './application/service/invocation.service';
+import { InvocationRepository } from './infrastructure/persistence/invocation.repository';
 import { InvocationSchema } from './infrastructure/persistence/invocation.schema';
-import { InvocationRepository } from './infrastructure/persistence/invocation.typeorm.repository';
 import { InvocationTeamController } from './interface/invocation-team.controller';
 import { InvocationUserController } from './interface/invocation.controller';
 
