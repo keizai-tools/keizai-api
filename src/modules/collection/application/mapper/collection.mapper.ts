@@ -1,13 +1,7 @@
 import { Inject, forwardRef } from '@nestjs/common';
 
-import {
-  ENVIROMENT_MAPPER,
-  IEnviromentMapper,
-} from '@/modules/enviroment/application/interface/enviroment.mapper.interface';
-import {
-  FOLDER_MAPPER,
-  IFolderMapper,
-} from '@/modules/folder/application/interface/folder.mapper.interface';
+import { EnviromentMapper } from '@/modules/enviroment/application/mapper/enviroment.mapper';
+import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
 
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
@@ -18,10 +12,10 @@ import {
 
 export class CollectionMapper {
   constructor(
-    @Inject(forwardRef(() => FOLDER_MAPPER))
-    private readonly folderMapper: IFolderMapper,
-    @Inject(forwardRef(() => ENVIROMENT_MAPPER))
-    private readonly enviromentMapper: IEnviromentMapper,
+    @Inject(forwardRef(() => FolderMapper))
+    private readonly folderMapper: FolderMapper,
+    @Inject(forwardRef(() => EnviromentMapper))
+    private readonly enviromentMapper: EnviromentMapper,
   ) {}
 
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
