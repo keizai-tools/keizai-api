@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -20,18 +19,12 @@ import { FolderResponseDto } from '@/modules/folder/application/dto/folder-respo
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
 import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
-import {
-  COLLECTION_SERVICE,
-  ICollectionService,
-} from '../application/interface/collection.service.interface';
+import { CollectionService } from '../application/service/collection.service';
 
 @Auth(AuthType.Bearer)
 @Controller('/team/:teamId/collection')
 export class CollectionTeamController {
-  constructor(
-    @Inject(COLLECTION_SERVICE)
-    private readonly collectionService: ICollectionService,
-  ) {}
+  constructor(private readonly collectionService: CollectionService) {}
 
   @Post('/')
   async create(
