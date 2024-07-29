@@ -1,4 +1,4 @@
-import { IMethodValues } from '@/modules/method/application/service/method.service';
+import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 
 export interface IInvocationValues {
   name: string;
