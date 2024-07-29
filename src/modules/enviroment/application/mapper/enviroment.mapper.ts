@@ -4,9 +4,8 @@ import {
   IEnviromentValues,
   IUpdateEnviromentValues,
 } from '../interface/enviroment.base.interface';
-import { IEnviromentMapper } from '../interface/enviroment.mapper.interface';
 
-export class EnviromentMapper implements IEnviromentMapper {
+export class EnviromentMapper {
   fromDtoToEntity(createEnviromentDto: IEnviromentValues): Enviroment {
     const { name, value, collectionId } = createEnviromentDto;
     return new Enviroment(name, value, collectionId);

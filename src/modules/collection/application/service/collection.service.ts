@@ -27,7 +27,6 @@ import {
   ICollectionValues,
   IUpdateCollectionValues,
 } from '../interface/collection.base.interface';
-import { COLLECTION_MAPPER } from '../interface/collection.mapper.interface';
 import {
   COLLECTION_REPOSITORY,
   ICollectionRepository,
@@ -37,7 +36,6 @@ import { CollectionMapper } from '../mapper/collection.mapper';
 @Injectable()
 export class CollectionService {
   constructor(
-    @Inject(COLLECTION_MAPPER)
     private readonly collectionMapper: CollectionMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,

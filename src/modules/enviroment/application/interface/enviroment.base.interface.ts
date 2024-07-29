@@ -7,5 +7,3 @@ export interface IEnviromentValues {
 export interface IUpdateEnviromentValues extends Partial<IEnviromentValues> {
   id: string;
 }
-
-export const ENVIROMENT_SERVICE = 'ENVIROMENT_SERVICE';

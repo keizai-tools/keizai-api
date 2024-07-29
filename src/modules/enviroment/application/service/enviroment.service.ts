@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 
 import {
@@ -10,7 +11,6 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { COLLECTION_SERVICE } from '@/modules/collection/application/interface/collection.base.interface';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { Enviroment } from '../../domain/enviroment.domain';
@@ -24,24 +24,20 @@ import {
   IUpdateEnviromentValues,
 } from '../interface/enviroment.base.interface';
 import {
-  ENVIROMENT_MAPPER,
-  IEnviromentMapper,
-} from '../interface/enviroment.mapper.interface';
-import {
   ENVIROMENT_REPOSITORY,
   IEnviromentRepository,
 } from '../interface/enviroment.repository.interface';
+import type { EnviromentMapper } from '../mapper/enviroment.mapper';
 
 @Injectable()
 export class EnviromentService {
   constructor(
-    @Inject(ENVIROMENT_MAPPER)
-    private readonly enviromentMapper: IEnviromentMapper,
+    private readonly enviromentMapper: EnviromentMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
-    @Inject(COLLECTION_SERVICE)
+    @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
   ) {
     this.responseService.setContext(EnviromentService.name);

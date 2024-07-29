@@ -9,9 +9,8 @@ import {
   ICollectionValues,
   IUpdateCollectionValues,
 } from '../interface/collection.base.interface';
-import { ICollectionMapper } from '../interface/collection.mapper.interface';
 
-export class CollectionMapper implements ICollectionMapper {
+export class CollectionMapper {
   constructor(
     @Inject(FolderMapper)
     private readonly folderMapper: FolderMapper,
