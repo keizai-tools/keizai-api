@@ -5,11 +5,11 @@ import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper'
 
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
-import { ICollectionMapper } from '../interface/collection.mapper.interface';
 import {
   ICollectionValues,
   IUpdateCollectionValues,
-} from '../interface/collection.service.interface';
+} from '../interface/collection.base.interface';
+import { ICollectionMapper } from '../interface/collection.mapper.interface';
 
 export class CollectionMapper implements ICollectionMapper {
   constructor(
