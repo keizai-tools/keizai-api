@@ -17,26 +17,21 @@ import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
 import { UpdateUserRoleToTeamDto } from '../dto/update-user-role.dto';
 import { ROLE_RESPONSE } from '../exceptions/role-response.enum';
 import {
-  type IUserRoleToTeamMapper,
-  USER_ROLE_TO_TEAM_MAPPER,
-} from '../interface/role.mapper.interface';
+  IUpdateUserRoleToTeamData,
+  UserRoleToTeamData,
+} from '../interface/role.base.interface';
 import {
   IUserRoleToTeamRepository,
   USER_ROLE_TO_TEAM_REPOSITORY,
 } from '../interface/role.repository.interface';
-import {
-  IUpdateUserRoleToTeamData,
-  IUserRoleOnTeamService,
-  UserRoleToTeamData,
-} from '../interface/role.service.interface';
+import type { UserRoleToTeamMapper } from '../mapper/role.mapper';
 
 @Injectable()
-export class UserRoleOnTeamService implements IUserRoleOnTeamService {
+export class UserRoleOnTeamService {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
-    @Inject(USER_ROLE_TO_TEAM_MAPPER)
-    private readonly userRoleToTeamMapper: IUserRoleToTeamMapper,
+    private readonly userRoleToTeamMapper: UserRoleToTeamMapper,
     @Inject(USER_ROLE_TO_TEAM_REPOSITORY)
     private readonly userRoleToTeamRepository: IUserRoleToTeamRepository,
   ) {

@@ -3,9 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@/common/common.module';
 
-import { USER_ROLE_TO_TEAM_MAPPER } from './application/interface/role.mapper.interface';
 import { USER_ROLE_TO_TEAM_REPOSITORY } from './application/interface/role.repository.interface';
-import { USER_ROLE_TO_TEAM_SERVICE } from './application/interface/role.service.interface';
 import { UserRoleToTeamMapper } from './application/mapper/role.mapper';
 import { UserRoleOnTeamService } from './application/service/role.service';
 import { UserRoleToTeamRepository } from './infrastructure/persistence/role.repository';
@@ -19,29 +17,13 @@ import { UserRoleToTeamController } from './interface/role.controller';
   ],
   controllers: [UserRoleToTeamController],
   providers: [
-    {
-      provide: USER_ROLE_TO_TEAM_SERVICE,
-      useClass: UserRoleOnTeamService,
-    },
-    {
-      provide: USER_ROLE_TO_TEAM_MAPPER,
-      useClass: UserRoleToTeamMapper,
-    },
-    ,
+    UserRoleOnTeamService,
+    UserRoleToTeamMapper,
     {
       provide: USER_ROLE_TO_TEAM_REPOSITORY,
       useClass: UserRoleToTeamRepository,
     },
   ],
-  exports: [
-    {
-      provide: USER_ROLE_TO_TEAM_SERVICE,
-      useClass: UserRoleOnTeamService,
-    },
-    {
-      provide: USER_ROLE_TO_TEAM_MAPPER,
-      useClass: UserRoleToTeamMapper,
-    },
-  ],
+  exports: [UserRoleOnTeamService, UserRoleToTeamMapper],
 })
 export class UserRoleToTeamModule {}

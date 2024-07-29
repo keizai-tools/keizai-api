@@ -3,9 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@/common/common.module';
 
-import { INVITATION_MAPPER } from './application/interface/invitation.mapper.interface';
 import { INVITATION_REPOSITORY } from './application/interface/invitation.repository.interface';
-import { INVITATION_SERVICE } from './application/interface/invitation.service.interface';
 import { InvitationMapper } from './application/mapper/invitation.mapper';
 import { InvitationService } from './application/service/invitation.service';
 import { InvitationRepository } from './infrastructure/persistence/invitation.repository';
@@ -19,28 +17,13 @@ import { InvitationController } from './interface/invitation.controller';
   ],
   controllers: [InvitationController],
   providers: [
-    {
-      useClass: InvitationService,
-      provide: INVITATION_SERVICE,
-    },
-    {
-      useClass: InvitationMapper,
-      provide: INVITATION_MAPPER,
-    },
+    InvitationService,
+    InvitationMapper,
     {
       useClass: InvitationRepository,
       provide: INVITATION_REPOSITORY,
     },
   ],
-  exports: [
-    {
-      useClass: InvitationService,
-      provide: INVITATION_SERVICE,
-    },
-    {
-      useClass: InvitationMapper,
-      provide: INVITATION_MAPPER,
-    },
-  ],
+  exports: [InvitationService, InvitationMapper],
 })
 export class InvitationModule {}

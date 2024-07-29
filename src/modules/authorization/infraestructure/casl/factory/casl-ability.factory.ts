@@ -6,7 +6,6 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 
 import { IResponse } from '@/common/response_service/interface/response.interface';
-import { ICaslAbilityFactory } from '@/modules/authorization/application/interface/casl-ability.interface';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { IPermissionsDefinition } from '../../policy/type/permissions-definition.interface';
@@ -16,7 +15,7 @@ import { AppSubjects } from '../type/app-subjects.type';
 export const PERMISSIONS_FOR_FEATURE_KEY = 'permissions_for_feature';
 
 @Injectable()
-export class CaslAbilityFactory implements ICaslAbilityFactory {
+export class CaslAbilityFactory {
   constructor(
     @Inject(PERMISSIONS_FOR_FEATURE_KEY)
     private readonly permissions: IPermissionsDefinition,

@@ -17,20 +17,15 @@ import { ResponseInvitationDto } from '../dto/response-invitation.dto';
 import { UpdateInvitationDto } from '../dto/update-invitation.dto';
 import { INVITATION_RESPONSE } from '../exceptions/invitation.enum';
 import {
-  IInvitationMapper,
-  INVITATION_MAPPER,
-} from '../interface/invitation.mapper.interface';
-import {
   IInvitationRepository,
   INVITATION_REPOSITORY,
 } from '../interface/invitation.repository.interface';
-import { IInvitationService } from '../interface/invitation.service.interface';
+import type { InvitationMapper } from '../mapper/invitation.mapper';
 
 @Injectable()
-export class InvitationService implements IInvitationService {
+export class InvitationService {
   constructor(
-    @Inject(INVITATION_MAPPER)
-    private readonly invitationMapper: IInvitationMapper,
+    private readonly invitationMapper: InvitationMapper,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(INVITATION_REPOSITORY)
