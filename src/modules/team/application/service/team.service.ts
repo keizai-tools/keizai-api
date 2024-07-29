@@ -25,19 +25,18 @@ import { CreateTeamDto } from '../dto/create-team.dto';
 import type { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
+import type {
+  ITeamData,
+  IUpdateTeamData,
+} from '../interface/team.base.interface';
 import {
   type ITeamRepository,
   TEAM_REPOSITORY,
 } from '../interface/team.repository.interface';
-import type {
-  ITeamData,
-  ITeamService,
-  IUpdateTeamData,
-} from '../interface/team.service.interface';
 import { TeamMapper } from '../mapper/team.mapper';
 
 @Injectable()
-export class TeamService implements ITeamService {
+export class TeamService {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
