@@ -1,4 +1,4 @@
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { Collection } from '@/modules/collection/domain/collection.domain';
 
 export class Enviroment extends Base {

@@ -11,4 +11,6 @@ export enum ENVIROMENT_RESPONSE {
   ENVIRONMENTS_NOT_DELETED = 'Could not deleted variables, please try again',
   ENVIRONMENT_NOT_EXISTS_BY_NAME_AND_COLLECTION = 'The variable does not exist',
   ENVIRONMENT_FOUND = 'Variable found',
+  ENVIRONMENT_DELETED = 'Variable deleted',
+  ENVIRONMENT_UPDATED = 'Variable updated',
 }
