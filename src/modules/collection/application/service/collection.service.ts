@@ -14,10 +14,7 @@ import {
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
-import {
-  ENVIROMENT_SERVICE,
-  IEnviromentService,
-} from '@/modules/enviroment/application/interface/enviroment.service.interface';
+import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -44,8 +41,8 @@ export class CollectionService {
     private readonly responseService: IResponseService,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
-    @Inject(forwardRef(() => ENVIROMENT_SERVICE))
-    private readonly environmentService: IEnviromentService,
+    @Inject(forwardRef(() => EnviromentService))
+    private readonly environmentService: EnviromentService,
   ) {
     this.responseService.setContext(CollectionService.name);
   }
