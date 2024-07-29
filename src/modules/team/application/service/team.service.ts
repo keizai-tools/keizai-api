@@ -11,19 +11,10 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  COLLECTION_SERVICE,
-  ICollectionService,
-} from '@/modules/collection/application/interface/collection.service.interface';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
-import {
-  IInvitationService,
-  INVITATION_SERVICE,
-} from '@/modules/invitation/application/interface/invitation.service.interface';
-import {
-  IUserRoleOnTeamService,
-  USER_ROLE_TO_TEAM_SERVICE,
-} from '@/modules/role/application/interface/role.service.interface';
+import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
+import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
 import {
   IUserService,
   USER_SERVICE,
@@ -34,10 +25,7 @@ import { CreateTeamDto } from '../dto/create-team.dto';
 import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
-import type {
-  ITeamData,
-  IUpdateTeamData,
-} from '../interface/team.base.interface';
+import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
 import {
   ITeamRepository,
   TEAM_REPOSITORY,
@@ -47,20 +35,19 @@ import { TeamMapper } from '../mapper/team.mapper';
 @Injectable()
 export class TeamService {
   constructor(
-    @Inject(forwardRef(() => USER_ROLE_TO_TEAM_SERVICE))
-    private readonly userRoleOnTeamService: IUserRoleOnTeamService,
-    @Inject(forwardRef(() => COLLECTION_SERVICE))
-    private readonly collectionService: ICollectionService,
-    @Inject(forwardRef(() => INVITATION_SERVICE))
-    private readonly invitationService: IInvitationService,
+    @Inject(forwardRef(() => UserRoleOnTeamService))
+    private readonly userRoleOnTeamService: UserRoleOnTeamService,
+    @Inject(forwardRef(() => CollectionService))
+    private readonly collectionService: CollectionService,
+    @Inject(forwardRef(() => InvitationService))
+    private readonly invitationService: InvitationService,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(TEAM_REPOSITORY)
     private readonly teamRepository: ITeamRepository,
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
-    @Inject(TEAM_MAPPER)
-    private readonly teamMapper: ITeamMapper,
+    private readonly teamMapper: TeamMapper,
   ) {
     this.responseService.setContext(TeamService.name);
   }
