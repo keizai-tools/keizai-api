@@ -24,7 +24,7 @@ import {
   IUserRoleToTeamRepository,
   USER_ROLE_TO_TEAM_REPOSITORY,
 } from '../interface/role.repository.interface';
-import type { UserRoleToTeamMapper } from '../mapper/role.mapper';
+import { UserRoleToTeamMapper } from '../mapper/role.mapper';
 
 @Injectable()
 export class UserRoleOnTeamService {
