@@ -4,7 +4,10 @@ import { InvocationMapper } from '@/modules/invocation/application/mapper/invoca
 
 import { Folder } from '../../domain/folder.domain';
 import { FolderResponseDto } from '../dto/folder-response.dto';
-import { IFolderValues, IUpdateFolderValues } from '../service/folder.service';
+import {
+  IFolderValues,
+  IUpdateFolderValues,
+} from '../interface/folder.base.interface';
 
 export class FolderMapper {
   constructor(
