@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -21,18 +20,12 @@ import { User } from '@/modules/user/domain/user.domain';
 import { CreateInvitationDto } from '../application/dto/create-invitation.dto';
 import { ResponseInvitationDto } from '../application/dto/response-invitation.dto';
 import { UpdateInvitationDto } from '../application/dto/update-invitation.dto';
-import {
-  IInvitationService,
-  INVITATION_SERVICE,
-} from '../application/interface/invitation.service.interface';
+import { InvitationService } from '../application/service/invitation.service';
 
 @Auth(AuthType.Bearer)
 @Controller('invitation')
 export class InvitationController {
-  constructor(
-    @Inject(INVITATION_SERVICE)
-    private readonly invitationService: IInvitationService,
-  ) {}
+  constructor(private readonly invitationService: InvitationService) {}
 
   @Get('/')
   async findAllByUserId(
