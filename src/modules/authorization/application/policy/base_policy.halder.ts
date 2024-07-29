@@ -1,7 +1,7 @@
 import { Injectable, Type, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 
-import { REQUEST_USER_KEY } from '@/modules/user/domain/auth_type.enum';
+import { REQUEST_USER_KEY } from '@/modules/auth/domain/auth_type.enum';
 
 import { AppAction } from '../../domain/app-action.enum';
 import { PolicyHandlerStorage } from '../../infraestructure/policy/storage/policies-handler.storage';
