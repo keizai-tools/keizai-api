@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
@@ -12,21 +12,14 @@ import { IPromiseResponse } from '@/common/response_service/interface/response.i
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { IAuthController } from '../application/interface/auth.controller.interface';
-import {
-  AUTH_SERVICE,
-  IAuthService,
-} from '../application/interface/auth.service.interface';
+import { AuthService } from '../application/service/auth.service';
 import { AuthType } from '../domain/auth_type.enum';
 
 @Controller('auth')
 @ApiTags('auth')
 @Auth(AuthType.None)
-export class AuthController implements IAuthController {
-  constructor(
-    @Inject(AUTH_SERVICE)
-    private authenticationService: IAuthService,
-  ) {}
+export class AuthController {
+  constructor(private authenticationService: AuthService) {}
 
   @Post('/register')
   async registerUser(
