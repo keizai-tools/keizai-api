@@ -12,6 +12,7 @@ import {
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
 import { IUpdateInvocationValues } from '@/modules/invocation/application/interface/invocation.base.interface';
+
 import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
@@ -34,6 +35,7 @@ import {
   METHOD_REPOSITORY,
 } from '../interface/method.repository.interface';
 import { MethodMapper } from '../mapper/method.mapper';
+
 
 @Injectable()
 export class MethodService {
@@ -123,6 +125,7 @@ export class MethodService {
         invocationMapped,
       );
       await this.invocationRepository.save(invocationUpdated);
+
 
       return this.methodMapper.fromEntityToDto(methodSaved);
     } catch (error) {

@@ -26,8 +26,9 @@ import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
 import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
+
 import {
-  ITeamRepository,
+  type ITeamRepository,
   TEAM_REPOSITORY,
 } from '../interface/team.repository.interface';
 import { TeamMapper } from '../mapper/team.mapper';
@@ -37,6 +38,7 @@ export class TeamService {
   constructor(
     @Inject(forwardRef(() => UserRoleOnTeamService))
     private readonly userRoleOnTeamService: UserRoleOnTeamService,
+
     @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
     @Inject(forwardRef(() => InvitationService))
@@ -48,6 +50,7 @@ export class TeamService {
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
     private readonly teamMapper: TeamMapper,
+
   ) {
     this.responseService.setContext(TeamService.name);
   }
