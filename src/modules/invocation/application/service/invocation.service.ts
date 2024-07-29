@@ -22,15 +22,13 @@ import {
 } from '@/common/stellar_service/application/interface/soroban';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderService } from '@/modules/folder/application/service/folder.service';
-import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 import {
   IMethodRepository,
   METHOD_REPOSITORY,
-} from '@/modules/method/application/repository/method.interface.repository';
-import {
-  IMethodValues,
-  MethodService,
-} from '@/modules/method/application/service/method.service';
+} from '@/modules/method/application/interface/method.repository.interface';
+import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
+import { MethodService } from '@/modules/method/application/service/method.service';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { Invocation } from '../../domain/invocation.domain';

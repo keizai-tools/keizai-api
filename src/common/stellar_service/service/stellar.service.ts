@@ -3,6 +3,7 @@ import {
   Injectable,
   RequestTimeoutException,
   UseInterceptors,
+  forwardRef,
 } from '@nestjs/common';
 import { xdr } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
@@ -24,7 +25,7 @@ import {
   SendTransactionStatus,
 } from '../application/domain/soroban.enum';
 import {
-  type IDecodedSection,
+  IDecodedSection,
   IGeneratedMethod,
   IStellarService,
 } from '../application/interface/contract.service.interface';
@@ -52,7 +53,7 @@ export class StellarService implements IStellarService {
     private readonly stellarAdapter: IStellarAdapter,
     @Inject(CONTRACT_MAPPER)
     private readonly stellarMapper: IStellarMapper,
-    @Inject(MethodMapper)
+    @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
   ) {
     this.responseService.setContext(StellarService.name);

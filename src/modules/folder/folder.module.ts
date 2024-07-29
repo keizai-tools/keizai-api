@@ -20,7 +20,7 @@ import { FolderUserController } from './interface/folder.controller';
     forwardRef(() => CollectionModule),
     forwardRef(() => InvocationModule),
     forwardRef(() => CommonModule),
-    TeamModule,
+    forwardRef(() => TeamModule),
   ],
   controllers: [FolderUserController, FolderTeamController],
   providers: [

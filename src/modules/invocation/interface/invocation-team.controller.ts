@@ -11,7 +11,7 @@ import {
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
-import type {
+import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';

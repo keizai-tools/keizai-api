@@ -1,6 +1,7 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 
-import { REQUEST_USER_KEY } from '../../domain/auth_type.enum';
+import { REQUEST_USER_KEY } from '@/modules/auth/domain/auth_type.enum';
+
 import { User } from '../../domain/user.domain';
 
 export const CurrentUser = createParamDecorator(

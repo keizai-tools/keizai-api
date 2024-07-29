@@ -20,7 +20,7 @@ import {
   IInvitationRepository,
   INVITATION_REPOSITORY,
 } from '../interface/invitation.repository.interface';
-import type { InvitationMapper } from '../mapper/invitation.mapper';
+import { InvitationMapper } from '../mapper/invitation.mapper';
 
 @Injectable()
 export class InvitationService {

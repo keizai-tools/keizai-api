@@ -15,7 +15,7 @@ export class InvocationMapper {
   constructor(
     @Inject(forwardRef(() => FolderMapper))
     private readonly folderMapper: FolderMapper,
-    @Inject(MethodMapper)
+    @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
   ) {}
 

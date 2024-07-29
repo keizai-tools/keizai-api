@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 
 import {
-  type IPromiseResponse,
-  type IResponseService,
+  IPromiseResponse,
+  IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
@@ -16,19 +16,17 @@ import { ResponseInvitationDto } from '@/modules/invitation/application/dto/resp
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
 import { UserRoleOnTeamService } from '@/modules/role/application/service/role.service';
 import {
-  type IUserService,
+  IUserService,
   USER_SERVICE,
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../dto/create-team.dto';
-import type { TeamResponseDto } from '../dto/response-team.dto';
+import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
-import type {
-  ITeamData,
-  IUpdateTeamData,
-} from '../interface/team.base.interface';
+import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
+
 import {
   type ITeamRepository,
   TEAM_REPOSITORY,
@@ -38,19 +36,21 @@ import { TeamMapper } from '../mapper/team.mapper';
 @Injectable()
 export class TeamService {
   constructor(
-    @Inject(RESPONSE_SERVICE)
-    private readonly responseService: IResponseService,
-    private readonly teamMapper: TeamMapper,
-    @Inject(TEAM_REPOSITORY)
-    private readonly teamRepository: ITeamRepository,
+    @Inject(forwardRef(() => UserRoleOnTeamService))
+    private readonly userRoleOnTeamService: UserRoleOnTeamService,
+
     @Inject(forwardRef(() => CollectionService))
     private readonly collectionService: CollectionService,
     @Inject(forwardRef(() => InvitationService))
     private readonly invitationService: InvitationService,
-    @Inject(forwardRef(() => UserRoleOnTeamService))
-    private readonly userRoleOnTeamService: UserRoleOnTeamService,
+    @Inject(RESPONSE_SERVICE)
+    private readonly responseService: IResponseService,
+    @Inject(TEAM_REPOSITORY)
+    private readonly teamRepository: ITeamRepository,
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
+    private readonly teamMapper: TeamMapper,
+
   ) {
     this.responseService.setContext(TeamService.name);
   }

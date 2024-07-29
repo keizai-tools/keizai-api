@@ -11,7 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 
 import {
-  type IResponseService,
+  IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
 import { IPolicyHandler } from '@/modules/authorization/application/interface/policy_handler.interface';

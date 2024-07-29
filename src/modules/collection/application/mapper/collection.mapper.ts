@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, forwardRef } from '@nestjs/common';
 
 import { EnviromentMapper } from '@/modules/enviroment/application/mapper/enviroment.mapper';
 import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
@@ -12,9 +12,9 @@ import {
 
 export class CollectionMapper {
   constructor(
-    @Inject(FolderMapper)
+    @Inject(forwardRef(() => FolderMapper))
     private readonly folderMapper: FolderMapper,
-    @Inject(EnviromentMapper)
+    @Inject(forwardRef(() => EnviromentMapper))
     private readonly enviromentMapper: EnviromentMapper,
   ) {}
 

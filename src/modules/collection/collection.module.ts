@@ -20,7 +20,7 @@ import { CollectionController } from './interface/collection.controller';
     forwardRef(() => FolderModule),
     forwardRef(() => EnviromentModule),
     forwardRef(() => CommonModule),
-    TeamModule,
+    forwardRef(() => TeamModule),
   ],
   controllers: [CollectionController, CollectionTeamController],
   providers: [

@@ -200,7 +200,7 @@ export class CollectionService {
   async findEnvironmentByCollectionId(
     collectionId: string,
     environmentName: string,
-  ) {
+  ): IPromiseResponse<EnviromentResponseDto> {
     try {
       const environment = await this.environmentService.findByNames(
         [environmentName],

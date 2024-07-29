@@ -86,7 +86,7 @@ export class CollectionTeamController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ): IPromiseResponse<Enviroment> {
+  ): IPromiseResponse<EnviromentResponseDto> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,

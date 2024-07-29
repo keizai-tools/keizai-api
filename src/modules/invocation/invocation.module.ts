@@ -23,7 +23,7 @@ import { InvocationUserController } from './interface/invocation.controller';
     forwardRef(() => MethodModule),
     forwardRef(() => FolderModule),
     forwardRef(() => EnviromentModule),
-    TeamModule,
+    forwardRef(() => TeamModule),
   ],
   controllers: [InvocationUserController, InvocationTeamController],
   providers: [
