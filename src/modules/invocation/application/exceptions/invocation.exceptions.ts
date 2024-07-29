@@ -2,10 +2,9 @@ import { NotFoundException } from '@nestjs/common';
 
 import { Invocation } from '../../domain/invocation.domain';
 import { UpdateInvocationDto } from '../dto/update-invocation.dto';
-import { IInvocationException } from '../interface/invocation.exceptions.interface';
 import { INVOCATION_RESPONSE } from './invocation-response.enum.dto';
 
-export class InvocationException implements IInvocationException {
+export class InvocationException {
   validateInvocation(
     invocation: Invocation,
     updateInvocationDto: UpdateInvocationDto,
