@@ -3,7 +3,7 @@ import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import {
   IEnviromentValues,
   IUpdateEnviromentValues,
-} from '../interface/enviroment.service.interface';
+} from './enviroment.base.interface';
 
 export const ENVIROMENT_MAPPER = 'ENVIROMENT_MAPPER';
 

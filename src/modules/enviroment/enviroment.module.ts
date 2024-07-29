@@ -5,9 +5,9 @@ import { CommonModule } from '@/common/common.module';
 
 import { CollectionModule } from '../collection/collection.module';
 import { TeamModule } from '../team/team.module';
+import { ENVIROMENT_SERVICE } from './application/interface/enviroment.base.interface';
 import { ENVIROMENT_MAPPER } from './application/interface/enviroment.mapper.interface';
 import { ENVIROMENT_REPOSITORY } from './application/interface/enviroment.repository.interface';
-import { ENVIROMENT_SERVICE } from './application/interface/enviroment.service.interface';
 import { EnviromentMapper } from './application/mapper/enviroment.mapper';
 import { EnviromentService } from './application/service/enviroment.service';
 import { EnviromentRepository } from './infrastructure/persistence/enviroment.repository';

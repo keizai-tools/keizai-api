@@ -3,7 +3,7 @@ import { CollectionResponseDto } from '../dto/collection-response.dto';
 import {
   ICollectionValues,
   IUpdateCollectionValues,
-} from './collection.service.interface';
+} from './collection.base.interface';
 
 export const COLLECTION_MAPPER = 'COLLECTION_MAPPER';
 

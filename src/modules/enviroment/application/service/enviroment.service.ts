@@ -10,10 +10,8 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  COLLECTION_SERVICE,
-  ICollectionService,
-} from '@/modules/collection/application/interface/collection.service.interface';
+import { COLLECTION_SERVICE } from '@/modules/collection/application/interface/collection.base.interface';
+import { CollectionService } from '@/modules/collection/application/service/collection.service';
 
 import { Enviroment } from '../../domain/enviroment.domain';
 import { CreateEnvironmentsDto } from '../dto/create-all-environments.dto';
@@ -22,21 +20,20 @@ import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import { UpdateEnviromentDto } from '../dto/update-enviroment.dto';
 import { ENVIROMENT_RESPONSE } from '../exceptions/enviroment-response.enum';
 import {
+  IEnviromentValues,
+  IUpdateEnviromentValues,
+} from '../interface/enviroment.base.interface';
+import {
   ENVIROMENT_MAPPER,
-  type IEnviromentMapper,
+  IEnviromentMapper,
 } from '../interface/enviroment.mapper.interface';
 import {
   ENVIROMENT_REPOSITORY,
   IEnviromentRepository,
 } from '../interface/enviroment.repository.interface';
-import {
-  IEnviromentService,
-  IEnviromentValues,
-  IUpdateEnviromentValues,
-} from '../interface/enviroment.service.interface';
 
 @Injectable()
-export class EnviromentService implements IEnviromentService {
+export class EnviromentService {
   constructor(
     @Inject(ENVIROMENT_MAPPER)
     private readonly enviromentMapper: IEnviromentMapper,
@@ -45,7 +42,7 @@ export class EnviromentService implements IEnviromentService {
     @Inject(ENVIROMENT_REPOSITORY)
     private readonly enviromentRepository: IEnviromentRepository,
     @Inject(COLLECTION_SERVICE)
-    private readonly collectionService: ICollectionService,
+    private readonly collectionService: CollectionService,
   ) {
     this.responseService.setContext(EnviromentService.name);
   }
