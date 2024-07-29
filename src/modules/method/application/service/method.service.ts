@@ -11,19 +11,13 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import {
-  IInvocationMapper,
-  INVOCATION_MAPPER,
-} from '@/modules/invocation/application/interface/invocation.mapper.interface';
+import type { IUpdateInvocationValues } from '@/modules/invocation/application/interface/invocation.base.interface';
 import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
 } from '@/modules/invocation/application/interface/invocation.repository.interface';
-import {
-  IInvocationService,
-  INVOCATION_SERVICE,
-  IUpdateInvocationValues,
-} from '@/modules/invocation/application/interface/invocation.service.interface';
+import { InvocationMapper } from '@/modules/invocation/application/mapper/invocation.mapper';
+import { InvocationService } from '@/modules/invocation/application/service/invocation.service';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 import { Method } from '../../domain/method.domain';
@@ -32,34 +26,29 @@ import { MethodResponseDto } from '../dto/method-response.dto';
 import { UpdateMethodDto } from '../dto/update-method.dto';
 import { METHOD_RESPONSE } from '../exceptions/method-response.enum';
 import {
-  IMethodMapper,
-  METHOD_MAPPER,
-} from '../interface/method.mapper.interface';
+  IMethodValues,
+  IUpdateMethodValues,
+} from '../interface/method.base.interface';
 import {
   IMethodRepository,
   METHOD_REPOSITORY,
 } from '../interface/method.repository.interface';
-import {
-  IMethodService,
-  IMethodValues,
-  IUpdateMethodValues,
-} from '../interface/method.service.interface';
+import type { MethodMapper } from '../mapper/method.mapper';
 
 @Injectable()
-export class MethodService implements IMethodService {
+export class MethodService {
   constructor(
-    @Inject(METHOD_MAPPER)
-    private readonly methodMapper: IMethodMapper,
-    @Inject(forwardRef(() => INVOCATION_MAPPER))
-    private readonly invocationMapper: IInvocationMapper,
+    private readonly methodMapper: MethodMapper,
+    @Inject(forwardRef(() => InvocationMapper))
+    private readonly invocationMapper: InvocationMapper,
     @Inject(METHOD_REPOSITORY)
     private readonly methodRepository: IMethodRepository,
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(forwardRef(() => INVOCATION_REPOSITORY))
     private readonly invocationRepository: IInvocationRepository,
-    @Inject(forwardRef(() => INVOCATION_SERVICE))
-    private readonly invocationService: IInvocationService,
+    @Inject(forwardRef(() => InvocationService))
+    private readonly invocationService: InvocationService,
   ) {
     this.responseService.setContext(MethodService.name);
   }

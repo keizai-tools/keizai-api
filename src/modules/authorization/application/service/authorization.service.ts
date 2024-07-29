@@ -10,10 +10,9 @@ import { User } from '@/modules/user/domain/user.domain';
 import { AppAction } from '../../domain/app-action.enum';
 import { CaslAbilityFactory } from '../../infraestructure/casl/factory/casl-ability.factory';
 import { AppSubjects } from '../../infraestructure/casl/type/app-subjects.type';
-import { IAuthorizationService } from '../interface/authorization.service.interface';
 
 @Injectable()
-export class AuthorizationService implements IAuthorizationService {
+export class AuthorizationService {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,

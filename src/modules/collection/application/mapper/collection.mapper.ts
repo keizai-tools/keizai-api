@@ -5,13 +5,12 @@ import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper'
 
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
-import { ICollectionMapper } from '../interface/collection.mapper.interface';
 import {
   ICollectionValues,
   IUpdateCollectionValues,
-} from '../interface/collection.service.interface';
+} from '../interface/collection.base.interface';
 
-export class CollectionMapper implements ICollectionMapper {
+export class CollectionMapper {
   constructor(
     @Inject(FolderMapper)
     private readonly folderMapper: FolderMapper,
