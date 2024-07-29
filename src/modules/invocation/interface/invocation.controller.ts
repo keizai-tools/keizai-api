@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -28,18 +27,12 @@ import { User } from '@/modules/user/domain/user.domain';
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
 import { InvocationResponseDto } from '../application/dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
-import {
-  IInvocationService,
-  INVOCATION_SERVICE,
-} from '../application/interface/invocation.service.interface';
+import { InvocationService } from '../application/service/invocation.service';
 
 @Auth(AuthType.Bearer)
 @Controller('invocation')
 export class InvocationUserController {
-  constructor(
-    @Inject(INVOCATION_SERVICE)
-    private readonly invocationService: IInvocationService,
-  ) {}
+  constructor(private readonly invocationService: InvocationService) {}
 
   @Post('')
   async create(
