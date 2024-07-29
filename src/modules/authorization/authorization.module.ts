@@ -2,8 +2,6 @@ import { DynamicModule, Module } from '@nestjs/common';
 
 import { CommonModule } from '@/common/common.module';
 
-import { AUTHORIZATION_SERVICE } from './application/interface/authorization.service.interface';
-import { CASL_ABILITY_FACTORY } from './application/interface/casl-ability.interface';
 import { AuthorizationService } from './application/service/authorization.service';
 import {
   CaslAbilityFactory,
@@ -36,14 +34,8 @@ export class AuthorizationModule {
       module: AuthorizationModule,
       imports: [CommonModule],
       providers: [
-        {
-          provide: AUTHORIZATION_SERVICE,
-          useClass: AuthorizationService,
-        },
-        {
-          provide: CASL_ABILITY_FACTORY,
-          useClass: CaslAbilityFactory,
-        },
+        AuthorizationService,
+        CaslAbilityFactory,
         {
           provide: PERMISSIONS_FOR_FEATURE_KEY,
           useValue: options.permissions,
@@ -51,14 +43,8 @@ export class AuthorizationModule {
         PoliciesGuard,
       ],
       exports: [
-        {
-          provide: AUTHORIZATION_SERVICE,
-          useClass: AuthorizationService,
-        },
-        {
-          provide: CASL_ABILITY_FACTORY,
-          useClass: CaslAbilityFactory,
-        },
+        AuthorizationService,
+        CaslAbilityFactory,
         {
           provide: PERMISSIONS_FOR_FEATURE_KEY,
           useValue: options.permissions,
