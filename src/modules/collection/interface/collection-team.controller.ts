@@ -15,7 +15,6 @@ import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
-import { Enviroment } from '@/modules/enviroment/domain/enviroment.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
@@ -93,7 +92,7 @@ export class CollectionTeamController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ): IPromiseResponse<Enviroment> {
+  ): IPromiseResponse<EnviromentResponseDto> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,
