@@ -11,7 +11,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import type { IUpdateInvocationValues } from '@/modules/invocation/application/interface/invocation.base.interface';
+import { IUpdateInvocationValues } from '@/modules/invocation/application/interface/invocation.base.interface';
 import {
   IInvocationRepository,
   INVOCATION_REPOSITORY,
@@ -33,7 +33,7 @@ import {
   IMethodRepository,
   METHOD_REPOSITORY,
 } from '../interface/method.repository.interface';
-import type { MethodMapper } from '../mapper/method.mapper';
+import { MethodMapper } from '../mapper/method.mapper';
 
 @Injectable()
 export class MethodService {
