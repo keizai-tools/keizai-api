@@ -6,7 +6,7 @@ import { UserRoleToTeamMapper } from '@/modules/role/application/mapper/role.map
 
 import { Team } from '../../domain/team.domain';
 import { TeamResponseDto } from '../dto/response-team.dto';
-import { ITeamData, IUpdateTeamData } from '../service/team.service';
+import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
 
 export class TeamMapper {
   constructor(

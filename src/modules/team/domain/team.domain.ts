@@ -1,4 +1,4 @@
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { Collection } from '@/modules/collection/domain/collection.domain';
 import { Invitation } from '@/modules/invitation/domain/invitation.domain';
 import { UserRoleToTeam } from '@/modules/role/domain/role.domain';

@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ITeamRepository } from '../../application/repository/team.repository';
+import { ITeamRepository } from '../../application/interface/team.repository.interface';
 import { Team } from '../../domain/team.domain';
 import { TeamSchema } from './team.schema';
 
@@ -43,7 +43,23 @@ export class TeamRepository implements ITeamRepository {
   }
 
   async update(team: Team): Promise<Team> {
-    return await this.repository.preload(team);
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const existingCollection = await queryRunner.manager.findOne(Team, {
+        where: { id: team.id },
+      });
+      if (existingCollection)
+        await queryRunner.manager.update(Team, team.id, team);
+      await queryRunner.commitTransaction();
+      return await this.findOne(team.id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(id: string): Promise<boolean> {

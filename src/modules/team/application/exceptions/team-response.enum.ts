@@ -7,4 +7,9 @@ export enum TEAM_RESPONSE {
   TEAM_FAILED_SAVE = 'Could not save team, please try again',
   TEAM_FAILED_DELETED = 'Could not deleted team, please try again',
   TEAM_FAILED_UPDATE = 'Could not updated team, please try again',
+  TEAM_DELETED = 'Team deleted',
+  TEAM_UPDATED = 'Team updated',
+  TEAM_CREATED = 'Team created',
+  TEAMS_FOUND_BY_USER = 'Teams found by user',
+  TEAM_FOUND_BY_ID = 'Team found by id',
 }
