@@ -7,5 +7,3 @@ export interface ICollectionValues {
 export interface IUpdateCollectionValues extends ICollectionValues {
   id: string;
 }
-
-export const COLLECTION_SERVICE = 'COLLECTION_SERVICE';
