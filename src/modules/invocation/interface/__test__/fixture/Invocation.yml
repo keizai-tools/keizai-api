@@ -93,3 +93,14 @@ items:
     preInvocation: 'const a = () => "a"; a();'
     postInvocation: 'const a = () => "a"; a();'
     selectedMethod: '@method4'
+
+  invocation12:
+    id: 'invocation12'
+    name: 'invocation11'
+    folder: '@folder0'
+    network: 'FUTURENET'
+    contractId: 'contractId'
+    publicKey: 'publicKey5'
+    preInvocation: 'const a = () => "a"; a();'
+    postInvocation: 'const a = () => "a"; a();'
+    selectedMethod: '@method4'
