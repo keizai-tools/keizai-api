@@ -38,7 +38,7 @@ export enum SC_VAL_TYPE {
 }
 
 export enum SOROBAN_CONTRACT_ERROR {
-  NO_ENTRIES_FOUND = "No entries found for this contract address",
+  NO_ENTRIES_FOUND = 'No entries found for this contract address',
   HOST_FAILED = 'host invocation failed',
   HOST_ERROR = 'HostError',
 }
