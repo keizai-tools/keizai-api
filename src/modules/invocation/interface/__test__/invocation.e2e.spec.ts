@@ -437,11 +437,19 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Run all - [GET /invocation/run]', () => {
+  describe('Run all - [POST /invocation/run]', () => {
     it('should run correctly the invocation', async () => {
       const invocationId = 'invocation5';
       await request(app.getHttpServer())
-        .get(`/invocation/${invocationId}/run`)
+        .post(`/invocation/${invocationId}/run`)
+        .expect(HttpStatus.OK);
+    });
+
+    it('should run correctly the invocation with a signed xdr', async () => {
+      const invocationId = 'invocation12';
+      await request(app.getHttpServer())
+        .post(`/invocation/${invocationId}/run`)
+        .send({ signedTransactionXDR: 'xdr' })
         .expect(HttpStatus.OK);
     });
   });
@@ -466,10 +474,10 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Run one  - [GET /invocation/:id/run]', () => {
+  describe('Run one  - [POST /invocation/:id/run]', () => {
     it('should validate all required fields', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation/invocation4/run')
+        .post('/invocation/invocation4/run')
         .expect(HttpStatus.BAD_REQUEST);
 
       expect(response.body.message).toEqual(
@@ -478,7 +486,7 @@ describe('Invocation - [/invocation]', () => {
     });
     it('should validate missing params', async () => {
       const response = await request(app.getHttpServer())
-        .get('/invocation/invocation4/run')
+        .post('/invocation/invocation4/run')
         .expect(HttpStatus.BAD_REQUEST);
 
       expect(response.body.message).toEqual(
@@ -843,15 +851,15 @@ describe('Invocation - [/invocation]', () => {
         expect(response.body).toEqual(responseExpected);
       });
     });
-    describe('Run one  - [GET /invocation/:id/run]', () => {
+    describe('Run one  - [POST /invocation/:id/run]', () => {
       it('should run correctly the invocation', async () => {
         await request(app.getHttpServer())
-          .get(`${validRoute}/invocation11/run`)
+          .post(`${validRoute}/invocation11/run`)
           .expect(HttpStatus.OK);
       });
       it('should validate all required fields', async () => {
         const response = await request(app.getHttpServer())
-          .get(`${validRoute}/invocation10/run`)
+          .post(`${validRoute}/invocation10/run`)
           .expect(HttpStatus.BAD_REQUEST);
 
         expect(response.body.message).toEqual(

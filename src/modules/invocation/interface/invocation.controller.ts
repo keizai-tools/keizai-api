@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -42,9 +43,9 @@ export class InvocationUserController {
     );
   }
 
-  @Get('/:id/run')
-  runInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.runInvocationByUser(id, user.id);
+  @Get('/:id/prepare')
+  prepareInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+    return this.invocationService.prepareInvocationByUser(id, user.id);
   }
 
   @Get(':id/methods')
@@ -70,5 +71,24 @@ export class InvocationUserController {
   @Delete('/:id')
   delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
     return this.invocationService.deleteByUser(id, user.id);
+  }
+
+  @Post('/:id/run')
+  @HttpCode(200)
+  runInvocation(
+    @AuthUser() user: IUserResponse,
+    @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR?: string;
+    },
+  ) {
+    return this.invocationService.runInvocationByUser(
+      id,
+      user.id,
+      signedTransactionXDR,
+    );
   }
 }
