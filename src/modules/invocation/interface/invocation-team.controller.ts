@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -38,9 +39,28 @@ export class InvocationTeamController {
     return this.invocationService.findOneByInvocationAndTeamIdToDto(id, teamId);
   }
 
-  @Get('/:id/run')
-  runInvocation(@Param('teamId') teamId: string, @Param('id') id: string) {
-    return this.invocationService.runInvocationByTeam(id, teamId);
+  @Get('/:id/prepare')
+  prepareInvocation(@Param('teamId') teamId: string, @Param('id') id: string) {
+    return this.invocationService.prepareInvocationByTeam(id, teamId);
+  }
+
+  @Post('/:id/run')
+  @HttpCode(200)
+  runInvocation(
+    @Param('teamId') teamId: string,
+    @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR?: string;
+    },
+  ) {
+    return this.invocationService.runInvocationByTeam(
+      id,
+      teamId,
+      signedTransactionXDR,
+    );
   }
 
   @Get('/:id/methods')

@@ -2,7 +2,10 @@ import { xdr } from '@stellar/stellar-sdk';
 
 import { Method } from '@/modules/method/domain/method.domain';
 
-import { IGeneratedMethod } from '../service/stellar.service';
+import {
+  IGeneratedMethod,
+  IRunInvocationParams,
+} from '../service/stellar.service';
 import { ContractErrorResponse, RunInvocationResponse } from '../types/soroban';
 
 export interface IContractService {
@@ -25,11 +28,13 @@ export interface IContractService {
     selectedMethod: Method,
   ): Promise<xdr.ScVal[]>;
   runInvocation(
-    publicKey: string,
-    secretKey: string,
-    contractId: string,
-    method: Partial<Method>,
+    runInvocationParams: IRunInvocationParams,
   ): Promise<RunInvocationResponse | ContractErrorResponse>;
+  getPreparedTransactionXDR(
+    contractId: string,
+    publicKey: string,
+    selectedMethod: Partial<Method>,
+  ): Promise<string>;
 }
 
 export const CONTRACT_SERVICE = 'CONTRACT_SERVICE';

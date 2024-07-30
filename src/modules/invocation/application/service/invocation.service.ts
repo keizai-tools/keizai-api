@@ -10,6 +10,10 @@ import {
   CONTRACT_SERVICE,
   IContractService,
 } from '@/common/application/repository/contract.interface.service';
+import {
+  ContractErrorResponse,
+  RunInvocationResponse,
+} from '@/common/application/types/soroban';
 import { NETWORK } from '@/common/application/types/soroban.enum';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderService } from '@/modules/folder/application/service/folder.service';
@@ -81,22 +85,39 @@ export class InvocationService {
     return environment ? environment.value : contractIdValue;
   }
 
-  async runInvocationByUser(id: string, userId: string) {
+  async prepareInvocationByUser(id: string, userId: string): Promise<string> {
     const invocation = await this.findOneByInvocationAndUserId(id, userId);
-    return this.runInvocation(invocation);
+    return this.prepareInvocationTransaction(invocation);
   }
 
-  async runInvocationByTeam(id: string, teamId: string) {
+  async prepareInvocationByTeam(id: string, teamId: string): Promise<string> {
     const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
-    return this.runInvocation(invocation);
+    return this.prepareInvocationTransaction(invocation);
   }
 
-  async runInvocation(invocation: Invocation) {
+  async runInvocationByUser(
+    id: string,
+    userId: string,
+    transactionXDR: string,
+  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+    const invocation = await this.findOneByInvocationAndUserId(id, userId);
+    return this.runInvocationTransaction(invocation, transactionXDR);
+  }
+
+  async runInvocationByTeam(
+    id: string,
+    teamId: string,
+    transactionXDR,
+  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+    const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
+    return this.runInvocationTransaction(invocation, transactionXDR);
+  }
+
+  async prepareInvocationTransaction(invocation: Invocation): Promise<string> {
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
       (param) => !param.value,
     );
     if (
-      !invocation.secretKey ||
       !invocation.publicKey ||
       !invocation.selectedMethod ||
       hasEmptyParameters
@@ -143,12 +164,43 @@ export class InvocationService {
 
     this.contractService.verifyNetwork(invocation.network);
     try {
-      const invocationResult = await this.contractService.runInvocation(
-        invocation.publicKey,
-        invocation.secretKey,
-        contractId,
-        selectedMethodMapped,
+      const preparedTransaction =
+        await this.contractService.getPreparedTransactionXDR(
+          contractId,
+          invocation.publicKey,
+          selectedMethodMapped,
+        );
+      return preparedTransaction;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async runInvocationTransaction(
+    invocation: Invocation,
+    transactionXDR?: string,
+  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+    const hasEmptyParameters = invocation.selectedMethod?.params?.some(
+      (param) => !param.value,
+    );
+    if (
+      !invocation.publicKey ||
+      !invocation.selectedMethod ||
+      hasEmptyParameters
+    ) {
+      throw new BadRequestException(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
+    }
+    this.contractService.verifyNetwork(invocation.network);
+    try {
+      const invocationResult = await this.contractService.runInvocation({
+        contractId: invocation.contractId,
+        selectedMethod: invocation.selectedMethod,
+        signedTransactionXDR: transactionXDR,
+        publicKey: invocation.publicKey,
+        secretKey: invocation.secretKey,
+      });
       return invocationResult;
     } catch (error) {
       return error;

@@ -4,7 +4,15 @@ import {
   RequestTimeoutException,
   UseInterceptors,
 } from '@nestjs/common';
-import { xdr } from '@stellar/stellar-sdk';
+import {
+  Memo,
+  MemoType,
+  Networks,
+  Operation,
+  Transaction,
+  TransactionBuilder,
+  xdr,
+} from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import { StellarAdapter } from '@/common/infrastructure/stellar/stellar.adapter';
@@ -27,6 +35,14 @@ export interface IGeneratedMethod {
   docs: string | null;
   inputs: { name: string; type: string }[];
   outputs: { type: string }[];
+}
+
+export interface IRunInvocationParams {
+  contractId: string;
+  selectedMethod: Partial<Method>;
+  signedTransactionXDR?: string;
+  publicKey?: string;
+  secretKey?: string;
 }
 
 @Injectable()
@@ -551,24 +567,42 @@ export class StellarService implements IContractService {
     ),
   )
   async runInvocation(
-    publicKey: string,
-    secretKey: string,
-    contractId: string,
-    selectedMethod: Partial<Method>,
+    runInvocationParams: IRunInvocationParams,
   ): Promise<RunInvocationResponse | ContractErrorResponse> {
-    try {
-      const scArgs = await this.generateScArgsToFromContractId(
-        contractId,
-        selectedMethod,
-      );
+    const {
+      contractId,
+      publicKey,
+      secretKey,
+      selectedMethod,
+      signedTransactionXDR,
+    } = runInvocationParams;
 
-      const transaction = await this.stellarAdapter.prepareTransaction(
-        publicKey,
-        contractId,
-        selectedMethod.name,
-        scArgs,
-      );
-      this.stellarAdapter.signTransaction(transaction, secretKey);
+    try {
+      let transaction: Transaction<Memo<MemoType>, Operation[]>;
+
+      if (!signedTransactionXDR && secretKey) {
+        const scArgs = await this.generateScArgsToFromContractId(
+          contractId,
+          selectedMethod,
+        );
+
+        transaction = await this.stellarAdapter.prepareTransaction(
+          publicKey,
+          contractId,
+          selectedMethod.name,
+          scArgs,
+        );
+        this.stellarAdapter.signTransaction(transaction, secretKey);
+      }
+
+      if (signedTransactionXDR) {
+        const netWorkPassphrase = Networks[this.currentNetwork];
+
+        transaction = TransactionBuilder.fromXDR(
+          signedTransactionXDR,
+          netWorkPassphrase,
+        ) as Transaction;
+      }
 
       const response = await this.stellarAdapter.rawSendTransaction(
         transaction,
@@ -618,13 +652,37 @@ export class StellarService implements IContractService {
         method: methodMapped,
       };
     } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message;
+
       if (
-        error.includes(SOROBAN_CONTRACT_ERROR.HOST_FAILED) ||
-        error.includes(SOROBAN_CONTRACT_ERROR.HOST_ERROR)
+        errorMessage.includes(SOROBAN_CONTRACT_ERROR.HOST_FAILED) ||
+        errorMessage.includes(SOROBAN_CONTRACT_ERROR.HOST_ERROR)
       ) {
-        return this.stellarMapper.fromContractErrorToDisplayResponse(error);
+        return this.stellarMapper.fromContractErrorToDisplayResponse(
+          errorMessage,
+        );
       }
       return error;
     }
+  }
+
+  async getPreparedTransactionXDR(
+    contractId: string,
+    publicKey: string,
+    selectedMethod: Partial<Method>,
+  ): Promise<string> {
+    const scArgs = await this.generateScArgsToFromContractId(
+      contractId,
+      selectedMethod,
+    );
+
+    const transaction = await this.stellarAdapter.prepareTransaction(
+      publicKey,
+      contractId,
+      selectedMethod.name,
+      scArgs,
+    );
+
+    return transaction.toXDR();
   }
 }
