@@ -1,54 +1,40 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { join } from 'path';
-import * as request from 'supertest';
 
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
-import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
-import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
+import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
+import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { ROLE_RESPONSE } from '../../application/exceptions/role-response.enum';
 
-const mockedCognitoService = {
-  registerAccount: jest.fn(),
-  loginAccount: jest.fn(),
-};
-
-const mockedJwtStrategy = {
-  validate: jest.fn(),
-};
-
-const mockedGuard = {
-  canActivate: (context) => {
-    const req = context.switchToHttp().getRequest();
-    req.user = {
-      id: 'user0',
-    };
-    return true;
-  },
-};
-
 describe('UserRoleToTeam - [/role]', () => {
   let app: INestApplication;
+
+  const adminToken = createAccessToken({
+    sub: '00000000-0000-0000-0000-00000000000X',
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(JwtStrategy)
-      .useValue(mockedJwtStrategy)
-      .overrideProvider(COGNITO_SERVICE)
-      .useValue(mockedCognitoService)
-      .overrideGuard(JwtAuthGuard)
-      .useValue(mockedGuard)
+      .overrideProvider(COGNITO_AUTH)
+      .useValue(identityProviderServiceMock)
       .compile();
 
-    await loadFixtures(
-      `${__dirname}/fixture`,
-      join(
+    await loadFixtures({
+      fixturesPath: `${__dirname}/fixture`,
+      dataSourcePath: join(
         __dirname,
         '..',
         '..',
@@ -56,24 +42,49 @@ describe('UserRoleToTeam - [/role]', () => {
         '..',
         'configuration/orm.configuration.ts',
       ),
-    );
+    });
 
     app = moduleRef.createNestApplication();
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
+
+    app.useGlobalInterceptors(new SuccessResponseInterceptor());
 
     await app.init();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
   describe('Create one - [POST /role]', () => {
     it('should create a new user role', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/role')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/role',
+        data: {
           teamId: 'team0',
           role: 'ADMIN',
-        })
-        .expect(HttpStatus.CREATED);
+        },
+      });
 
-      expect(response.body).toEqual(
+      expect(response.body.payload).toEqual(
         expect.objectContaining({
           teamId: 'team0',
           userId: 'user0',
@@ -82,16 +93,22 @@ describe('UserRoleToTeam - [/role]', () => {
         }),
       );
     });
+
     it('should throw error when try to create one user role', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/role')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/role',
+        data: {
           teamId: 'team',
           role: 'ADMIN',
-        })
-        .expect(HttpStatus.BAD_REQUEST);
+        },
+      });
 
-      expect(response.body.message).toEqual(ROLE_RESPONSE.ROLE_FAILED_SAVED);
+      expect(response.body.details.description).toEqual(
+        ROLE_RESPONSE.USER_OR_TEAM_NOT_FOUND,
+      );
     });
   });
 
@@ -112,68 +129,82 @@ describe('UserRoleToTeam - [/role]', () => {
         }),
       ]);
 
-      const response = await request(app.getHttpServer())
-        .get('/role')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/role',
+      });
 
-      expect(response.body).toEqual(expectedResponse);
+      expect(response.body.payload).toEqual(expectedResponse);
     });
   });
 
   describe('Get one - [GET /role/:id]', () => {
     it('should get one user role associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/role/role0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/role/role0',
+      });
 
-      expect(response.body).toEqual({
+      expect(response.body.payload).toEqual({
         id: 'role0',
         teamId: 'team0',
         userId: 'user0',
         role: 'ADMIN',
       });
     });
-    it('should throw error when try to get one user role not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/role/role')
-        .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
+    it('should throw error when try to get one user role not associated with a user', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/role/role',
+      });
+
+      expect(response.body.details.description).toEqual(
         ROLE_RESPONSE.USER_NOT_FOUND_BY_USER_AND_ID,
       );
     });
   });
 
-  describe('Update one - [UPDATE /role/:id]', () => {
+  describe('Update one - [PATCH /role/:id]', () => {
     it('should update a user role', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/role')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/role',
+        data: {
           id: 'role0',
           teamId: 'team0',
-          role: 'UPDATED',
-        })
-        .expect(HttpStatus.OK);
+          role: 'OWNER',
+        },
+      });
 
-      expect(response.body).toEqual(
+      expect(response.body.payload).toEqual(
         expect.objectContaining({
           id: 'role0',
           teamId: 'team0',
-          role: 'UPDATED',
+          role: 'OWNER',
         }),
       );
     });
+
     it('should throw error when try to update one user role not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/role')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/role',
+        data: {
           id: 'role',
           teamId: 'team0',
-          role: 'UPDATED',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+          role: 'REGULAR',
+        },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         ROLE_RESPONSE.USER_NOT_FOUND_BY_USER_AND_ID,
       );
     });
@@ -181,18 +212,32 @@ describe('UserRoleToTeam - [/role]', () => {
 
   describe('Delete one - [DELETE /role/:id]', () => {
     it('should update a user role', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/role/role0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/role/role0',
+      });
 
-      expect(response.body).toEqual({});
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Role deleted successfully',
+        payload: true,
+        timestamp: expect.any(String),
+        path: '/role/role0',
+      });
     });
-    it('should throw error when try to delete one user role not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/role/role')
-        .expect(HttpStatus.NOT_FOUND);
 
-      expect(response.body.message).toEqual(
+    it('should throw error when try to delete one user role not associated with a user', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/role/role',
+      });
+
+      expect(response.body.details.description).toEqual(
         ROLE_RESPONSE.USER_NOT_FOUND_BY_USER_AND_ID,
       );
     });
