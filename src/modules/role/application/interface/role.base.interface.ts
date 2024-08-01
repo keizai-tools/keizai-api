@@ -1,7 +1,9 @@
+import { Role } from '@/modules/authorization/domain/role.enum';
+
 export interface UserRoleToTeamData {
   teamId: string;
   userId: string;
-  role: string;
+  role: Role;
   id?: string;
 }
 
