@@ -36,7 +36,7 @@ export class AuthorizationService {
       return false;
     }
 
-    const userAbility = this.abilityFactory.createForUser(data);
+    const userAbility = this.abilityFactory.createForUser();
     this.responseService.log('Checking user permissions');
     return userAbility.can(action, subject);
   }
