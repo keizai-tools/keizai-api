@@ -15,6 +15,7 @@ export enum CognitoMessage {
   PASSWORD_RESET_SUCCESS = 'Password reset successfully',
   PASSWORD_RESET_CONFIRMATION_SUCCESS = 'Password reset confirmation successfully',
   SESSION_REFRESHED_SUCCESS = 'Session refreshed successfully',
+  USER_NOT_FOUND_ERROR = 'User not found',
 }
 
 export enum CognitoError {
@@ -25,4 +26,6 @@ export enum CognitoError {
   PASSWORD_RESET_REQUIRED_EXCEPTION = 'PasswordResetRequiredException',
   CODE_MISMATCH_EXCEPTION = 'CodeMismatchException',
   EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException',
+  USER_NOT_FOUND_EXCEPTION = 'UserNotFoundException',
+  INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException',
 }

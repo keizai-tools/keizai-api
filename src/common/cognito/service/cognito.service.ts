@@ -162,6 +162,18 @@ export class CognitoService implements ICognitoAuthService {
                     CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR,
                   ),
                 );
+              } else if (error.code === CognitoError.USER_NOT_FOUND_EXCEPTION) {
+                return reject(
+                  new UnauthorizedException(
+                    CognitoMessage.USER_NOT_FOUND_ERROR,
+                  ),
+                );
+              } else if (
+                error.code === CognitoError.INVALID_PARAMETER_EXCEPTION
+              ) {
+                return reject(
+                  new UnauthorizedException(CognitoMessage.INVALID_CODE_ERROR),
+                );
               } else {
                 return reject(new InternalServerErrorException(error.code));
               }
