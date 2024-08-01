@@ -72,7 +72,7 @@ export class InvocationService {
 
   getContractIdValue = (inputString: string): string => {
     const regex = /{{(.*?)}}/g;
-    const contractId = inputString.replace(regex, (match, text) => text);
+    const contractId = inputString.replace(regex, (_match, text) => text);
     return contractId;
   };
 
