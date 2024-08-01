@@ -5,9 +5,6 @@ import {
 } from '@casl/ability';
 import { Inject, Injectable } from '@nestjs/common';
 
-import { IResponse } from '@/common/response_service/interface/response.interface';
-import { User } from '@/modules/user/domain/user.domain';
-
 import { IPermissionsDefinition } from '../../policy/type/permissions-definition.interface';
 import { AppAbility } from '../type/app-ability.type';
 import { AppSubjects } from '../type/app-subjects.type';
@@ -21,12 +18,8 @@ export class CaslAbilityFactory {
     private readonly permissions: IPermissionsDefinition,
   ) {}
 
-  createForUser(data: IResponse<User>): AppAbility {
+  createForUser(): AppAbility {
     const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-
-    data.payload.roles.forEach((roles) => {
-      this.permissions[roles](data.payload, builder);
-    });
 
     return builder.build({
       detectSubjectType: (item) =>
