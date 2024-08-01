@@ -361,7 +361,7 @@ export class EnviromentService {
 
       return this.responseService.createResponse({
         payload: await this.enviromentRepository.delete(environment.id),
-        message: ENVIROMENT_RESPONSE.ENVIRONMENT_FOUND,
+        message: ENVIROMENT_RESPONSE.ENVIRONMENT_DELETED,
         type: 'OK',
       });
     } catch (error) {
