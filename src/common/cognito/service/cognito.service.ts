@@ -89,7 +89,8 @@ export class CognitoService implements ICognitoAuthService {
       });
 
       if (
-        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST ||
         process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
       ) {
         this.confirmUserRegistration({

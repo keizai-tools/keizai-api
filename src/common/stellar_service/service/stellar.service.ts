@@ -91,7 +91,6 @@ export class StellarService implements IStellarService {
           try {
             const partialDecodedData =
               this.stellarAdapter.getScSpecEntryFromXDR(subArray);
-
             decodedData.push(partialDecodedData);
             offset += length;
             success = true;
