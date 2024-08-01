@@ -6,11 +6,13 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 
 import { CreateMethodDto } from '../application/dto/create-method.dto';
 import { MethodResponseDto } from '../application/dto/method-response.dto';
@@ -18,6 +20,7 @@ import { UpdateMethodDto } from '../application/dto/update-method.dto';
 import { MethodService } from '../application/service/method.service';
 
 @Auth(AuthType.Bearer)
+@UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/method')
 export class MethodTeamController {
   constructor(private readonly methodService: MethodService) {}
