@@ -6,11 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
+import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 
 import { CreateFolderDto } from '../application/dto/create-folder.dto';
@@ -19,10 +22,12 @@ import { UpdateFolderDto } from '../application/dto/update-folder.dto';
 import { FolderService } from '../application/service/folder.service';
 
 @Auth(AuthType.Bearer)
+@UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/folder')
 export class FolderTeamController {
   constructor(private readonly folderService: FolderService) {}
 
+  @UseGuards(AdminRoleGuard)
   @Post('')
   async create(
     @Body() createFolderDto: CreateFolderDto,
@@ -47,6 +52,7 @@ export class FolderTeamController {
     return this.folderService.findAllInvocationsByTeam(id, teamId);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Patch('')
   update(
     @Body() updateFoldertDto: UpdateFolderDto,
@@ -55,6 +61,7 @@ export class FolderTeamController {
     return this.folderService.updateByTeam(updateFoldertDto, teamId);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Delete('/:id')
   delete(
     @Param('teamId') teamId: string,
