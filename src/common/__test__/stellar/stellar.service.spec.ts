@@ -1,39 +1,38 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 
+import { AppModule } from '@/app.module';
+import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import {
   CONTRACT_SERVICE,
-  type IStellarService,
+  IStellarService,
 } from '@/common/stellar_service/application/interface/contract.service.interface';
 import {
   CONTRACT_ADAPTER,
-  type IStellarAdapter,
+  IStellarAdapter,
 } from '@/common/stellar_service/application/interface/stellar.adapter.interface';
 import {
   CONTRACT_MAPPER,
-  type IStellarMapper,
+  IStellarMapper,
 } from '@/common/stellar_service/application/interface/stellar.mapper.interface';
-import { StellarMapper } from '@/common/stellar_service/application/mapper/contract.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
+import {
+  contractExecutable,
+  contracts,
+  getTxFailed,
+  identityProviderServiceMock,
+  rawGetTxFailed,
+  rawSendTxError,
+  rawSendTxPending,
+  selectedMethod,
+} from '@/test/test.module.bootstrapper';
+import { getRandomKeypair } from '@/test/test.util';
 
-import { StellarAdapter } from '../../stellar_service/adapter/stellar.adapter';
 import {
   CONTRACT_EXECUTABLE_TYPE,
   GetTransactionStatus,
   NETWORK,
   SendTransactionStatus,
 } from '../../stellar_service/application/domain/soroban.enum';
-import { StellarService } from '../../stellar_service/service/stellar.service';
-import {
-  contractExecutable,
-  contracts,
-  getRandomKeypair,
-  getTxFailed,
-  rawGetTxFailed,
-  rawSendTxError,
-  rawSendTxPending,
-  selectedMethod,
-} from './stellar.service.mocks';
 
 describe('StellarService', () => {
   let service: IStellarService;
@@ -42,27 +41,16 @@ describe('StellarService', () => {
   const mockedMethod = new Method('mock', [], [], [], 'mock');
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: CONTRACT_SERVICE,
-          useClass: StellarService,
-        },
-        {
-          provide: CONTRACT_ADAPTER,
-          useClass: StellarAdapter,
-        },
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(COGNITO_AUTH)
+      .useValue(identityProviderServiceMock)
+      .compile();
 
-        {
-          provide: CONTRACT_MAPPER,
-          useClass: StellarMapper,
-        },
-      ],
-    }).compile();
-
-    service = module.get<StellarService>(StellarService);
-    stellarAdapter = module.get<StellarAdapter>(StellarAdapter);
-    stellarMapper = module.get<StellarMapper>(CONTRACT_MAPPER);
+    service = moduleRef.get<IStellarService>(CONTRACT_SERVICE);
+    stellarAdapter = moduleRef.get<IStellarAdapter>(CONTRACT_ADAPTER);
+    stellarMapper = moduleRef.get<IStellarMapper>(CONTRACT_MAPPER);
   });
 
   describe('verifyNetwork', () => {
@@ -85,13 +73,8 @@ describe('StellarService', () => {
       expect(changeNetworkSpy).toHaveBeenCalledTimes(1);
     });
   });
-  describe('generateMethodsFromContractId', () => {
-    it.skip('Should return the stellar asset contract functions', async () => {
-      const sacFunctions = service.getStellarAssetContractFunctions();
-      const result = await service.generateMethodsFromContractId(contracts.sac);
 
-      expect(result).toEqual(sacFunctions);
-    });
+  describe('generateMethodsFromContractId', () => {
     it('Should return the smart contract functions', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
@@ -104,8 +87,9 @@ describe('StellarService', () => {
           expect.objectContaining({ name: 'increment' }),
         ]),
       );
-    }, 45000);
+    }, 50000);
   });
+
   describe('generateScArgsToFromContractId', () => {
     afterEach(() => {
       jest.clearAllMocks();
@@ -133,6 +117,7 @@ describe('StellarService', () => {
       expect(service.getScValFromSmartContract).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
+
     it('Should return the smart contract arguments', async () => {
       jest
         .spyOn(stellarAdapter, 'getInstanceValue')
@@ -158,6 +143,7 @@ describe('StellarService', () => {
       expect(result).toEqual([]);
     });
   });
+
   describe('RunInvocation', () => {
     const setupCommonMocks = () => {
       jest
@@ -170,6 +156,7 @@ describe('StellarService', () => {
     };
 
     jest.retryTimes(5);
+
     it('Should return a successfully transaction with a smart contract', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
@@ -182,8 +169,10 @@ describe('StellarService', () => {
       );
 
       expect(result.status).toEqual(GetTransactionStatus.SUCCESS);
-    }, 45000);
+    }, 50000);
+
     jest.retryTimes(5);
+
     it('Should return a successfully transaction with a stellar asset contract', async () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
@@ -201,7 +190,7 @@ describe('StellarService', () => {
           response: 'USDC',
         }),
       );
-    }, 15000);
+    }, 50000);
 
     it('Should return a transaction with status error', async () => {
       setupCommonMocks();
