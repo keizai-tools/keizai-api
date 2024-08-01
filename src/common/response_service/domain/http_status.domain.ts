@@ -95,7 +95,7 @@ export const messageError = {
   400: () =>
     'The server could not understand the request due to invalid syntax.',
   401: () =>
-    'The client must authenticate it self to get the requested response.',
+    'The client must authenticate itself to get the requested response.',
   402: () => 'This request requires payment.',
   403: () => 'The client does not have access rights to the content.',
   404: () => 'The server can not find the requested resource.',
