@@ -1,5 +1,5 @@
 import {
-  type ArgumentsHost,
+  ArgumentsHost,
   Catch,
   HttpException,
   HttpStatus,
