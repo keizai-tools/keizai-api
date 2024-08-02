@@ -2,7 +2,7 @@ import { Transaction, contract, xdr } from '@stellar/stellar-sdk';
 
 import {
   EncodeEvent,
-  type GetTransactionResponse,
+  GetTransactionResponse,
   RawGetTransactionResponse,
   RawSendTransactionResponse,
 } from './soroban';
