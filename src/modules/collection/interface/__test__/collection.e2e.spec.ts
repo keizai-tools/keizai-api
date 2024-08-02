@@ -16,11 +16,7 @@ import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/ex
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 import { TEAM_RESPONSE } from '@/modules/team/application/exceptions/team-response.enum';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
-import {
-  type DataObject,
-  createAccessToken,
-  makeRequest,
-} from '@/test/test.util';
+import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
 
