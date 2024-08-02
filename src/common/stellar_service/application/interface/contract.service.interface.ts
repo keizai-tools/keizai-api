@@ -27,6 +27,14 @@ export interface IDecodedSection extends xdr.ScSpecEntry {
   };
 }
 
+export interface IRunInvocationParams {
+  contractId: string;
+  selectedMethod: Partial<Method>;
+  signedTransactionXDR?: string;
+  publicKey?: string;
+  secretKey?: string;
+}
+
 export interface IStellarService {
   verifyNetwork(selectedNetwork: string): void;
   getStellarAssetContractFunctions(): IGeneratedMethod[];
@@ -47,9 +55,11 @@ export interface IStellarService {
     selectedMethod: Method,
   ): Promise<xdr.ScVal[]>;
   runInvocation(
-    publicKey: string,
-    secretKey: string,
-    contractId: string,
-    method: Partial<Method>,
+    runInvocationParams: IRunInvocationParams,
   ): Promise<RunInvocationResponse | ContractErrorResponse>;
+  getPreparedTransactionXDR(
+    contractId: string,
+    publicKey: string,
+    selectedMethod: Partial<Method>,
+  ): Promise<string>;
 }
