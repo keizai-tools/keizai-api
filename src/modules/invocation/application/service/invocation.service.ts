@@ -191,14 +191,17 @@ export class InvocationService {
               invocation.folder.collectionId,
             ));
 
-          const envsValues: { name: string; value: string }[] =
-            envsByName &&
-            envsByName?.map((env) => {
-              return {
-                name: env.name,
-                value: env.value,
-              };
-            });
+          const envsValues: { name: string; value: string }[] = Array.isArray(
+            envsByName,
+          )
+            ? envsByName.map((env) => {
+                return {
+                  name: env.name,
+                  value: env.value,
+                };
+              })
+            : [];
+
           if (envsValues.length > 0) {
             param.value = invocation.selectedMethod.replaceParamValue(
               envsValues,
@@ -315,7 +318,7 @@ export class InvocationService {
         postInvocation: createFolderDto.postInvocation,
         contractId: createFolderDto.contractId,
         folderId: createFolderDto.folderId,
-        network: createFolderDto.network || NETWORK.SOROBAN_FUTURENET,
+        network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
       };
 
       const invocation =
@@ -492,6 +495,8 @@ export class InvocationService {
         updateInvocationDto,
       );
 
+      let network: string;
+
       if (updateInvocationDto.contractId) {
         try {
           const contractId = await this.getContractAddress(
@@ -499,7 +504,10 @@ export class InvocationService {
             updateInvocationDto.contractId,
           );
 
-          this.contractService.verifyNetwork(invocation.network);
+          network = await this.contractService.verifyNetwork(
+            invocation.network,
+            contractId,
+          );
 
           const generatedMethods =
             await this.contractService.generateMethodsFromContractId(
@@ -549,9 +557,11 @@ export class InvocationService {
         this.invocationMapper.fromUpdateDtoToInvocationValues(
           updateInvocationDto,
         );
-      const invocationMapped =
-        this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 
+      const invocationMapped = this.invocationMapper.fromUpdateDtoToEntity({
+        ...invocationValues,
+        network: network || invocationValues.network,
+      });
       const invocationUpdated = await this.invocationRepository.update(
         invocationMapped,
       );
