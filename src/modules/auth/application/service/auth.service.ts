@@ -45,10 +45,26 @@ export class AuthService {
   ): IPromiseResponse<User> {
     try {
       const { email, password } = userRegistrationDetails;
-      const { payload } = await this.userService.getUserByEmail(email);
-      if (payload !== null) {
+
+      const localResult = await this.userService.getUserByEmail(email);
+      const local = localResult?.payload;
+
+      if (local) {
         throw new ConflictException('User already exists');
       }
+
+      const cognitoResult = await this.identityProviderService.getUserSub(
+        email,
+      );
+      const cognito = cognitoResult?.payload;
+
+      if (cognito) {
+        return await this.userService.createUser({
+          ...userRegistrationDetails,
+          externalId: cognito,
+        });
+      }
+
       const result = await this.identityProviderService.registerUser({
         email,
         password,
@@ -131,19 +147,13 @@ export class AuthService {
   ): IPromiseResponse<{
     accessToken: string;
     refreshToken: string;
+    idToken: string;
     user: User;
   }> {
     try {
       const { email, password } = userLoginCredentials;
+
       const { payload: user } = await this.userService.getUserByEmail(email);
-
-      if (!user) {
-        throw new BadRequestException('User not found');
-      }
-
-      if (!user.isVerified) {
-        throw new ConflictException('User not verified');
-      }
 
       const { payload, type, message } =
         await this.identityProviderService.loginUser({
@@ -151,12 +161,35 @@ export class AuthService {
           password,
         });
 
+      if (!user && type !== 'OK') {
+        throw new BadRequestException('User not found');
+      }
+
+      if (!user) {
+        const newUser = await this.registerUser({
+          email,
+          password,
+        });
+
+        return this.responseService.createResponse({
+          type,
+          message,
+          payload: {
+            accessToken: payload.getAccessToken().getJwtToken(),
+            refreshToken: payload.getRefreshToken().getToken(),
+            idToken: payload.getIdToken().getJwtToken(),
+            user: newUser.payload,
+          },
+        });
+      }
+
       return this.responseService.createResponse({
         type,
         message,
         payload: {
           accessToken: payload.getAccessToken().getJwtToken(),
           refreshToken: payload.getRefreshToken().getToken(),
+          idToken: payload.getIdToken().getJwtToken(),
           user,
         },
       });

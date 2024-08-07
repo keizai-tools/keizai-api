@@ -34,6 +34,7 @@ export class AuthController {
   ): IPromiseResponse<{
     accessToken: string;
     refreshToken: string;
+    idToken: string;
     user: User;
   }> {
     return this.authenticationService.loginUser(userLoginCredentials);

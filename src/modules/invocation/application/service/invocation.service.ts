@@ -557,11 +557,9 @@ export class InvocationService {
         this.invocationMapper.fromUpdateDtoToInvocationValues(
           updateInvocationDto,
         );
+      const invocationMapped =
+        this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 
-      const invocationMapped = this.invocationMapper.fromUpdateDtoToEntity({
-        ...invocationValues,
-        network: network || invocationValues.network,
-      });
       const invocationUpdated = await this.invocationRepository.update(
         invocationMapped,
       );

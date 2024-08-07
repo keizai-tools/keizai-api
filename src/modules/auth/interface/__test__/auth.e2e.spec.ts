@@ -99,7 +99,6 @@ describe('Authentication Module', () => {
 
         const response = await makeRequest({
           app,
-
           endpoint: '/auth/register',
           method: 'post',
           data: userRegistrationDetails as unknown as DataObject,
@@ -294,7 +293,7 @@ describe('Authentication Module', () => {
         });
 
         expect(response.body).toEqual({
-          statusCode: 200,
+          statusCode: 202,
           timestamp: expect.any(String),
           message: 'User updated',
           path: '/auth/confirm-registration',
@@ -575,6 +574,7 @@ describe('Authentication Module', () => {
           payload: {
             accessToken: 'access_token',
             refreshToken: 'refresh_token',
+            idToken: 'id_token',
             user: {
               externalId: '00000000-0000-0000-0000-000000000001',
               createdAt: expect.any(String),
