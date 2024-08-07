@@ -293,6 +293,7 @@ describe('Invocation - [/invocation]', () => {
         endpoint: '/method/method0',
       });
 
+
       expect(responseMethod0.body.details.description).toEqual(
         METHOD_RESPONSE.METHOD_NOT_FOUND,
       );
@@ -529,11 +530,12 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Run all - [GET /invocation/run]', () => {
+  describe('Run all - [POST /invocation/run]', () => {
     it('should run correctly the invocation', async () => {
       const invocationId = 'invocation5';
       const response = await makeRequest({
         app,
+        method: 'post',
         authCode: adminToken,
         endpoint: `/invocation/${invocationId}/run`,
       });
@@ -543,7 +545,26 @@ describe('Invocation - [/invocation]', () => {
         statusCode: 200,
         message: 'Invocation run',
         timestamp: expect.any(String),
-        path: '/invocation/invocation5/run',
+        path: `/invocation/${invocationId}/run`,
+      });
+    });
+
+    it('should run correctly the invocation with a signed xdr', async () => {
+      const invocationId = 'invocation12';
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: `/invocation/${invocationId}/run`,
+        data: { signedTransactionXDR: 'xdr' },
+        method: 'post',
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Invocation run',
+        timestamp: expect.any(String),
+        path: `/invocation/${invocationId}/run`,
       });
     });
   });
@@ -581,10 +602,11 @@ describe('Invocation - [/invocation]', () => {
     });
   });
 
-  describe('Run one  - [GET /invocation/:id/run]', () => {
+  describe('Run one  - [POST /invocation/:id/run]', () => {
     it('should validate all required fields', async () => {
       const response = await makeRequest({
         app,
+        method: 'post',
         authCode: adminToken,
         endpoint: '/invocation/invocation4/run',
       });
@@ -597,6 +619,20 @@ describe('Invocation - [/invocation]', () => {
     it('should validate missing params', async () => {
       const response = await makeRequest({
         app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/invocation/invocation4/run',
+      });
+
+      expect(response.body.details.description).toEqual(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
+      );
+    });
+
+    it('should validate missing params', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'post',
         authCode: adminToken,
         endpoint: '/invocation/invocation4/run',
       });
@@ -834,7 +870,7 @@ describe('Invocation - [/invocation]', () => {
           authCode: adminToken,
           endpoint: '/method/method5',
         });
-
+        
         expect(responseMethod5.body.details.description).toEqual(
           METHOD_RESPONSE.METHOD_NOT_FOUND,
         );
@@ -1076,10 +1112,12 @@ describe('Invocation - [/invocation]', () => {
       });
     });
 
-    describe('Run one  - [GET /invocation/:id/run]', () => {
+    describe('Run one  - [POST /invocation/:id/run]', () => {
       it('should run correctly the invocation', async () => {
         const response = await makeRequest({
           app,
+          method: 'post',
+
           authCode: adminToken,
           endpoint: `${validRoute}/invocation11/run`,
         });
@@ -1089,13 +1127,14 @@ describe('Invocation - [/invocation]', () => {
           statusCode: 200,
           message: 'Invocation run',
           timestamp: expect.any(String),
-          path: '/team/team0/invocation/invocation11/run',
+          path: `${validRoute}/invocation11/run`,
         });
       });
 
       it('should validate all required fields', async () => {
         const response = await makeRequest({
           app,
+          method: 'post',
           authCode: adminToken,
           endpoint: `${validRoute}/invocation10/run`,
         });

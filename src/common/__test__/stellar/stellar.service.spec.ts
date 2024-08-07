@@ -161,12 +161,12 @@ describe('StellarService', () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
       const { publicKey, secretKey } = await getRandomKeypair();
-      const result = await service.runInvocation(
+      const result = await service.runInvocation({
+        contractId: contracts.smart,
+        selectedMethod: selectedMethod.smart,
         publicKey,
         secretKey,
-        contracts.smart,
-        selectedMethod.smart,
-      );
+      });
 
       expect(result.status).toEqual(GetTransactionStatus.SUCCESS);
     }, 50000);
@@ -177,12 +177,12 @@ describe('StellarService', () => {
       stellarAdapter.changeNetwork(NETWORK.SOROBAN_TESTNET);
 
       const { publicKey, secretKey } = await getRandomKeypair();
-      const result = await service.runInvocation(
+      const result = await service.runInvocation({
+        contractId: contracts.sac,
+        selectedMethod: selectedMethod.sac,
         publicKey,
         secretKey,
-        contracts.sac,
-        selectedMethod.sac,
-      );
+      });
 
       expect(result).toEqual(
         expect.objectContaining({
@@ -201,12 +201,12 @@ describe('StellarService', () => {
         .spyOn(stellarAdapter, 'rawSendTransaction')
         .mockResolvedValue(rawSendTxError);
 
-      const result = await service.runInvocation(
-        'publicKey',
-        'secretKey',
-        'contractId',
-        mockedMethod,
-      );
+      const result = await service.runInvocation({
+        contractId: 'contractId',
+        selectedMethod: mockedMethod,
+        publicKey: 'publicKey',
+        secretKey: 'secretKey',
+      });
 
       expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
       expect(stellarMapper.fromTxResultToDisplayResponse).toHaveBeenCalled();
@@ -233,12 +233,12 @@ describe('StellarService', () => {
         .spyOn(stellarAdapter, 'rawGetTransaction')
         .mockResolvedValue(rawGetTxFailed);
 
-      const result = await service.runInvocation(
-        'publicKey',
-        'secretKey',
-        'contractId',
-        mockedMethod,
-      );
+      const result = await service.runInvocation({
+        contractId: 'contractId',
+        selectedMethod: mockedMethod,
+        publicKey: 'publicKey',
+        secretKey: 'secretKey',
+      });
 
       expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
       expect(stellarAdapter.getTransaction).toHaveBeenCalled();
@@ -260,12 +260,12 @@ describe('StellarService', () => {
           'Caused by:\n    HostError: Error(Contract, #2)\n    \n',
         );
 
-      const result = await service.runInvocation(
-        'publicKey',
-        'secretKey',
-        'contractId',
-        mockedMethod,
-      );
+      const result = await service.runInvocation({
+        contractId: 'contractId',
+        selectedMethod: mockedMethod,
+        publicKey: 'publicKey',
+        secretKey: 'secretKey',
+      });
 
       expect(stellarAdapter.rawSendTransaction).toHaveBeenCalled();
       expect(result).toEqual(

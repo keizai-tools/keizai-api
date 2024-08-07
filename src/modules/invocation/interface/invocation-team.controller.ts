@@ -50,12 +50,30 @@ export class InvocationTeamController {
     return this.invocationService.findOneByInvocationAndTeamIdToDto(id, teamId);
   }
 
-  @Get('/:id/run')
+  @Post('/:id/run')
   runInvocation(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR?: string;
+    },
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
-    return this.invocationService.runInvocationByTeam(id, teamId);
+    return this.invocationService.runInvocationByTeam(
+      id,
+      teamId,
+      signedTransactionXDR,
+    );
+  }
+
+  @Get('/:id/prepare')
+  prepareInvocation(
+    @Param('teamId') teamId: string,
+    @Param('id') id: string,
+  ): IPromiseResponse<string> {
+    return this.invocationService.prepareInvocationByTeam(id, teamId);
   }
 
   @Get('/:id/methods')

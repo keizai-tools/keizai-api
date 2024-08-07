@@ -71,9 +71,13 @@ export class InvocationService {
   }
 
   getContractIdValue = (inputString: string): string => {
-    const regex = /{{(.*?)}}/g;
-    const contractId = inputString.replace(regex, (_match, text) => text);
-    return contractId;
+    try {
+      const regex = /{{(.*?)}}/g;
+      const contractId = inputString.replace(regex, (_match, text) => text);
+      return contractId;
+    } catch (error) {
+      this.handleError(error);
+    }
   };
 
   async getContractAddress(invocation: Invocation, contractId: string) {
@@ -89,14 +93,50 @@ export class InvocationService {
     }
   }
 
+  async prepareInvocationByUser(
+    id: string,
+    userId: string,
+  ): IPromiseResponse<string> {
+    try {
+      const invocation = await this.findOneByInvocationAndUserId(id, userId);
+      return this.responseService.createResponse({
+        payload: await this.prepareInvocationTransaction(invocation),
+        message: INVOCATION_RESPONSE.METHODS_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async prepareInvocationByTeam(
+    id: string,
+    teamId: string,
+  ): IPromiseResponse<string> {
+    try {
+      const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
+      return this.responseService.createResponse({
+        payload: await this.prepareInvocationTransaction(invocation),
+        message: INVOCATION_RESPONSE.METHODS_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   async runInvocationByUser(
     id: string,
     userId: string,
+    transactionXDR: string,
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
       return this.responseService.createResponse({
-        payload: await this.runInvocation(invocation),
+        payload: await this.runInvocationTransaction(
+          invocation,
+          transactionXDR,
+        ),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'OK',
       });
@@ -108,11 +148,15 @@ export class InvocationService {
   async runInvocationByTeam(
     id: string,
     teamId: string,
+    transactionXDR: string,
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
       return this.responseService.createResponse({
-        payload: await this.runInvocation(invocation),
+        payload: await this.runInvocationTransaction(
+          invocation,
+          transactionXDR,
+        ),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'OK',
       });
@@ -121,15 +165,12 @@ export class InvocationService {
     }
   }
 
-  async runInvocation(
-    invocation: Invocation,
-  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+  async prepareInvocationTransaction(invocation: Invocation): Promise<string> {
     try {
       const hasEmptyParameters = invocation.selectedMethod?.params?.some(
         (param) => !param.value,
       );
       if (
-        !invocation.secretKey ||
         !invocation.publicKey ||
         !invocation.selectedMethod ||
         hasEmptyParameters
@@ -167,7 +208,6 @@ export class InvocationService {
           return param;
         }),
       );
-
       const selectedMethodMapped: Partial<Method> = {
         ...invocation.selectedMethod,
         params: paramsMapped,
@@ -178,15 +218,50 @@ export class InvocationService {
       );
 
       this.contractService.verifyNetwork(invocation.network);
-      const invocationResult = await this.contractService.runInvocation(
-        invocation.publicKey,
-        invocation.secretKey,
-        contractId,
-        selectedMethodMapped,
-      );
-      return invocationResult;
+      try {
+        const preparedTransaction =
+          await this.contractService.getPreparedTransactionXDR(
+            contractId,
+            invocation.publicKey,
+            selectedMethodMapped,
+          );
+        return preparedTransaction;
+      } catch (error) {
+        return error;
+      }
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  async runInvocationTransaction(
+    invocation: Invocation,
+    transactionXDR?: string,
+  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+    const hasEmptyParameters = invocation.selectedMethod?.params?.some(
+      (param) => !param.value,
+    );
+    if (
+      !invocation.publicKey ||
+      !invocation.selectedMethod ||
+      hasEmptyParameters
+    ) {
+      throw new BadRequestException(
+        INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
+      );
+    }
+    this.contractService.verifyNetwork(invocation.network);
+    try {
+      const invocationResult = await this.contractService.runInvocation({
+        contractId: invocation.contractId,
+        selectedMethod: invocation.selectedMethod,
+        signedTransactionXDR: transactionXDR,
+        publicKey: invocation.publicKey,
+        secretKey: invocation.secretKey,
+      });
+      return invocationResult;
+    } catch (error) {
+      return error;
     }
   }
 
@@ -461,6 +536,7 @@ export class InvocationService {
       if (updateInvocationDto.network) {
         try {
           const methodIds = invocation.methods.map((method) => method.id);
+
           await this.methodRepository.deleteAll(methodIds);
         } catch (error) {
           throw new BadRequestException(
@@ -473,7 +549,6 @@ export class InvocationService {
         this.invocationMapper.fromUpdateDtoToInvocationValues(
           updateInvocationDto,
         );
-
       const invocationMapped =
         this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 

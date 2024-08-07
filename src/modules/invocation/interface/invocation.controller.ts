@@ -56,12 +56,30 @@ export class InvocationUserController {
     );
   }
 
-  @Get('/:id/run')
+  @Post('/:id/run')
   runInvocation(
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR?: string;
+    },
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
-    return this.invocationService.runInvocationByUser(id, data.payload.id);
+    return this.invocationService.runInvocationByUser(
+      id,
+      data.payload.id,
+      signedTransactionXDR,
+    );
+  }
+
+  @Get('/:id/prepare')
+  prepareInvocation(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<string> {
+    return this.invocationService.prepareInvocationByUser(id, data.payload.id);
   }
 
   @Get(':id/methods')
