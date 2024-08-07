@@ -1,4 +1,8 @@
 import {
+  AdminGetUserCommand,
+  CognitoIdentityProviderClient,
+} from '@aws-sdk/client-cognito-identity-provider';
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -40,6 +44,7 @@ import { ICognitoRequestError } from '../application/interface/cognito_request_e
 @Injectable()
 export class CognitoService implements ICognitoAuthService {
   private readonly userPool: CognitoUserPool;
+  private readonly cognitoClient: CognitoIdentityProviderClient;
 
   constructor(
     @Inject(RESPONSE_SERVICE)
@@ -51,6 +56,53 @@ export class CognitoService implements ICognitoAuthService {
       ClientId: process.env.AWS_COGNITO_CLIENT_ID,
       endpoint: process.env.AWS_COGNITO_ENDPOINT,
     });
+    this.cognitoClient = new CognitoIdentityProviderClient({
+      region: process.env.AWS_COGNITO_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_COGNITO_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_COGNITO_SECRET_KEY,
+      },
+    });
+  }
+
+  async getUserSub(email: string): IPromiseResponse<string | null> {
+    const params = {
+      UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
+      Username: email,
+    };
+
+    try {
+      const command = new AdminGetUserCommand(params);
+      const response = await this.cognitoClient.send(command);
+
+      const subAttribute = response.UserAttributes?.find(
+        (attribute) => attribute.Name === 'sub',
+      );
+
+      if (subAttribute) {
+        return this.responseService.createResponse({
+          message: 'User exists',
+          payload: subAttribute.Value,
+          type: 'OK',
+        });
+      } else {
+        return this.responseService.createResponse({
+          message: 'User does not have a sub attribute',
+          payload: null,
+          type: 'NOT_FOUND',
+        });
+      }
+    } catch (error) {
+      if (error.name === 'UserNotFoundException') {
+        return this.responseService.createResponse({
+          message: 'User not found',
+          payload: null,
+          type: 'NOT_FOUND',
+        });
+      } else {
+        this.handleError(error);
+      }
+    }
   }
 
   async registerUser(
@@ -89,8 +141,8 @@ export class CognitoService implements ICognitoAuthService {
       });
 
       if (
-        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST ||
+        (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+          process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
         process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
       ) {
         this.confirmUserRegistration({
