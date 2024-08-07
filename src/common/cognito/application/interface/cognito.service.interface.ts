@@ -35,4 +35,5 @@ export interface ICognitoAuthService {
   refreshUserSession(
     sessionRefreshDetails: SessionRefreshDetailsDto,
   ): IPromiseResponse<ICognitoRefreshSessionResponse>;
+  getUserSub(email: string): IPromiseResponse<string | null>;
 }
