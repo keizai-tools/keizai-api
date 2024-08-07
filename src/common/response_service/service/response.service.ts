@@ -31,6 +31,7 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
       statusCode: HttpStatus[type] ? HttpStatus[type] : 200,
       message: message || 'Success',
       payload,
+      type,
     };
   };
 
