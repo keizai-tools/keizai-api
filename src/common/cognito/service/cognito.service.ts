@@ -89,7 +89,8 @@ export class CognitoService implements ICognitoAuthService {
       });
 
       if (
-        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST ||
         process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
       ) {
         this.confirmUserRegistration({
@@ -160,6 +161,18 @@ export class CognitoService implements ICognitoAuthService {
                   new UnauthorizedException(
                     CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR,
                   ),
+                );
+              } else if (error.code === CognitoError.USER_NOT_FOUND_EXCEPTION) {
+                return reject(
+                  new UnauthorizedException(
+                    CognitoMessage.USER_NOT_FOUND_ERROR,
+                  ),
+                );
+              } else if (
+                error.code === CognitoError.INVALID_PARAMETER_EXCEPTION
+              ) {
+                return reject(
+                  new UnauthorizedException(CognitoMessage.INVALID_CODE_ERROR),
                 );
               } else {
                 return reject(new InternalServerErrorException(error.code));

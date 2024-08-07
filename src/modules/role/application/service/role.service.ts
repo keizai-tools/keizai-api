@@ -114,11 +114,20 @@ export class UserRoleOnTeamService {
       const userRoleToTeamData: UserRoleToTeamData = {
         teamId: createDto.teamId,
         userId,
-        role: 'ADMIN',
+        role: createDto.role,
       };
 
       const userRoleMapped =
         this.userRoleToTeamMapper.fromDtoToEntity(userRoleToTeamData);
+
+      if (
+        !(await this.userRoleToTeamRepository.validateUserAndTeam(
+          userRoleMapped,
+        ))
+      ) {
+        throw new NotFoundException(ROLE_RESPONSE.USER_OR_TEAM_NOT_FOUND);
+      }
+
       const response = await this.userRoleToTeamRepository.save(userRoleMapped);
 
       if (!response) {

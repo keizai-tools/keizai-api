@@ -1,3 +1,5 @@
+import { Role } from '@/modules/authorization/domain/role.enum';
+
 import { UserRoleToTeam } from '../../domain/role.domain';
 import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';
 import {
@@ -20,6 +22,6 @@ export class UserRoleToTeamMapper {
 
   fromEntityToDto(userRole: UserRoleToTeam): ResponseUserRoletoTeamDto {
     const { id, teamId, userId, role } = userRole;
-    return new ResponseUserRoletoTeamDto(id, teamId, userId, role);
+    return new ResponseUserRoletoTeamDto(id, teamId, userId, Role[role]);
   }
 }

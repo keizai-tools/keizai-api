@@ -11,11 +11,18 @@ export const UserSchema = new EntitySchema<User>({
     ...baseColumnSchemas,
     email: {
       type: 'varchar',
-      name: 'email',
+      length: 255,
+      unique: true,
     },
     externalId: {
-      type: 'varchar',
       name: 'external_id',
+      type: 'varchar',
+      unique: true,
+    },
+
+    isVerified: {
+      type: 'boolean',
+      default: false,
     },
   },
   relations: {

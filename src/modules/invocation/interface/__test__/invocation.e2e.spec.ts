@@ -1,67 +1,49 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { join } from 'path';
-import * as request from 'supertest';
 
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
-import { CONTRACT_SERVICE } from '@/common/application/repository/contract.interface.service';
-import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
-import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
-import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
+import { CONTRACT_SERVICE } from '@/common/stellar_service/application/interface/contract.service.interface';
+import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
 import { FOLDER_RESPONSE } from '@/modules/folder/application/exceptions/folder-response.enum';
+import { METHOD_RESPONSE } from '@/modules/method/application/exceptions/method-response.enum';
+import {
+  identityProviderServiceMock,
+  mockedContractService,
+} from '@/test/test.module.bootstrapper';
+import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { INVOCATION_RESPONSE } from '../../application/exceptions/invocation-response.enum.dto';
-
-const mockedCognitoService = {
-  registerAccount: jest.fn(),
-  loginAccount: jest.fn(),
-};
-
-const mockedJwtStrategy = {
-  validate: jest.fn(),
-};
-
-const mockedContractService = {
-  runInvocation: jest.fn(),
-  verifyNetwork: jest.fn(),
-  changeNetwork: jest.fn(),
-  generateMethodsFromContractId: jest.fn(),
-};
-
-const mockedGuard = {
-  canActivate: (context) => {
-    const req = context.switchToHttp().getRequest();
-    req.user = {
-      id: 'user0',
-    };
-    return true;
-  },
-};
 
 describe('Invocation - [/invocation]', () => {
   let app: INestApplication;
 
+  const adminToken = createAccessToken({
+    sub: '00000000-0000-0000-0000-00000000000X',
+  });
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-      providers: [],
     })
-      .overrideProvider(JwtStrategy)
-      .useValue(mockedJwtStrategy)
+      .overrideProvider(COGNITO_AUTH)
+      .useValue(identityProviderServiceMock)
       .overrideProvider(CONTRACT_SERVICE)
       .useValue(mockedContractService)
-      .overrideProvider(COGNITO_SERVICE)
-      .useValue(mockedCognitoService)
-      .overrideGuard(JwtAuthGuard)
-      .useValue(mockedGuard)
       .compile();
 
-    await loadFixtures(
-      `${__dirname}/fixture`,
-      join(
+    await loadFixtures({
+      fixturesPath: `${__dirname}/fixture`,
+      dataSourcePath: join(
         __dirname,
         '..',
         '..',
@@ -69,15 +51,33 @@ describe('Invocation - [/invocation]', () => {
         '..',
         'configuration/orm.configuration.ts',
       ),
-    );
+    });
 
     app = moduleRef.createNestApplication();
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
+
+    app.useGlobalInterceptors(new SuccessResponseInterceptor());
 
     await app.init();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe('Create one  - [POST /invocation]', () => {
@@ -90,32 +90,40 @@ describe('Invocation - [/invocation]', () => {
         contractId: expect.any(String),
         network: expect.any(String),
       });
-      const response = await request(app.getHttpServer())
-        .post('/invocation')
-        .send({
+
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'test',
           folderId: 'folder0',
           secretKey: 'test',
           publicKey: 'test',
           contractId: 'test contract',
-        })
-        .expect(HttpStatus.CREATED);
+        },
+      });
 
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toEqual(responseExpected);
     });
+
     it('should throw error when try to create a new invocation not associated with a folder', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'test',
           folderId: 'folder',
           secretKey: 'test',
           publicKey: 'test',
           contractId: 'test contract',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_USER_ID,
       );
     });
@@ -131,30 +139,37 @@ describe('Invocation - [/invocation]', () => {
         contractId: null,
       });
 
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation0',
+      });
 
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toEqual(responseExpected);
     });
 
     it('should throw error when try to get one invocation not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation')
-        .expect(HttpStatus.NOT_FOUND);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation',
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
   });
+
   describe('Get all methods - [GET /invocation/:id/methods]', () => {
     it('should get all methods associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation0/methods')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation0/methods',
+      });
 
-      expect(response.body).toEqual(
+      expect(response.body.payload).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: 'method0',
@@ -169,45 +184,58 @@ describe('Invocation - [/invocation]', () => {
         ]),
       );
     });
-    it('should throw error when try to get all methods not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation1')
-        .expect(HttpStatus.BAD_REQUEST);
 
-      expect(response.body.message).toEqual(
+    it('should throw error when try to get all methods not associated with a user', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation1',
+      });
+
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
       );
     });
   });
 
-  describe('Update one  - [PUT /invocation/:id]', () => {
+  describe('Update one  - [PATCH /invocation/:id]', () => {
     it('should update one invocation associated with a user', async () => {
       const responseExpected = expect.objectContaining({
         id: 'invocation0',
         name: 'invocation updated',
       });
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toEqual(responseExpected);
     });
+
     it('should mock generateMethodsFromContractId function', async () => {
       const spy = jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
-      await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+
+      await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
           contractId: 'test contract',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
+
       expect(spy.mock.calls).toHaveLength(1);
     });
 
@@ -233,168 +261,225 @@ describe('Invocation - [/invocation]', () => {
           }),
         ]),
       });
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           id: 'invocation0',
           contractId: 'contract test',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body).toEqual(expectedResponse);
+      expect(response.body.payload).toEqual(expectedResponse);
 
-      expect(response.body.methods).toHaveLength(1);
+      expect(response.body.payload.methods).toHaveLength(1);
 
-      await request(app.getHttpServer())
-        .get('/method/method2')
-        .expect(HttpStatus.NOT_FOUND);
+      const responseMethod2 = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/method/method2',
+      });
 
-      await request(app.getHttpServer())
-        .get('/method/method0')
-        .expect(HttpStatus.NOT_FOUND);
+      expect(responseMethod2.body.details.description).toEqual(
+        METHOD_RESPONSE.METHOD_NOT_FOUND,
+      );
+
+      const responseMethod0 = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/method/method0',
+      });
+
+      expect(responseMethod0.body.details.description).toEqual(
+        METHOD_RESPONSE.METHOD_NOT_FOUND,
+      );
     });
+
     it('should throw error when try to update selected method and contract at the same time', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
           contractId: 'test contract',
           selectedMethodId: 'method2',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD,
       );
     });
+
     it('should throw error when try to update an invocation not associated with a folder', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
+
     it('should throw error when try to update and invocation with an invalid contract id', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue(new Error());
 
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
           contractId: 'invalid contract id',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
       );
     });
+
     it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue(new Error());
 
-      await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
           contractId: 'test contract',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
     });
+
     it('should update contract id with a selected method', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation0',
           contractId: 'new test contract',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body.contractId).toEqual('new test contract');
+      expect(response.body.payload.contractId).toEqual('new test contract');
     });
+
     it('should update contract id with a environment', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
         .mockResolvedValue([]);
+
       const contractId = '{{contract_id}}';
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           id: 'invocation0',
           contractId,
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body.contractId).toEqual(contractId);
+      expect(response.body.payload.contractId).toEqual(contractId);
     });
+
     it('should update secretKey without removing publicKey', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           name: 'invocation updated',
           id: 'invocation2',
           secretKey: 'newSecretKey',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body.publicKey).toEqual('publicKey2');
-      expect(response.body.secretKey).toEqual('newSecretKey');
+      expect(response.body.payload.publicKey).toEqual('publicKey2');
+      expect(response.body.payload.secretKey).toEqual('newSecretKey');
     });
 
     it('should update pre invocation code', async () => {
       const preInvocationValue = 'console.log("pre invocation")';
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           preInvocation: preInvocationValue,
           id: 'invocation2',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body.preInvocation).toEqual(preInvocationValue);
+      expect(response.body.payload.preInvocation).toEqual(preInvocationValue);
     });
 
     it('should update post invocation code', async () => {
       const postInvocationValue = 'console.log("post invocation")';
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
           preInvocation: postInvocationValue,
           id: 'invocation2',
-        })
-        .expect(HttpStatus.OK);
+        },
+      });
 
-      expect(response.body.preInvocation).toEqual(postInvocationValue);
+      expect(response.body.payload.preInvocation).toEqual(postInvocationValue);
     });
   });
 
-  describe('Update Network - [PUT /invocation]', () => {
+  describe('Update Network - [PATCH /invocation]', () => {
     it('should throw error when the invocation id is incorrect', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({ network: 'TESTNET', id: 'invocation' })
-        .expect(HttpStatus.NOT_FOUND);
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: { network: 'TESTNET', id: 'invocation' },
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
+
     it('should change to TESTNET network', async () => {
       const responseExpected = expect.objectContaining({
         secretKey: null,
@@ -408,13 +493,17 @@ describe('Invocation - [/invocation]', () => {
         selectedMethod: null,
       });
 
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({ network: 'TESTNET', id: 'invocation0' })
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: { network: 'TESTNET', id: 'invocation0' },
+      });
 
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toEqual(responseExpected);
     });
+
     it('should change to FUTURENET network', async () => {
       const responseExpected = expect.objectContaining({
         secretKey: null,
@@ -428,39 +517,65 @@ describe('Invocation - [/invocation]', () => {
         selectedMethod: null,
       });
 
-      const response = await request(app.getHttpServer())
-        .patch('/invocation')
-        .send({ network: 'FUTURENET', id: 'invocation0' })
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: { network: 'FUTURENET', id: 'invocation0' },
+      });
 
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toEqual(responseExpected);
     });
   });
 
   describe('Run all - [GET /invocation/run]', () => {
     it('should run correctly the invocation', async () => {
       const invocationId = 'invocation5';
-      await request(app.getHttpServer())
-        .get(`/invocation/${invocationId}/run`)
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: `/invocation/${invocationId}/run`,
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Invocation run',
+        timestamp: expect.any(String),
+        path: '/invocation/invocation5/run',
+      });
     });
   });
 
   describe('Delete one  - [DELETE /invocation/:id]', () => {
     it('should delete one invocation associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/invocation/invocation0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/invocation/invocation0',
+      });
 
-      expect(response.body).toEqual({});
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 202,
+        message: 'Invocation deleted',
+        payload: true,
+        timestamp: expect.any(String),
+        path: '/invocation/invocation0',
+      });
     });
 
     it('should throw error when try to delete one invocation not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/invocation/invocation')
-        .expect(HttpStatus.NOT_FOUND);
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/invocation/invocation',
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND,
       );
     });
@@ -468,24 +583,30 @@ describe('Invocation - [/invocation]', () => {
 
   describe('Run one  - [GET /invocation/:id/run]', () => {
     it('should validate all required fields', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation4/run')
-        .expect(HttpStatus.BAD_REQUEST);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation4/run',
+      });
 
-      expect(response.body.message).toEqual(
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     });
-    it('should validate missing params', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/invocation/invocation4/run')
-        .expect(HttpStatus.BAD_REQUEST);
 
-      expect(response.body.message).toEqual(
+    it('should validate missing params', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/invocation/invocation4/run',
+      });
+
+      expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     });
   });
+
   describe('By Team - [/team/:teamId/invocation]', () => {
     const validRoute = '/team/team0/invocation';
     const invalidRoute = '/team/team1/invocation';
@@ -501,52 +622,65 @@ describe('Invocation - [/invocation]', () => {
           contractId: expect.any(String),
           network: expect.any(String),
         });
-        const response = await request(app.getHttpServer())
-          .post(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'post',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'test',
             folderId: 'folder2',
             secretKey: 'test',
             publicKey: 'test',
             contractId: 'test contract',
-          })
-          .expect(HttpStatus.CREATED);
+          },
+        });
 
-        expect(response.body).toEqual(responseExpected);
+        expect(response.body.payload).toEqual(responseExpected);
       });
+
       it('should throw error when try to create a new invocation not associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .post(`${invalidRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'post',
+          authCode: adminToken,
+          endpoint: `${invalidRoute}`,
+          data: {
             name: 'test',
             folderId: 'folder2',
             secretKey: 'test',
             publicKey: 'test',
             contractId: 'test contract',
-          })
-          .expect(HttpStatus.NOT_FOUND);
+          },
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body.details.description).toEqual(
           FOLDER_RESPONSE.FOLDER_NOT_FOUND_BY_TEAM_ID,
         );
       });
+
       it('should throw an unauthorize error when try to create a new invocation with a user without the required role', async () => {
-        const response = await request(app.getHttpServer())
-          .post(`${unauthorizeRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'post',
+          authCode: adminToken,
+          endpoint: `${unauthorizeRoute}`,
+          data: {
             name: 'test',
             folderId: 'folder2',
             secretKey: 'test',
             publicKey: 'test',
             contractId: 'test contract',
-          })
-          .expect(HttpStatus.UNAUTHORIZED);
+          },
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body.details.description).toEqual(
           AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
         );
       });
     });
+
     describe('Get one  - [GET /invocation/:id]', () => {
       it('should get one invocation associated with a team', async () => {
         const responseExpected = expect.objectContaining({
@@ -557,29 +691,37 @@ describe('Invocation - [/invocation]', () => {
           contractId: null,
         });
 
-        const response = await request(app.getHttpServer())
-          .get(`${validRoute}/invocation6`)
-          .expect(HttpStatus.OK);
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${validRoute}/invocation6`,
+        });
 
-        expect(response.body).toEqual(responseExpected);
+        expect(response.body.payload).toEqual(responseExpected);
       });
-      it('should throw error when try to get one invocation not associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .get(`${invalidRoute}/invocation7`)
-          .expect(HttpStatus.BAD_REQUEST);
 
-        expect(response.body.message).toEqual(
+      it('should throw error when try to get one invocation not associated with a team', async () => {
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${invalidRoute}/invocation7`,
+        });
+
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
         );
       });
     });
+
     describe('Get all methods - [GET /invocation/:id/methods]', () => {
       it('should get all methods associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .get(`${validRoute}/invocation6/methods`)
-          .expect(HttpStatus.OK);
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${validRoute}/invocation6/methods`,
+        });
 
-        expect(response.body).toEqual(
+        expect(response.body.payload).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               name: 'method5',
@@ -594,46 +736,61 @@ describe('Invocation - [/invocation]', () => {
           ]),
         );
       });
-      it('should throw error when try to get all methods not associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .get(`${invalidRoute}/invocation7/methods`)
-          .expect(HttpStatus.BAD_REQUEST);
 
-        expect(response.body.message).toEqual(
+      it('should throw error when try to get all methods not associated with a team', async () => {
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${invalidRoute}/invocation7/methods`,
+        });
+
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
         );
       });
     });
-    describe('Update one  - [PUT /invocation]', () => {
+
+    describe('Update one  - [PATCH /invocation]', () => {
       it('should update one invocation associated with a TEAM', async () => {
         const responseExpected = expect.objectContaining({
           id: 'invocation6',
           name: 'invocation updated',
         });
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body).toEqual(responseExpected);
+        expect(response.body.payload).toEqual(responseExpected);
       });
+
       it('should mock generateMethodsFromContractId function', async () => {
         const spy = jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
           .mockResolvedValue([]);
-        await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
             contractId: 'test contract',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
+
         expect(spy.mock.calls).toHaveLength(1);
       });
+
       it('should remove methods associated with an invocation when update the contract', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
@@ -656,165 +813,233 @@ describe('Invocation - [/invocation]', () => {
             }),
           ]),
         });
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             id: 'invocation6',
             contractId: 'contract test',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body).toEqual(expectedResponse);
+        expect(response.body.payload).toEqual(expectedResponse);
 
-        expect(response.body.methods).toHaveLength(1);
+        expect(response.body.payload.methods).toHaveLength(1);
 
-        await request(app.getHttpServer())
-          .get('/method/method5')
-          .expect(HttpStatus.NOT_FOUND);
+        const responseMethod5 = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: '/method/method5',
+        });
 
-        await request(app.getHttpServer())
-          .get('/method/method7')
-          .expect(HttpStatus.NOT_FOUND);
+        expect(responseMethod5.body.details.description).toEqual(
+          METHOD_RESPONSE.METHOD_NOT_FOUND,
+        );
+
+        const responseMethod7 = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: '/method/method7',
+        });
+
+        expect(responseMethod7.body.details.description).toEqual(
+          METHOD_RESPONSE.METHOD_NOT_FOUND,
+        );
       });
+
       it('should throw error when try to update selected method and contract at the same time', async () => {
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
             contractId: 'test contract',
             selectedMethodId: 'method7',
-          })
-          .expect(HttpStatus.NOT_FOUND);
+          },
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.INVOCATION_FAIL_WITH_NEW_CONTRACT_AND_NEW_METHOD,
         );
       });
+
       it('should throw error when try to update an invocation not associated with a folder', async () => {
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation',
-          })
-          .expect(HttpStatus.NOT_FOUND);
+          },
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.Invocation_NOT_FOUND,
         );
       });
+
       it('should throw error when try to update and invocation with an invalid contract id', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
           .mockResolvedValue(new Error());
 
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
             contractId: 'invalid contract id',
-          })
-          .expect(HttpStatus.NOT_FOUND);
+          },
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
         );
       });
+
       it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
           .mockResolvedValue(new Error());
 
-        await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
             contractId: 'test contract',
-          })
-          .expect(HttpStatus.NOT_FOUND);
+          },
+        });
+
+        expect(response.body.details.description).toEqual(
+          INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+        );
       });
+
       it('should update contract id with a selected method', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
           .mockResolvedValue([]);
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation6',
             contractId: 'new test contract',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body.contractId).toEqual('new test contract');
+        expect(response.body.payload.contractId).toEqual('new test contract');
       });
+
       it('should update contract id with a environment', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
           .mockResolvedValue([]);
+
         const contractId = '{{contract_id}}';
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             id: 'invocation6',
             contractId,
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body.contractId).toEqual(contractId);
+        expect(response.body.payload.contractId).toEqual(contractId);
       });
+
       it('should update secretKey without removing publicKey', async () => {
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             name: 'invocation updated',
             id: 'invocation8',
             secretKey: 'newSecretKey',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body.publicKey).toEqual('publicKey2');
-        expect(response.body.secretKey).toEqual('newSecretKey');
+        expect(response.body.payload.publicKey).toEqual('publicKey2');
+        expect(response.body.payload.secretKey).toEqual('newSecretKey');
       });
+
       it('should update pre invocation code', async () => {
         const preInvocationValue = 'console.log("pre invocation")';
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             preInvocation: preInvocationValue,
             id: 'invocation6',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body.preInvocation).toEqual(preInvocationValue);
+        expect(response.body.payload.preInvocation).toEqual(preInvocationValue);
       });
+
       it('should update post invocation code', async () => {
         const postInvocationValue = 'console.log("post invocation")';
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({
+
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: {
             preInvocation: postInvocationValue,
             id: 'invocation6',
-          })
-          .expect(HttpStatus.OK);
+          },
+        });
 
-        expect(response.body.preInvocation).toEqual(postInvocationValue);
+        expect(response.body.payload.preInvocation).toEqual(
+          postInvocationValue,
+        );
       });
     });
-    describe('Update Network - [PUT /invocation]', () => {
-      it('should throw error when the invocation id is incorrect', async () => {
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({ network: 'TESTNET', id: 'invocation' })
-          .expect(HttpStatus.NOT_FOUND);
 
-        expect(response.body.message).toEqual(
+    describe('Update Network - [PATCH /invocation]', () => {
+      it('should throw error when the invocation id is incorrect', async () => {
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: { network: 'TESTNET', id: 'invocation' },
+        });
+
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.Invocation_NOT_FOUND,
         );
       });
+
       it('should change to TESTNET network', async () => {
         const responseExpected = expect.objectContaining({
           network: 'TESTNET',
@@ -822,66 +1047,106 @@ describe('Invocation - [/invocation]', () => {
           methods: [],
         });
 
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({ network: 'TESTNET', id: 'invocation6' })
-          .expect(HttpStatus.OK);
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: { network: 'TESTNET', id: 'invocation6' },
+        });
 
-        expect(response.body).toEqual(responseExpected);
+        expect(response.body.payload).toEqual(responseExpected);
       });
+
       it('should change to FUTURENET network', async () => {
         const responseExpected = expect.objectContaining({
           network: 'FUTURENET',
           id: 'invocation6',
         });
 
-        const response = await request(app.getHttpServer())
-          .patch(`${validRoute}`)
-          .send({ network: 'FUTURENET', id: 'invocation6' })
-          .expect(HttpStatus.OK);
+        const response = await makeRequest({
+          app,
+          method: 'patch',
+          authCode: adminToken,
+          endpoint: `${validRoute}`,
+          data: { network: 'FUTURENET', id: 'invocation6' },
+        });
 
-        expect(response.body).toEqual(responseExpected);
+        expect(response.body.payload).toEqual(responseExpected);
       });
     });
+
     describe('Run one  - [GET /invocation/:id/run]', () => {
       it('should run correctly the invocation', async () => {
-        await request(app.getHttpServer())
-          .get(`${validRoute}/invocation11/run`)
-          .expect(HttpStatus.OK);
-      });
-      it('should validate all required fields', async () => {
-        const response = await request(app.getHttpServer())
-          .get(`${validRoute}/invocation10/run`)
-          .expect(HttpStatus.BAD_REQUEST);
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${validRoute}/invocation11/run`,
+        });
 
-        expect(response.body.message).toEqual(
+        expect(response.body).toEqual({
+          success: true,
+          statusCode: 200,
+          message: 'Invocation run',
+          timestamp: expect.any(String),
+          path: '/team/team0/invocation/invocation11/run',
+        });
+      });
+
+      it('should validate all required fields', async () => {
+        const response = await makeRequest({
+          app,
+          authCode: adminToken,
+          endpoint: `${validRoute}/invocation10/run`,
+        });
+
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
         );
       });
     });
+
     describe('Delete one  - [DELETE /invocation/:id]', () => {
       it('should delete one invocation associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .delete(`${validRoute}/invocation6`)
-          .expect(HttpStatus.OK);
+        const response = await makeRequest({
+          app,
+          method: 'delete',
+          authCode: adminToken,
+          endpoint: `${validRoute}/invocation6`,
+        });
 
-        expect(response.body).toEqual({});
+        expect(response.body).toEqual({
+          success: true,
+          statusCode: 202,
+          message: 'Invocation deleted',
+          payload: true,
+          timestamp: expect.any(String),
+          path: '/team/team0/invocation/invocation6',
+        });
       });
-      it('should throw error when try to delete one invocation not associated with a team', async () => {
-        const response = await request(app.getHttpServer())
-          .delete(`${invalidRoute}/invocation7`)
-          .expect(HttpStatus.BAD_REQUEST);
 
-        expect(response.body.message).toEqual(
+      it('should throw error when try to delete one invocation not associated with a team', async () => {
+        const response = await makeRequest({
+          app,
+          method: 'delete',
+          authCode: adminToken,
+          endpoint: `${invalidRoute}/invocation7`,
+        });
+
+        expect(response.body.details.description).toEqual(
           INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
         );
       });
-      it('should throw an unauthorize error when try to delete an invocation with a user without the required role', async () => {
-        const response = await request(app.getHttpServer())
-          .delete(`${unauthorizeRoute}/invocation11`)
-          .expect(HttpStatus.UNAUTHORIZED);
 
-        expect(response.body.message).toEqual(
+      it('should throw an unauthorize error when try to delete an invocation with a user without the required role', async () => {
+        const response = await makeRequest({
+          app,
+          method: 'delete',
+          authCode: adminToken,
+          endpoint: `${unauthorizeRoute}/invocation11`,
+        });
+
+        expect(response.body.details.description).toEqual(
           AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
         );
       });

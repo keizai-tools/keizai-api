@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import {
@@ -14,6 +15,8 @@ import {
 } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
+import { OwnerRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/owner-role.guard';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -28,11 +31,12 @@ export class TeamController {
 
   @Get('/')
   async findAllByUser(
-    @CurrentUser() user: User,
+    @CurrentUser() data: IResponse<User>,
   ): IPromiseResponse<TeamResponseDto[]> {
-    return this.teamService.findAllByUser(user.id);
+    return this.teamService.findAllByUser(data.payload.id);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Get('/:teamId')
   async findOne(
     @Param('teamId') teamId: string,
@@ -48,6 +52,7 @@ export class TeamController {
     return this.teamService.create(createTeamDto, data.payload);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Patch('/:teamId')
   async update(
     @CurrentUser() data: IResponse<User>,
@@ -60,6 +65,7 @@ export class TeamController {
     );
   }
 
+  @UseGuards(OwnerRoleGuard)
   @Delete('/:teamId')
   async delete(
     @CurrentUser() data: IResponse<User>,

@@ -10,4 +10,5 @@ export enum ROLE_RESPONSE {
   ROLE_SAVED = 'Role saved successfully',
   ROLE_UPDATED = 'Role updated successfully',
   ROLE_DELETED = 'Role deleted successfully',
+  USER_OR_TEAM_NOT_FOUND = 'User or team not found',
 }

@@ -1,17 +1,34 @@
-import { Keypair, xdr } from '@stellar/stellar-sdk';
-import axios from 'axios';
+import { xdr } from '@stellar/stellar-sdk';
 
+import { ICognitoAuthService } from '@/common/cognito/application/interface/cognito.service.interface';
 import {
   GetTransactionStatus,
-  SOROBAN_SERVER,
   SendTransactionStatus,
 } from '@/common/stellar_service/application/domain/soroban.enum';
+
+export const identityProviderServiceMock: jest.MockedObject<ICognitoAuthService> =
+  {
+    confirmPasswordReset: jest.fn(),
+    confirmUserRegistration: jest.fn(),
+    initiatePasswordReset: jest.fn(),
+    loginUser: jest.fn(),
+    refreshUserSession: jest.fn(),
+    registerUser: jest.fn(),
+    resendUserConfirmationCode: jest.fn(),
+  };
 
 export const contractExecutable: xdr.ContractExecutable = {
   switch: jest.fn(),
   wasmHash: jest.fn(),
   value: jest.fn(),
   toXDR: jest.fn(),
+};
+
+export const mockedContractService = {
+  runInvocation: jest.fn(),
+  verifyNetwork: jest.fn(),
+  changeNetwork: jest.fn(),
+  generateMethodsFromContractId: jest.fn(),
 };
 
 export const getTxFailed = {
@@ -85,18 +102,3 @@ export const contracts = {
   sac: 'CD6ZUMPDGJLXJGMKBEMATOFTES7B7VLWPEDKQKLNMWKV7IDJWYDKHK75',
   smart: 'CBZWGTHBZMJGXAQ3WTANSAGUNX5J6H4UHVVUMVZXMJIGMAHTOQVRFANO',
 };
-
-export async function getRandomKeypair() {
-  const keypair = Keypair.random();
-
-  const response = await axios.get(
-    `${SOROBAN_SERVER.FRIENDBOT_TESNET}${keypair.publicKey()}`,
-  );
-
-  if (response) {
-    return {
-      publicKey: keypair.publicKey(),
-      secretKey: keypair.secret(),
-    };
-  }
-}

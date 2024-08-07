@@ -7,14 +7,16 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
+import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
-import { Enviroment } from '@/modules/enviroment/domain/enviroment.domain';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
@@ -23,10 +25,12 @@ import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
 @Auth(AuthType.Bearer)
+@UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/collection')
 export class CollectionTeamController {
   constructor(private readonly collectionService: CollectionService) {}
 
+  @UseGuards(AdminRoleGuard)
   @Post('/')
   async create(
     @Body() collectionDto: CreateCollectionDto,
@@ -35,6 +39,7 @@ export class CollectionTeamController {
     return this.collectionService.createByTeam(collectionDto, teamId);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Post('/:id/environments')
   async createAllEnvironments(
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
@@ -93,6 +98,7 @@ export class CollectionTeamController {
     );
   }
 
+  @UseGuards(AdminRoleGuard)
   @Patch('/')
   async update(
     @Param('teamId') teamId: string,
@@ -101,11 +107,13 @@ export class CollectionTeamController {
     return this.collectionService.updateCollectionTeam(collectionDto, teamId);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Delete('/:id')
   async delete(@Param('id') id: string): IPromiseResponse<boolean> {
     return this.collectionService.delete(id);
   }
 
+  @UseGuards(AdminRoleGuard)
   @Delete('/:id/environments')
   async deleteAll(
     @Param('teamId') teamId: string,

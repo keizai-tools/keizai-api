@@ -1,6 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Team } from '@/modules/team/domain/team.domain';
+import { User } from '@/modules/user/domain/user.domain';
+
 import { IUserRoleToTeamRepository } from '../../application/interface/role.repository.interface';
 import { UserRoleToTeam } from '../../domain/role.domain';
 import { UserRoleToTeamSchema } from './role.schema';
@@ -53,6 +56,20 @@ export class UserRoleToTeamRepository implements IUserRoleToTeamRepository {
 
   async save(entity: UserRoleToTeam): Promise<UserRoleToTeam> {
     return this.repository.save(entity);
+  }
+
+  async validateUserAndTeam(entity: UserRoleToTeam): Promise<boolean> {
+    const user = await this.repository.manager.findOne(User, {
+      where: { id: entity.userId },
+    });
+    const team = await this.repository.manager.findOne(Team, {
+      where: { id: entity.teamId },
+    });
+
+    if (!user || !team) {
+      return false;
+    }
+    return true;
   }
 
   async saveAll(entities: UserRoleToTeam[]): Promise<UserRoleToTeam[]> {

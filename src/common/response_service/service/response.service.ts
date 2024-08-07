@@ -20,7 +20,8 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     message &&
       payload &&
-      process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
+      (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
       this.verbose(`Message: ${message}`);
 
     return {
@@ -69,7 +70,10 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
     error: Error | Error[];
     description?: string;
   }): void {
-    if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
+    if (
+      process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+      process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST
+    ) {
       if (description) this.error(`Message: ${description}`);
       if (Array.isArray(error)) {
         error.forEach((err) => {

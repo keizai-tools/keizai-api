@@ -11,6 +11,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
+import { Role } from '@/modules/authorization/domain/role.enum';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
@@ -26,9 +27,8 @@ import { TeamResponseDto } from '../dto/response-team.dto';
 import { UpdateTeamDto } from '../dto/update-team.dto';
 import { TEAM_RESPONSE } from '../exceptions/team-response.enum';
 import { ITeamData, IUpdateTeamData } from '../interface/team.base.interface';
-
 import {
-  type ITeamRepository,
+  ITeamRepository,
   TEAM_REPOSITORY,
 } from '../interface/team.repository.interface';
 import { TeamMapper } from '../mapper/team.mapper';
@@ -50,7 +50,6 @@ export class TeamService {
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
     private readonly teamMapper: TeamMapper,
-
   ) {
     this.responseService.setContext(TeamService.name);
   }
@@ -184,7 +183,7 @@ export class TeamService {
         return {
           teamId,
           userId: user.id,
-          role: 'ADMIN',
+          role: Role.ADMIN,
         };
       });
 
@@ -192,7 +191,7 @@ export class TeamService {
         userRoleToSave.push({
           teamId,
           userId: ownerId,
-          role: 'OWNER',
+          role: Role.OWNER,
         });
       }
 

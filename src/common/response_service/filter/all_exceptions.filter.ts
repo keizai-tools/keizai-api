@@ -22,7 +22,8 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     const loggedMessages = new Set<string>();
 
     if (
-      process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT &&
+      (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
       exception instanceof Error &&
       (Array.isArray(exception.message) ||
         typeof exception.message === 'string')

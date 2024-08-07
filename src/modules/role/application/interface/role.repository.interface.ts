@@ -10,4 +10,5 @@ export interface IUserRoleToTeamRepository {
   saveAll(entities: UserRoleToTeam[]): Promise<UserRoleToTeam[]>;
   update(team: UserRoleToTeam): Promise<UserRoleToTeam>;
   delete(id: string): Promise<boolean>;
+  validateUserAndTeam(entity: UserRoleToTeam): Promise<boolean>;
 }
