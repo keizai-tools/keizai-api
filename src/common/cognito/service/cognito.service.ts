@@ -71,6 +71,13 @@ export class CognitoService implements ICognitoAuthService {
       Username: email,
     };
 
+    if (process.env.AWS_COGNITO_REGION === 'local') {
+      return this.responseService.createResponse({
+        message: 'User not found',
+        payload: null,
+        type: 'NOT_FOUND',
+      });
+    }
     try {
       const command = new AdminGetUserCommand(params);
       const response = await this.cognitoClient.send(command);
