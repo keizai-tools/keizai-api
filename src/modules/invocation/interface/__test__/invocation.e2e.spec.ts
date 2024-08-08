@@ -293,7 +293,6 @@ describe('Invocation - [/invocation]', () => {
         endpoint: '/method/method0',
       });
 
-
       expect(responseMethod0.body.details.description).toEqual(
         METHOD_RESPONSE.METHOD_NOT_FOUND,
       );
@@ -870,7 +869,7 @@ describe('Invocation - [/invocation]', () => {
           authCode: adminToken,
           endpoint: '/method/method5',
         });
-        
+
         expect(responseMethod5.body.details.description).toEqual(
           METHOD_RESPONSE.METHOD_NOT_FOUND,
         );
