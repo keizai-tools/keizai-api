@@ -6,50 +6,61 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateInvitationDto } from '../application/dto/create-invitation.dto';
+import { ResponseInvitationDto } from '../application/dto/response-invitation.dto';
 import { UpdateInvitationDto } from '../application/dto/update-invitation.dto';
 import { InvitationService } from '../application/service/invitation.service';
 
+@Auth(AuthType.Bearer)
 @Controller('invitation')
 export class InvitationController {
   constructor(private readonly invitationService: InvitationService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
-  async findAllByUserId(@AuthUser() user: IUserResponse) {
-    return this.invitationService.findAllByUserId(user.id);
+  async findAllByUserId(
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<ResponseInvitationDto[]> {
+    return this.invitationService.findAllByUserId(data.payload.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+  async findOne(
+    @CurrentUser() _user: User,
+    @Param('id') id: string,
+  ): IPromiseResponse<ResponseInvitationDto> {
     return this.invitationService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
-  async create(@Body() invitationDto: CreateInvitationDto) {
+  async create(
+    @Body() invitationDto: CreateInvitationDto,
+  ): IPromiseResponse<ResponseInvitationDto> {
     return this.invitationService.create(invitationDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/')
-  async update(@Body() invitationDto: UpdateInvitationDto) {
+  async update(
+    @Body() invitationDto: UpdateInvitationDto,
+  ): IPromiseResponse<ResponseInvitationDto> {
     return this.invitationService.update(invitationDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  async delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+  async delete(
+    @CurrentUser() _user: User,
+    @Param('id') id: string,
+  ): IPromiseResponse<boolean> {
     return this.invitationService.delete(id);
   }
 }

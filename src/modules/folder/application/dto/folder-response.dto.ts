@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
 
 export class FolderResponseDto extends Base {

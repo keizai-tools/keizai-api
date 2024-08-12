@@ -3,54 +3,91 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import {
+  ContractErrorResponse,
+  RunInvocationResponse,
+} from '@/common/stellar_service/application/interface/soroban';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { Method } from '@/modules/method/domain/method.domain';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
+import { InvocationResponseDto } from '../application/dto/invocation-response.dto';
 import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
+@Auth(AuthType.Bearer)
 @Controller('invocation')
-@UseGuards(JwtAuthGuard)
 export class InvocationUserController {
   constructor(private readonly invocationService: InvocationService) {}
 
   @Post('')
   async create(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() createInvocationDto: CreateInvocationDto,
-  ) {
-    return this.invocationService.createByUser(createInvocationDto, user.id);
+  ): IPromiseResponse<InvocationResponseDto> {
+    return this.invocationService.createByUser(
+      createInvocationDto,
+      data.payload.id,
+    );
   }
 
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
+  findOne(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<InvocationResponseDto> {
     return this.invocationService.findOneByInvocationAndUserIdToDto(
       id,
-      user.id,
+      data.payload.id,
+    );
+  }
+
+  @Post('/:id/run')
+  runInvocation(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR?: string;
+    },
+  ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
+    return this.invocationService.runInvocationByUser(
+      id,
+      data.payload.id,
+      signedTransactionXDR,
     );
   }
 
   @Get('/:id/prepare')
-  prepareInvocation(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.prepareInvocationByUser(id, user.id);
+  prepareInvocation(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<string> {
+    return this.invocationService.prepareInvocationByUser(id, data.payload.id);
   }
 
   @Get(':id/methods')
-  findAllMethods(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.findAllMethodsByUser(id, user.id);
+  findAllMethods(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<Method[]> {
+    return this.invocationService.findAllMethodsByUser(id, data.payload.id);
   }
 
   @Patch('')
@@ -63,32 +100,19 @@ export class InvocationUserController {
   )
   update(
     @Body() updateInvocationDto: UpdateInvocationDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.invocationService.updateByUser(updateInvocationDto, user.id);
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<InvocationResponseDto> {
+    return this.invocationService.updateByUser(
+      updateInvocationDto,
+      data.payload.id,
+    );
   }
 
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.invocationService.deleteByUser(id, user.id);
-  }
-
-  @Post('/:id/run')
-  @HttpCode(200)
-  runInvocation(
-    @AuthUser() user: IUserResponse,
+  delete(
+    @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-    @Body()
-    {
-      signedTransactionXDR,
-    }: {
-      signedTransactionXDR?: string;
-    },
-  ) {
-    return this.invocationService.runInvocationByUser(
-      id,
-      user.id,
-      signedTransactionXDR,
-    );
+  ): IPromiseResponse<boolean> {
+    return this.invocationService.deleteByUser(id, data.payload.id);
   }
 }

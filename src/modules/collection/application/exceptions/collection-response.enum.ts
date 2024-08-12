@@ -8,4 +8,10 @@ export enum COLLECTION_RESPONSE {
   COLLECTION_FAILED_SAVE = 'Could not save collection, please try again',
   COLLECTION_FAILED_DELETED = 'Could not deleted collection, please try again',
   COLLECTION_FAILED_UPDATED = 'Could not updated collection, please try again',
+  COLLECTIONS_FOUND = 'Collections found',
+  COLLECTION_CREATED = 'Collection created',
+  COLLECTION_DELETED = 'Collection deleted',
+  COLLECTION_FOUND = 'Collection found',
+  ENVIRONMENTS_CREATED = 'Environments created',
+  COLLECTION_UPDATED = 'Collection updated',
 }

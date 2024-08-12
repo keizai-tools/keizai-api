@@ -8,7 +8,7 @@ export class InvocationException {
   validateInvocation(
     invocation: Invocation,
     updateInvocationDto: UpdateInvocationDto,
-  ) {
+  ): void {
     if (!invocation) {
       throw new NotFoundException(
         INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,

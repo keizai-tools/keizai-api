@@ -3,14 +3,9 @@ import { join } from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-dotenv.config();
+import { ENVIRONMENT } from '@/common/base/enum/common.enum';
 
-export enum ENVIRONMENT {
-  PRODUCTION = 'production',
-  STAGING = 'staging',
-  DEVELOPMENT = 'development',
-  AUTOMATED_TEST = 'automated_tests',
-}
+dotenv.config();
 
 const production: DataSourceOptions = {
   type: 'mysql',

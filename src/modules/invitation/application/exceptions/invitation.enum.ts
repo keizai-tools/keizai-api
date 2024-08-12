@@ -7,4 +7,9 @@ export enum INVITATION_RESPONSE {
   INVITATION_FAILED_SAVE = 'Could not save invitation, please try again',
   INVITATION_FAILED_DELETED = 'Could not deleted invitation, please try again',
   INVITATION_FAILED_UPDATED = 'Could not updated invitation, please try again',
+  INVITATIONS_FOUND = 'Invitations found',
+  INVITATION_FOUND = 'Invitation found',
+  INVITATION_CREATED = 'Invitation created',
+  INVITATION_UPDATED = 'Invitation updated',
+  INVITATION_DELETED = 'Invitation deleted',
 }

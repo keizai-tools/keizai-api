@@ -1,4 +1,4 @@
-import { Base } from '@/common/domain/base.domain';
+import { Base } from '@/common/base/domain/base.domain';
 import { Folder } from '@/modules/folder/domain/folder.domain';
 import { Method } from '@/modules/method/domain/method.domain';
 
@@ -41,11 +41,4 @@ export class Invocation extends Base {
     this.id = id;
     this.selectedMethod = selectedMethod;
   }
-
-  getContractIdValue = (inputString: string): string => {
-    // this regex outputs the {{ }} if the contract comes as an environment
-    const regex = /{{(.*?)}}/g;
-    const contractId = inputString.replace(regex, (match, text) => text);
-    return contractId;
-  };
 }
