@@ -16,13 +16,11 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-
+  status =
+    process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
+    process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST;
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
-    message &&
-      payload &&
-      (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
-      this.verbose(`Message: ${message}`);
+    message && payload && this.status && this.verbose(`Message: ${message}`);
 
     return {
       success: HttpStatus[type]
@@ -71,18 +69,13 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
     error: Error | Error[];
     description?: string;
   }): void {
-    if (
-      process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-      process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST
-    ) {
-      if (description) this.error(`Message: ${description}`);
-      if (Array.isArray(error)) {
-        error.forEach((err) => {
-          if (err && err.toString().length > 0) this.error(err.toString());
-        });
-      } else if (error && error.toString().length > 0) {
-        this.error(error.toString());
-      }
+    if (description) this.error(`Message: ${description}`);
+    if (Array.isArray(error)) {
+      error.forEach((err) => {
+        if (err && err.toString().length > 0) this.error(err.toString());
+      });
+    } else if (error && error.toString().length > 0) {
+      this.error(error.toString());
     }
   }
 
