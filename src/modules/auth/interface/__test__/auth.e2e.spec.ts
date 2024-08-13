@@ -108,10 +108,9 @@ describe('Authentication Module', () => {
           expect.objectContaining({
             success: true,
             statusCode: 201,
-            message: `Create user success: with id ${response.body.payload.id}`,
+            message: `User successfully registered`,
             payload: expect.objectContaining({
               email: 'testing@testing.com',
-              isVerified: true,
               externalId: '00000000-0000-0000-0000-000000000001',
               id: expect.any(String),
               updatedAt: expect.any(String),
@@ -164,6 +163,9 @@ describe('Authentication Module', () => {
       });
 
       it('should return 400 when provided email already exists', async () => {
+        identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
+          payload: '00000000-0000-0000-0000-00000000000X',
+        });
         const userRegistrationDetails = {
           email: 'testing@testing.com',
           password: '123456789Testing*',
@@ -293,9 +295,9 @@ describe('Authentication Module', () => {
         });
 
         expect(response.body).toEqual({
-          statusCode: 202,
+          statusCode: 200,
           timestamp: expect.any(String),
-          message: 'User updated',
+          message: 'User successfully confirmed',
           path: '/auth/confirm-registration',
           success: true,
           payload: {
@@ -304,7 +306,6 @@ describe('Authentication Module', () => {
             updatedAt: expect.any(String),
             email: 'admin@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
-            isVerified: true,
           },
         });
       });
@@ -551,6 +552,9 @@ describe('Authentication Module', () => {
             isValid: jest.fn().mockReturnValue(true),
           },
         });
+        identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
+          payload: '00000000-0000-0000-0000-000000000001',
+        });
 
         const user = {
           email: 'testing@testing.com',
@@ -580,7 +584,6 @@ describe('Authentication Module', () => {
               createdAt: expect.any(String),
               email: 'testing@testing.com',
               id: expect.any(String),
-              isVerified: true,
               updatedAt: expect.any(String),
             },
           },
@@ -672,6 +675,9 @@ describe('Authentication Module', () => {
         identityProviderServiceMock.loginUser.mockRejectedValueOnce(
           new UnauthorizedException('Invalid credentials'),
         );
+        identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
+          payload: '00000000-0000-0000-0000-000000000001',
+        });
 
         const user = {
           email: 'testing@testing.com',
@@ -680,7 +686,6 @@ describe('Authentication Module', () => {
 
         const response = await makeRequest({
           app,
-
           endpoint: '/auth/login',
           method: 'post',
           data: user as unknown as DataObject,
@@ -749,6 +754,9 @@ describe('Authentication Module', () => {
         identityProviderServiceMock.loginUser.mockRejectedValueOnce(
           new ForbiddenException(CognitoMessage.USER_NOT_CONFIRMED_ERROR),
         );
+        identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
+          payload: '00000000-0000-0000-0000-000000000001',
+        });
 
         const user = {
           email: 'testing@testing.com',
@@ -830,6 +838,9 @@ describe('Authentication Module', () => {
         identityProviderServiceMock.loginUser.mockRejectedValueOnce(
           new UnauthorizedException(CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR),
         );
+        identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
+          payload: '00000000-0000-0000-0000-000000000001',
+        });
 
         const user = {
           email: 'testing@testing.com',
