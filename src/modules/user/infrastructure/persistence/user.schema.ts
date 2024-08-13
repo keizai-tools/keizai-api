@@ -19,11 +19,6 @@ export const UserSchema = new EntitySchema<User>({
       type: 'varchar',
       unique: true,
     },
-
-    isVerified: {
-      type: 'boolean',
-      default: false,
-    },
   },
   relations: {
     collections: {

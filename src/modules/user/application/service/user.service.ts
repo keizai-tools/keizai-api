@@ -51,8 +51,8 @@ export class UserService implements IUserService {
         throw new NotFoundException(ServiceMessage.NOT_FOUND);
       }
       return this.responseService.createResponse({
-        type: 'OK',
-        message: ServiceMessage.FOUND,
+        type: user ? 'OK' : 'NOT_FOUND',
+        message: user ? ServiceMessage.FOUND : ServiceMessage.NOT_FOUND,
         payload: user,
       });
     } catch (error) {
