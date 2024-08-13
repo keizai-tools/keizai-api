@@ -2,6 +2,7 @@ import { CognitoUserSession, ISignUpResult } from 'amazon-cognito-identity-js';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 
+import { ChangePasswordDto } from '../dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '../dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '../dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '../dto/resend_confirmation_details.dto';
@@ -36,4 +37,5 @@ export interface ICognitoAuthService {
     sessionRefreshDetails: SessionRefreshDetailsDto,
   ): IPromiseResponse<ICognitoRefreshSessionResponse>;
   getUserSub(email: string): IPromiseResponse<string | null>;
+  changePassword(changePassword: ChangePasswordDto): IPromiseResponse<void>;
 }

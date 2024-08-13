@@ -16,6 +16,9 @@ export enum CognitoMessage {
   PASSWORD_RESET_CONFIRMATION_SUCCESS = 'Password reset confirmation successfully',
   SESSION_REFRESHED_SUCCESS = 'Session refreshed successfully',
   USER_NOT_FOUND_ERROR = 'User not found',
+  USER_EXISTS = 'User exists',
+  PASSWORD_CHANGED_SUCCESS = 'Password changed successfully',
+  USER_DOES_NOT_HAVE_A_SUB_ATTRIBUTE = 'User does not have a sub attribute',
 }
 
 export enum CognitoError {

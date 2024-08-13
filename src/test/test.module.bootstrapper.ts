@@ -16,6 +16,7 @@ export const identityProviderServiceMock: jest.MockedObject<ICognitoAuthService>
     registerUser: jest.fn(),
     resendUserConfirmationCode: jest.fn(),
     getUserSub: jest.fn(),
+    changePassword: jest.fn(),
   };
 
 export const contractExecutable: xdr.ContractExecutable = {
