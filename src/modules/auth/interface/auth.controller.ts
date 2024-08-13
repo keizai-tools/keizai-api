@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { ChangePasswordDto } from '@/common/cognito/application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '@/common/cognito/application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '@/common/cognito/application/dto/resend_confirmation_details.dto';
@@ -83,5 +84,12 @@ export class AuthController {
     accessToken: string;
   }> {
     return this.authenticationService.refreshUserSession(sessionRefreshDetails);
+  }
+
+  @Patch('/change-password')
+  async changePassword(
+    @Body() changePassword: ChangePasswordDto,
+  ): IPromiseResponse<void> {
+    return this.authenticationService.changePassword(changePassword);
   }
 }
