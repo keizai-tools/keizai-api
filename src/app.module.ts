@@ -19,6 +19,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
 import { MethodModule } from './modules/method/method.module';
 import { UserRoleToTeamModule } from './modules/role/role.module';
+import { SystemStatusModule } from './modules/systemStatus/systemStatus.module';
 import { TeamModule } from './modules/team/team.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -51,6 +52,7 @@ import { UserModule } from './modules/user/user.module';
     UserRoleToTeamModule,
     TeamModule,
     UserModule,
+    SystemStatusModule,
   ],
   controllers: [],
   providers: [],
