@@ -132,11 +132,14 @@ export class InvocationService {
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
+
+      const response = await this.runInvocationTransaction(
+        invocation,
+        transactionXDR,
+      );
+
       return this.responseService.createResponse({
-        payload: await this.runInvocationTransaction(
-          invocation,
-          transactionXDR,
-        ),
+        payload: response,
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'OK',
       });
@@ -557,12 +560,15 @@ export class InvocationService {
         this.invocationMapper.fromUpdateDtoToInvocationValues(
           updateInvocationDto,
         );
+
       const invocationMapped =
         this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 
-      const invocationUpdated = await this.invocationRepository.update(
-        invocationMapped,
-      );
+      const invocationUpdated = await this.invocationRepository.update({
+        ...invocationMapped,
+        network,
+      });
+
       if (!invocationUpdated) {
         throw new BadRequestException(
           INVOCATION_RESPONSE.Invocation_NOT_UPDATED,
