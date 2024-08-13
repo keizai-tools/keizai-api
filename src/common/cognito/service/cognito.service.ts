@@ -29,6 +29,7 @@ import {
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
 
+import { ChangePasswordDto } from '../application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '../application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '../application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '../application/dto/resend_confirmation_details.dto';
@@ -71,6 +72,22 @@ export class CognitoService implements ICognitoAuthService {
       Username: email,
     };
 
+    if (process.env.AWS_COGNITO_REGION === 'local') {
+      const sub = await this.getUserSubLocal(email);
+      if (sub) {
+        return this.responseService.createResponse({
+          message: CognitoMessage.USER_EXISTS,
+          payload: sub,
+          type: 'OK',
+        });
+      } else {
+        return this.responseService.createResponse({
+          message: CognitoMessage.USER_DOES_NOT_HAVE_A_SUB_ATTRIBUTE,
+          payload: null,
+          type: 'NOT_FOUND',
+        });
+      }
+    }
     try {
       const command = new AdminGetUserCommand(params);
       const response = await this.cognitoClient.send(command);
@@ -81,13 +98,13 @@ export class CognitoService implements ICognitoAuthService {
 
       if (subAttribute) {
         return this.responseService.createResponse({
-          message: 'User exists',
+          message: CognitoMessage.USER_EXISTS,
           payload: subAttribute.Value,
           type: 'OK',
         });
       } else {
         return this.responseService.createResponse({
-          message: 'User does not have a sub attribute',
+          message: CognitoMessage.USER_DOES_NOT_HAVE_A_SUB_ATTRIBUTE,
           payload: null,
           type: 'NOT_FOUND',
         });
@@ -95,7 +112,7 @@ export class CognitoService implements ICognitoAuthService {
     } catch (error) {
       if (error.name === 'UserNotFoundException') {
         return this.responseService.createResponse({
-          message: 'User not found',
+          message: CognitoMessage.USER_NOT_FOUND_ERROR,
           payload: null,
           type: 'NOT_FOUND',
         });
@@ -187,6 +204,7 @@ export class CognitoService implements ICognitoAuthService {
             },
             onFailure: (error: ICognitoRequestError) => {
               if (error.code === CognitoError.USER_NOT_CONFIRMED_EXCEPTION) {
+                this.resendUserConfirmationCode({ email });
                 return reject(
                   new ForbiddenException(
                     CognitoMessage.USER_NOT_CONFIRMED_ERROR,
@@ -446,6 +464,51 @@ export class CognitoService implements ICognitoAuthService {
     }
   }
 
+  async changePassword(
+    changePassword: ChangePasswordDto,
+  ): IPromiseResponse<void> {
+    const { email, newPassword, oldPassword } = changePassword;
+    const userCognito = new CognitoUser({
+      Username: email,
+      Pool: this.userPool,
+    });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        userCognito.changePassword(
+          oldPassword,
+          newPassword,
+          (error: ICognitoRequestError) => {
+            if (error) {
+              if (error.code === CognitoError.INVALID_PASSWORD_EXCEPTION) {
+                return reject(
+                  new BadRequestException(
+                    CognitoMessage.PASSWORD_VALIDATION_ERROR,
+                  ),
+                );
+              } else if (error.code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
+                return reject(
+                  new UnauthorizedException(
+                    CognitoMessage.INVALID_PASSWORD_ERROR,
+                  ),
+                );
+              } else {
+                return reject(new InternalServerErrorException(error.code));
+              }
+            }
+            return resolve();
+          },
+        );
+      });
+      return this.responseService.createResponse({
+        message: CognitoMessage.PASSWORD_CHANGED_SUCCESS,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   private async getConfirmationCodeFromLocalPool(
     email: string,
   ): Promise<string | undefined> {
@@ -469,6 +532,32 @@ export class CognitoService implements ICognitoAuthService {
     }
   }
 
+  private async getUserSubLocal(email: string): Promise<string | null> {
+    try {
+      const data: string = fs.readFileSync(
+        process.env.COGNITO_LOCAL_PATH,
+        'utf-8',
+      );
+      const jsonData: {
+        Users: {
+          [key: string]: {
+            Attributes: Array<{
+              Name: string;
+              Value: string;
+            }>;
+          };
+        };
+      } = JSON.parse(data);
+
+      const userAttributes = jsonData.Users?.[email]?.Attributes;
+
+      const subAttribute = userAttributes?.find((attr) => attr.Name === 'sub');
+
+      return subAttribute?.Value || null;
+    } catch (err) {
+      this.handleError(err);
+    }
+  }
   private handleError(error: Error): void {
     this.responseService.errorHandler({
       type: 'INTERNAL_SERVER_ERROR',
