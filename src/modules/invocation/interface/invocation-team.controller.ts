@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
@@ -18,8 +19,8 @@ import {
 } from '@/common/stellar_service/application/interface/soroban';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
-import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
+import { AdminRoleGuard } from '@/modules/authorization/guard/admin-role.guard';
+import { AuthTeamGuard } from '@/modules/authorization/guard/auth-team.guard';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
@@ -28,6 +29,7 @@ import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Invocation Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/invocation')
 export class InvocationTeamController {
