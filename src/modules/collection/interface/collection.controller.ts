@@ -8,6 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -27,6 +28,7 @@ import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Collection')
 @Controller('collection')
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}

@@ -9,12 +9,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
-import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
+import { AdminRoleGuard } from '@/modules/authorization/guard/admin-role.guard';
+import { AuthTeamGuard } from '@/modules/authorization/guard/auth-team.guard';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
@@ -25,6 +26,7 @@ import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Collection Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/collection')
 export class CollectionTeamController {
