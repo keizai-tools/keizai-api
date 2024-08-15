@@ -2,9 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
 
-import { PaginationDto } from '@/common/base/application/dto/pagination.dto';
-import { IFindAllResponse } from '@/common/base/interface/common.interface';
-
 import { IUpdateUserResponse } from '../../application/interfaces/user.common.interfaces';
 import { IUserRepository } from '../../application/interfaces/user.repository.interfaces';
 import { User } from '../../domain/user.domain';
@@ -61,19 +58,6 @@ export class UserRepository implements IUserRepository {
       where: { externalId },
       cache: true,
     });
-  }
-
-  async findAll({
-    skip = 0,
-    take = 20,
-  }: PaginationDto): Promise<IFindAllResponse<User>> {
-    const [users, total] = await this.userRepository.findAndCount({
-      skip,
-      take,
-      cache: true,
-    });
-
-    return { data: users, total, take, skip };
   }
 
   async findById(id: string): Promise<User> {
