@@ -3,7 +3,6 @@ import {
   Catch,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 
@@ -13,8 +12,6 @@ import { generateErrorMessages } from '../utils/utils';
 
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -36,7 +33,6 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
               message.includes(existingMessage),
           )
         ) {
-          this.logger.error(message);
           loggedMessages.add(message);
         }
       };

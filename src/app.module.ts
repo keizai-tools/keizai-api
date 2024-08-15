@@ -12,6 +12,7 @@ import { CommonModule } from '@common/common.module';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthorizationModule } from './modules/authorization/authorization.module';
+import { BlockchainNetworkStatusModule } from './modules/blockchainNetworkStatus/blockchainNetworkStatus.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
 import { FolderModule } from './modules/folder/folder.module';
@@ -51,6 +52,7 @@ import { UserModule } from './modules/user/user.module';
     UserRoleToTeamModule,
     TeamModule,
     UserModule,
+    BlockchainNetworkStatusModule,
   ],
   controllers: [],
   providers: [],
