@@ -87,6 +87,7 @@ export class CognitoService implements ICognitoAuthService {
           type: 'NOT_FOUND',
         });
       }
+
     }
     try {
       const command = new AdminGetUserCommand(params);

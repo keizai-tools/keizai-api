@@ -1,5 +1,26 @@
 {
   "Users": {
+    "test@test.com": {
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "b14bd0d0-fd8d-4e02-b7fb-0ff540896bea"
+        },
+        {
+          "Name": "email",
+          "Value": "test@test.com"
+        }
+      ],
+      "Enabled": true,
+      "Password": "12345678Test*",
+      "RefreshTokens": [
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOnVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSIsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsImlhdCI6MTcyMzEzMzM1NCwianRpIjoiYmZkYzEwZjQtZThlOS00YzE1LTg1NWItMWU2MGQzMmVkYWRjIiwiZXhwIjoxNzIzNzM4MTU0LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkyMjkvbG9jYWxfN2NTTUdaNmgifQ.QFHfTS4uPmt4QMGkSYOPd1SSxYPway2UGRrljbfw7USpY4iy8bnHsWz1jSfIS0gdTRlR83CkSaPzp_3GL2H53YDf7IpPgZzyIo5veKaZEXlcCf8fsmc_2Vs9Oss411Smas6GCyFHOZyV7aCQnalbbFIRwcaFj85mvKzkca5RdQtvRgy2DDi-PfuL7u_QY60ebPI112G-CUZXXrWg9CguKlu85mM3J0LTuztMwDFbRcy-zcKEoLT-BRTxaFNPuhH9qlUtRqxwN1fp4Rzk166rSf0-vvI5IhOzLve4qOhIRT3emoOEi8RXJHB6-IrgJxngSAcY0WWHOmaDyP126fwSwg"
+      ],
+      "UserCreateDate": "2024-08-08T16:09:05.647Z",
+      "UserLastModifiedDate": "2024-08-08T16:09:05.678Z",
+      "Username": "test@test.com",
+      "UserStatus": "CONFIRMED"
+    }
   },
   "Options": {
     "Policies": {
