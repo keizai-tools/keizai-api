@@ -84,27 +84,84 @@ export class StellarAdapter implements IStellarAdapter {
     return xdr.ScSpecEntry.fromXDR(base64String, 'base64');
   }
 
-  async getInstanceValue(contractId: string): Promise<xdr.ContractExecutable> {
+  createInstanceKey(contractId: string): xdr.LedgerKey {
     try {
-      const instanceKey = xdr.LedgerKey.contractData(
+      return xdr.LedgerKey.contractData(
         new xdr.LedgerKeyContractData({
           contract: new Address(contractId).toScAddress(),
           key: xdr.ScVal.scvLedgerKeyContractInstance(),
           durability: xdr.ContractDataDurability.persistent(),
         }),
       );
-      const response = await this.server.getLedgerEntries(instanceKey);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 
-      if (response.entries.length === 0) {
-        throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
+  async checkContractNetwork(contractId: string): Promise<string> {
+    try {
+      const networks = [
+        NETWORK.SOROBAN_FUTURENET,
+        NETWORK.SOROBAN_TESTNET,
+        NETWORK.SOROBAN_MAINNET,
+      ];
+
+      for (const network of networks) {
+        this.changeNetwork(network);
+        const instanceKey = this.createInstanceKey(contractId);
+        const response = await this.server.getLedgerEntries(instanceKey);
+        if (response.entries.length > 0) {
+          return network;
+        }
       }
 
-      const dataEntry = response.entries[0].val
+      throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async contractExists(
+    contractId: string,
+    currentNetwork: string,
+  ): Promise<SorobanRpc.Api.GetLedgerEntriesResponse> {
+    try {
+      if (currentNetwork === 'AUTO_DETECT') {
+        const network = await this.checkContractNetwork(contractId);
+        this.changeNetwork(network);
+        const instanceKey = this.createInstanceKey(contractId);
+        const response = await this.server.getLedgerEntries(instanceKey);
+        if (response.entries.length > 0) {
+          return response;
+        }
+        throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
+      } else {
+        const instanceKey = this.createInstanceKey(contractId);
+        const response = await this.server.getLedgerEntries(instanceKey);
+        if (response.entries.length === 0) {
+          throw new BadRequestException(
+            SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND,
+          );
+        }
+        return response;
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async getInstanceValue(
+    contractId: string,
+    currentNetwork: string,
+  ): Promise<xdr.ContractExecutable> {
+    try {
+      const response = await this.contractExists(contractId, currentNetwork);
+
+      return response.entries[0].val
         .contractData()
         .val()
         .instance()
         .executable();
-      return dataEntry;
     } catch (error) {
       this.handleError(error);
     }

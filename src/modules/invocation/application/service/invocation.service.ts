@@ -132,11 +132,14 @@ export class InvocationService {
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
+
+      const response = await this.runInvocationTransaction(
+        invocation,
+        transactionXDR,
+      );
+
       return this.responseService.createResponse({
-        payload: await this.runInvocationTransaction(
-          invocation,
-          transactionXDR,
-        ),
+        payload: response,
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'OK',
       });
@@ -191,14 +194,17 @@ export class InvocationService {
               invocation.folder.collectionId,
             ));
 
-          const envsValues: { name: string; value: string }[] =
-            envsByName &&
-            envsByName?.map((env) => {
-              return {
-                name: env.name,
-                value: env.value,
-              };
-            });
+          const envsValues: { name: string; value: string }[] = Array.isArray(
+            envsByName,
+          )
+            ? envsByName.map((env) => {
+                return {
+                  name: env.name,
+                  value: env.value,
+                };
+              })
+            : [];
+
           if (envsValues.length > 0) {
             param.value = invocation.selectedMethod.replaceParamValue(
               envsValues,
@@ -315,7 +321,7 @@ export class InvocationService {
         postInvocation: createFolderDto.postInvocation,
         contractId: createFolderDto.contractId,
         folderId: createFolderDto.folderId,
-        network: createFolderDto.network || NETWORK.SOROBAN_FUTURENET,
+        network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
       };
 
       const invocation =
@@ -492,6 +498,8 @@ export class InvocationService {
         updateInvocationDto,
       );
 
+      let network: string;
+
       if (updateInvocationDto.contractId) {
         try {
           const contractId = await this.getContractAddress(
@@ -499,7 +507,10 @@ export class InvocationService {
             updateInvocationDto.contractId,
           );
 
-          this.contractService.verifyNetwork(invocation.network);
+          network = await this.contractService.verifyNetwork(
+            invocation.network,
+            contractId,
+          );
 
           const generatedMethods =
             await this.contractService.generateMethodsFromContractId(
@@ -549,12 +560,15 @@ export class InvocationService {
         this.invocationMapper.fromUpdateDtoToInvocationValues(
           updateInvocationDto,
         );
+
       const invocationMapped =
         this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 
-      const invocationUpdated = await this.invocationRepository.update(
-        invocationMapped,
-      );
+      const invocationUpdated = await this.invocationRepository.update({
+        ...invocationMapped,
+        network,
+      });
+
       if (!invocationUpdated) {
         throw new BadRequestException(
           INVOCATION_RESPONSE.Invocation_NOT_UPDATED,

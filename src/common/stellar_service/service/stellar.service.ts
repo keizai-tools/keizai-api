@@ -70,12 +70,23 @@ export class StellarService implements IStellarService {
     this.SCSpecTypeMap = SCSpecTypeMap;
   }
 
-  verifyNetwork(selectedNetwork: string): void {
+  async verifyNetwork(
+    selectedNetwork: string,
+    contractId?: string,
+  ): Promise<string> {
     try {
       if (selectedNetwork !== this.currentNetwork) {
         this.stellarAdapter.changeNetwork(selectedNetwork);
         this.currentNetwork = selectedNetwork;
       }
+
+      if (selectedNetwork === NETWORK.SOROBAN_AUTO_DETECT && contractId) {
+        const response = await this.stellarAdapter.checkContractNetwork(
+          contractId,
+        );
+        this.currentNetwork = response;
+      }
+      return this.currentNetwork;
     } catch (error) {
       this.handleError(error);
     }
@@ -246,6 +257,7 @@ export class StellarService implements IStellarService {
     try {
       const instanceValue = await this.stellarAdapter.getInstanceValue(
         contractId,
+        this.currentNetwork,
       );
       if (
         instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
@@ -275,6 +287,7 @@ export class StellarService implements IStellarService {
     try {
       const instanceValue = await this.stellarAdapter.getInstanceValue(
         contractId,
+        this.currentNetwork,
       );
 
       if (

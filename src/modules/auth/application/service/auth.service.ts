@@ -5,6 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 
+import { ChangePasswordDto } from '@/common/cognito/application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '@/common/cognito/application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '@/common/cognito/application/dto/resend_confirmation_details.dto';
@@ -40,44 +41,87 @@ export class AuthService {
     this.responseService.setContext(AuthService.name);
   }
 
+  async changePassword(
+    changePasswordDetails: ChangePasswordDto,
+  ): IPromiseResponse<void> {
+    try {
+      const { email } = changePasswordDetails;
+      await this.userService.getUserByEmail(email);
+
+      const { message, type } =
+        await this.identityProviderService.changePassword(
+          changePasswordDetails,
+        );
+
+      return this.responseService.createResponse({
+        type,
+        message,
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   async registerUser(
     userRegistrationDetails: UserRegistrationDetailsDto,
   ): IPromiseResponse<User> {
     try {
       const { email, password } = userRegistrationDetails;
-
-      const localResult = await this.userService.getUserByEmail(email);
-      const local = localResult?.payload;
-
-      if (local) {
-        throw new ConflictException('User already exists');
-      }
-
-      const cognitoResult = await this.identityProviderService.getUserSub(
+      const userExists = await this.validateUserExists({ email });
+      const { payload } = await this.handleUserRegistration({
         email,
-      );
-      const cognito = cognitoResult?.payload;
-
-      if (cognito) {
-        return await this.userService.createUser({
-          ...userRegistrationDetails,
-          externalId: cognito,
-        });
-      }
-
-      const result = await this.identityProviderService.registerUser({
-        email,
+        userExists,
         password,
       });
-
-      return await this.userService.createUser({
-        ...userRegistrationDetails,
-        externalId: result.payload.userSub,
+      return this.responseService.createResponse({
+        type: 'CREATED',
+        message: 'User successfully registered',
+        payload,
       });
     } catch (error) {
-      if (error.message !== 'User not found') {
-        this.handleError(error);
-      }
+      this.handleError(error);
+    }
+  }
+
+  async loginUser({
+    email,
+    password,
+  }: UserLoginCredentialsDto): IPromiseResponse<{
+    accessToken: string;
+    refreshToken: string;
+    idToken: string;
+    user: User;
+  }> {
+    try {
+      const userExists = await this.validateUserExists({ email });
+
+      await this.handleUserRegistration({
+        email,
+        userExists,
+        password,
+        login: true,
+      });
+
+      const { payload: user } = await this.userService.getUserByEmail(email);
+
+      const { payload, type, message } =
+        await this.identityProviderService.loginUser({
+          email,
+          password,
+        });
+
+      return this.responseService.createResponse({
+        type,
+        message,
+        payload: {
+          accessToken: payload.getAccessToken().getJwtToken(),
+          refreshToken: payload.getRefreshToken().getToken(),
+          idToken: payload.getIdToken().getJwtToken(),
+          user,
+        },
+      });
+    } catch (error) {
+      this.handleError(error);
     }
   }
 
@@ -142,62 +186,6 @@ export class AuthService {
     }
   }
 
-  async loginUser(
-    userLoginCredentials: UserLoginCredentialsDto,
-  ): IPromiseResponse<{
-    accessToken: string;
-    refreshToken: string;
-    idToken: string;
-    user: User;
-  }> {
-    try {
-      const { email, password } = userLoginCredentials;
-
-      const { payload: user } = await this.userService.getUserByEmail(email);
-
-      const { payload, type, message } =
-        await this.identityProviderService.loginUser({
-          email,
-          password,
-        });
-
-      if (!user && type !== 'OK') {
-        throw new BadRequestException('User not found');
-      }
-
-      if (!user) {
-        const newUser = await this.registerUser({
-          email,
-          password,
-        });
-
-        return this.responseService.createResponse({
-          type,
-          message,
-          payload: {
-            accessToken: payload.getAccessToken().getJwtToken(),
-            refreshToken: payload.getRefreshToken().getToken(),
-            idToken: payload.getIdToken().getJwtToken(),
-            user: newUser.payload,
-          },
-        });
-      }
-
-      return this.responseService.createResponse({
-        type,
-        message,
-        payload: {
-          accessToken: payload.getAccessToken().getJwtToken(),
-          refreshToken: payload.getRefreshToken().getToken(),
-          idToken: payload.getIdToken().getJwtToken(),
-          user,
-        },
-      });
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   async confirmUserRegistration(
     userConfirmationDetails: UserConfirmationDetailsDto,
   ): IPromiseResponse<User> {
@@ -209,15 +197,12 @@ export class AuthService {
         confirmationCode,
       });
 
-      const { payload, type, message } = await this.userService.updateUser({
-        email: email,
-        isVerified: true,
-      });
+      const { payload } = await this.userService.getUserByEmail(email);
 
       return this.responseService.createResponse({
-        type,
-        message,
-        payload: payload.newUser,
+        type: 'OK',
+        message: 'User successfully confirmed',
+        payload: payload,
       });
     } catch (error) {
       this.handleError(error);
@@ -245,6 +230,107 @@ export class AuthService {
           accessToken: payload.idToken.jwtToken,
         },
       });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async validateUserExists({
+    email,
+  }: {
+    email: string;
+  }): Promise<{ cognito: boolean; local: boolean }> {
+    try {
+      const localUser = await this.userService.getUserByEmail(email);
+      const cognitoUserSub = await this.identityProviderService.getUserSub(
+        email,
+      );
+
+      return {
+        local: !!localUser?.payload,
+        cognito: !!cognitoUserSub?.payload,
+      };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async handleUserRegistration({
+    email,
+    userExists: { cognito, local },
+    password,
+    login = false,
+  }: {
+    email: string;
+    userExists: { cognito: boolean; local: boolean };
+    password: string;
+    login?: boolean;
+  }): IPromiseResponse<User> {
+    try {
+      if (cognito && local && !login) {
+        throw new ConflictException('User already exists');
+      }
+
+      if (cognito && !local) {
+        return await this.userService.createUser({
+          email,
+          externalId: (
+            await this.identityProviderService.getUserSub(email)
+          ).payload,
+        });
+      }
+
+      if (local && !cognito) {
+        const response = await this.identityProviderService.registerUser({
+          email,
+          password,
+        });
+        const userSub = response?.payload?.userSub;
+
+        if (!userSub) {
+          throw new BadRequestException('User not registered in Cognito');
+        }
+
+        await this.userService.updateUser({ email, externalId: userSub });
+
+        return await this.userService.getUserByEmail(email);
+      }
+
+      if (login) {
+        return await this.userService.getUserByEmail(email);
+      }
+
+      return await this.registerUserInBothProviders({ email, password });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async registerUserInBothProviders({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }): Promise<IPromiseResponse<User>> {
+    try {
+      const response = await this.identityProviderService.registerUser({
+        email,
+        password,
+      });
+
+      if (!response || !response.payload || !response.payload.userSub) {
+        throw new BadRequestException('User not registered in Cognito');
+      }
+
+      const userSub = response.payload.userSub;
+
+      await this.userService.createUser({
+        email,
+        externalId: userSub,
+      });
+
+      return await this.userService.getUserByEmail(email);
     } catch (error) {
       this.handleError(error);
     }

@@ -482,14 +482,19 @@ describe('Invocation - [/invocation]', () => {
 
     it('should change to TESTNET network', async () => {
       const responseExpected = expect.objectContaining({
-        secretKey: null,
-        publicKey: null,
-        preInvocation: null,
-        postInvocation: null,
         contractId: null,
-        network: 'TESTNET',
+        folder: {
+          id: 'folder0',
+          name: 'folder0',
+        },
         id: 'invocation0',
         methods: [],
+        name: 'invocation updated',
+        network: 'FUTURENET',
+        postInvocation: null,
+        preInvocation: null,
+        publicKey: null,
+        secretKey: null,
         selectedMethod: null,
       });
 
@@ -506,14 +511,19 @@ describe('Invocation - [/invocation]', () => {
 
     it('should change to FUTURENET network', async () => {
       const responseExpected = expect.objectContaining({
-        secretKey: null,
-        publicKey: null,
-        preInvocation: null,
-        postInvocation: null,
         contractId: null,
-        network: 'FUTURENET',
+        folder: {
+          id: 'folder0',
+          name: 'folder0',
+        },
         id: 'invocation0',
         methods: [],
+        name: 'invocation updated',
+        network: 'FUTURENET',
+        postInvocation: null,
+        preInvocation: null,
+        publicKey: null,
+        secretKey: null,
         selectedMethod: null,
       });
 
@@ -1077,9 +1087,20 @@ describe('Invocation - [/invocation]', () => {
 
       it('should change to TESTNET network', async () => {
         const responseExpected = expect.objectContaining({
-          network: 'TESTNET',
+          contractId: null,
+          folder: {
+            id: 'folder2',
+            name: 'folder2',
+          },
           id: 'invocation6',
           methods: [],
+          name: 'invocation updated',
+          network: 'FUTURENET',
+          postInvocation: null,
+          preInvocation: null,
+          publicKey: null,
+          secretKey: null,
+          selectedMethod: null,
         });
 
         const response = await makeRequest({

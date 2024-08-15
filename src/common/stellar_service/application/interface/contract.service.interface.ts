@@ -36,7 +36,7 @@ export interface IRunInvocationParams {
 }
 
 export interface IStellarService {
-  verifyNetwork(selectedNetwork: string): void;
+  verifyNetwork(selectedNetwork: string, contractId?: string): Promise<string>;
   getStellarAssetContractFunctions(): IGeneratedMethod[];
   decodeContractSpecBuffer(buffer: ArrayBuffer): Promise<xdr.ScSpecEntry[]>;
   extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;

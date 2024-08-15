@@ -8,6 +8,7 @@ export const baseColumnSchemas: { [key: string]: EntitySchemaColumnOptions } = {
     name: 'id',
     type: 'uuid',
     primary: true,
+    unique: true,
     generated: 'uuid',
   },
   createdAt: {
