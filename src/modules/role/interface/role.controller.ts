@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -24,6 +25,7 @@ import { UserRoleOnTeamService } from '../application/service/role.service';
 import { UserRoleToTeam } from '../domain/role.domain';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Role')
 @Controller('role')
 export class UserRoleToTeamController {
   constructor(private readonly userRoleOnTeamService: UserRoleOnTeamService) {}
