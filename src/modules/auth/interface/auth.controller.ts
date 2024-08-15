@@ -17,7 +17,7 @@ import { AuthService } from '../application/service/auth.service';
 import { AuthType } from '../domain/auth_type.enum';
 
 @Controller('auth')
-@ApiTags('auth')
+@ApiTags('Auth')
 @Auth(AuthType.None)
 export class AuthController {
   constructor(private authenticationService: AuthService) {}
@@ -85,7 +85,7 @@ export class AuthController {
   }> {
     return this.authenticationService.refreshUserSession(sessionRefreshDetails);
   }
-
+  @Auth(AuthType.Bearer)
   @Patch('/change-password')
   async changePassword(
     @Body() changePassword: ChangePasswordDto,

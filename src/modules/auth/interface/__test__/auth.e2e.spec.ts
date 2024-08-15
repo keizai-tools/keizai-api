@@ -14,6 +14,7 @@ import { join } from 'path';
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
+import type { ChangePasswordDto } from '@/common/cognito/application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '@/common/cognito/application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '@/common/cognito/application/dto/resend_confirmation_details.dto';
@@ -27,10 +28,14 @@ import { ICognitoRefreshSessionResponse } from '@/common/cognito/application/int
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { IResponse } from '@/common/response_service/interface/response.interface';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
-import { DataObject, makeRequest } from '@/test/test.util';
+import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
-describe('Authentication Module', () => {
+describe('Auth - [/auth]', () => {
   let app: INestApplication;
+
+  const adminToken = createAccessToken({
+    sub: '00000000-0000-0000-0000-00000000000X',
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -552,6 +557,7 @@ describe('Authentication Module', () => {
             isValid: jest.fn().mockReturnValue(true),
           },
         });
+
         identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
           payload: '00000000-0000-0000-0000-000000000001',
         });
@@ -563,7 +569,6 @@ describe('Authentication Module', () => {
 
         const response = await makeRequest({
           app,
-
           endpoint: '/auth/login',
           method: 'post',
           data: user as unknown as DataObject,
@@ -1243,6 +1248,72 @@ describe('Authentication Module', () => {
           statusCode: 500,
           timestamp: expect.any(String),
           success: false,
+        });
+      });
+    });
+
+    describe('POST - /auth/change-password', () => {
+      it('Should change the password when requested', async () => {
+        identityProviderServiceMock.changePassword.mockResolvedValueOnce({
+          success: true,
+          message: 'Password changed successfully',
+          type: 'OK',
+        });
+
+        const changePasswordRequest: ChangePasswordDto = {
+          email: 'admin@test.com',
+          oldPassword: '123456789Testing*',
+          newPassword: '987654321Testing*',
+        };
+
+        const response = await makeRequest({
+          app,
+          endpoint: '/auth/change-password',
+          method: 'patch',
+          authCode: adminToken,
+          data: changePasswordRequest as unknown as DataObject,
+        });
+
+        expect(response.body).toEqual({
+          success: true,
+          statusCode: 200,
+          message: 'Password changed successfully',
+          timestamp: expect.any(String),
+          path: '/auth/change-password',
+        });
+      });
+
+      it('Should respond with an UserNotFoundException when the user does not exist', async () => {
+        identityProviderServiceMock.changePassword.mockRejectedValueOnce(
+          new NotFoundException('User not found'),
+        );
+
+        const changePasswordRequest: ChangePasswordDto = {
+          email: 'admin@test.com',
+          oldPassword: '123456789Testing*',
+          newPassword: '987654321Testing*',
+        };
+
+        const response = await makeRequest({
+          app,
+          endpoint: '/auth/change-password',
+          method: 'patch',
+          authCode: adminToken,
+          data: changePasswordRequest as unknown as DataObject,
+        });
+
+        expect(response.body).toEqual({
+          success: false,
+          statusCode: 404,
+          details: {
+            description: 'User not found',
+            possibleCauses: ['Resource does not exist.', 'Incorrect URL.'],
+            suggestedFixes: ['Verify resource URL.', 'Ensure resource exists.'],
+          },
+          error: 'Not Found',
+          message: 'The server can not find the requested resource.',
+          path: '/auth/change-password',
+          timestamp: expect.any(String),
         });
       });
     });
