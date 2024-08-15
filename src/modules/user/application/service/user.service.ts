@@ -14,11 +14,10 @@ import {
   IUserRepository,
   USER_REPOSITORY,
 } from '../interfaces/user.repository.interfaces';
-import { IUserService } from '../interfaces/user.service.interfaces';
 import { ServiceMessage } from '../message/user.message';
 
 @Injectable()
-export class UserService implements IUserService {
+export class UserService {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
@@ -81,15 +80,15 @@ export class UserService implements IUserService {
 
   async updateUser(
     updateUserDto: UpdateUserDto,
+    user: User,
   ): IPromiseResponse<IUpdateUserResponse> {
     try {
-      const { email } = updateUserDto;
-      const user = await this.userRepository.findByEmail(email);
-      if (!user) {
+      const response = await this.userRepository.findByEmail(user.email);
+      if (!response) {
         throw new NotFoundException(ServiceMessage.NOT_FOUND);
       }
       const updatedUser = await this.userRepository.update(
-        user.id,
+        response.id,
         updateUserDto,
       );
       return this.responseService.createResponse({
