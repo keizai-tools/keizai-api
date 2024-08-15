@@ -10,6 +10,7 @@ import { UserMapper } from './application/mapper/user.mapper';
 import { UserService } from './application/service/user.service';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { UserSchema } from './infrastructure/persistence/user.schema';
+import { UserController } from './interface/user.controller';
 
 @Module({
   imports: [
@@ -44,5 +45,6 @@ import { UserSchema } from './infrastructure/persistence/user.schema';
       useClass: UserMapper,
     },
   ],
+  controllers: [UserController],
 })
 export class UserModule {}

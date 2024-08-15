@@ -290,8 +290,12 @@ export class AuthService {
         if (!userSub) {
           throw new BadRequestException('User not registered in Cognito');
         }
+        const localUser = await this.userService.getUserByEmail(email);
 
-        await this.userService.updateUser({ email, externalId: userSub });
+        await this.userService.updateUser(
+          { email, externalId: userSub },
+          localUser.payload,
+        );
 
         return await this.userService.getUserByEmail(email);
       }
