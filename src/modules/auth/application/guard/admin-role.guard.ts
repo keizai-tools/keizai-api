@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 
 import { IResponse } from '@/common/response_service/interface/response.interface';
-import { Role } from '@/modules/authorization/domain/role.enum';
+import { Role } from '@/modules/auth/domain/role.enum';
 import { TeamService } from '@/modules/team/application/service/team.service';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { AUTH_RESPONSE } from '../exceptions/auth-error';
 
 @Injectable()
-export class OwnerRoleGuard implements CanActivate {
+export class AdminRoleGuard implements CanActivate {
   constructor(private readonly teamService: TeamService) {}
 
   async canActivate(context: ExecutionContext) {
@@ -22,10 +22,10 @@ export class OwnerRoleGuard implements CanActivate {
 
     const { payload: team } = await this.teamService.findOne(teamId);
 
-    const user: IResponse<User> = req.user;
+    const userReq: IResponse<User> = req.user;
 
     const isMemberOfATeam = team.userMembers.some(
-      (member) => member.userId === user.payload.id,
+      (member) => member.userId === userReq.payload.id,
     );
 
     if (!isMemberOfATeam) {
@@ -33,13 +33,13 @@ export class OwnerRoleGuard implements CanActivate {
     }
 
     const userMember = team.userMembers.find(
-      (member) => member.userId === user.payload.id,
+      (user) => user.userId === userReq.payload.id,
     );
 
-    if (userMember.role !== Role.OWNER) {
-      throw new UnauthorizedException(AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED);
+    if (userMember.role === Role.OWNER || userMember.role === Role.ADMIN) {
+      return true;
     }
 
-    return true;
+    throw new UnauthorizedException(AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED);
   }
 }

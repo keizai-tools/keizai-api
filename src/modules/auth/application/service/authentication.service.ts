@@ -29,7 +29,7 @@ import {
 import { User } from '@/modules/user/domain/user.domain';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   constructor(
     @Inject(COGNITO_AUTH)
     private readonly identityProviderService: ICognitoAuthService,
@@ -38,7 +38,7 @@ export class AuthService {
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
   ) {
-    this.responseService.setContext(AuthService.name);
+    this.responseService.setContext(AuthenticationService.name);
   }
 
   async changePassword(

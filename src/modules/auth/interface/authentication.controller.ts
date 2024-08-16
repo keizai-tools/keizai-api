@@ -13,14 +13,14 @@ import { IPromiseResponse } from '@/common/response_service/interface/response.i
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { AuthService } from '../application/service/auth.service';
+import { AuthenticationService } from '../application/service/authentication.service';
 import { AuthType } from '../domain/auth_type.enum';
 
 @Controller('auth')
 @ApiTags('auth')
 @Auth(AuthType.None)
-export class AuthController {
-  constructor(private authenticationService: AuthService) {}
+export class AuthenticationController {
+  constructor(private authenticationService: AuthenticationService) {}
 
   @Post('/register')
   async registerUser(
