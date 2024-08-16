@@ -13,7 +13,7 @@ import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { CONTRACT_SERVICE } from '@/common/stellar_service/application/interface/contract.service.interface';
-import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
+import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
 import { FOLDER_RESPONSE } from '@/modules/folder/application/exceptions/folder-response.enum';
 import { METHOD_RESPONSE } from '@/modules/method/application/exceptions/method-response.enum';
 import {

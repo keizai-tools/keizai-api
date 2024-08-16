@@ -12,7 +12,7 @@ import { loadFixtures } from '@data/util/loader';
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
-import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
+import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
 import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions/collection-response.enum';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
