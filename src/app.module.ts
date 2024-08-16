@@ -10,8 +10,7 @@ import { datasourceOptions } from '@configuration/orm.configuration';
 
 import { CommonModule } from '@common/common.module';
 
-import { AuthModule } from './modules/auth/auth.module';
-import { AuthorizationModule } from './modules/authorization/authorization.module';
+import { AuthenticationModule } from './modules/auth/authentication.module';
 import { BlockchainNetworkStatusModule } from './modules/blockchainNetworkStatus/blockchainNetworkStatus.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
@@ -41,8 +40,7 @@ import { UserModule } from './modules/user/user.module';
     }),
     ResilienceModule.forRoot({}),
     CommonModule,
-    AuthModule,
-    AuthorizationModule,
+    AuthenticationModule,
     CollectionModule,
     EnviromentModule,
     FolderModule,

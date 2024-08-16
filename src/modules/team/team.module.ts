@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@/common/common.module';
 
-import { AuthModule } from '../auth/auth.module';
+import { AuthenticationModule } from '../auth/authentication.module';
 import { CollectionModule } from '../collection/collection.module';
 import { InvitationModule } from '../invitation/invitation.module';
 import { UserRoleToTeamModule } from '../role/role.module';
@@ -19,7 +19,7 @@ import { TeamController } from './interface/team.controller';
   imports: [
     TypeOrmModule.forFeature([TeamSchema]),
     forwardRef(() => CollectionModule),
-    forwardRef(() => AuthModule),
+    forwardRef(() => AuthenticationModule),
     forwardRef(() => InvitationModule),
     forwardRef(() => UserRoleToTeamModule),
     forwardRef(() => UserModule),
