@@ -11,8 +11,8 @@ import {
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthTeamGuard } from '@/modules/auth/application/guard/auth-team.guard';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 
 import { CreateMethodDto } from '../application/dto/create-method.dto';
 import { MethodResponseDto } from '../application/dto/method-response.dto';

@@ -14,9 +14,9 @@ import {
   IResponse,
 } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AdminRoleGuard } from '@/modules/auth/application/guard/admin-role.guard';
+import { OwnerRoleGuard } from '@/modules/auth/application/guard/owner-role.guard';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
-import { OwnerRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/owner-role.guard';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 

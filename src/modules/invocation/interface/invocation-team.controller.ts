@@ -17,9 +17,9 @@ import {
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AdminRoleGuard } from '@/modules/auth/application/guard/admin-role.guard';
+import { AuthTeamGuard } from '@/modules/auth/application/guard/auth-team.guard';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
-import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { CreateInvocationDto } from '../application/dto/create-invocation.dto';
