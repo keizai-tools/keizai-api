@@ -1,4 +1,4 @@
-import { Role } from '@/modules/authorization/domain/role.enum';
+import { Role } from '@/modules/auth/domain/role.enum';
 
 import { UserRoleToTeam } from '../../domain/role.domain';
 import { ResponseUserRoletoTeamDto } from '../dto/response-user-role.dto';

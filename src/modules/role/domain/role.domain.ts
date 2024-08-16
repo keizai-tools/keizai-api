@@ -1,5 +1,5 @@
 import { Base } from '@/common/base/domain/base.domain';
-import { Role } from '@/modules/authorization/domain/role.enum';
+import { Role } from '@/modules/auth/domain/role.enum';
 import { Team } from '@/modules/team/domain/team.domain';
 import { User } from '@/modules/user/domain/user.domain';
 

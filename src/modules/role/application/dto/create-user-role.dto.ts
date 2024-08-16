@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
-import { Role } from '@/modules/authorization/domain/role.enum';
+import { Role } from '@/modules/auth/domain/role.enum';
 
 export class CreateUserRoleToTeamDto {
   @IsNotEmpty()

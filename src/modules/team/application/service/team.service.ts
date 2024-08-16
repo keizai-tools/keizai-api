@@ -11,7 +11,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { Role } from '@/modules/authorization/domain/role.enum';
+import { Role } from '@/modules/auth/domain/role.enum';
 import { CollectionService } from '@/modules/collection/application/service/collection.service';
 import { ResponseInvitationDto } from '@/modules/invitation/application/dto/response-invitation.dto';
 import { InvitationService } from '@/modules/invitation/application/service/invitation.service';
