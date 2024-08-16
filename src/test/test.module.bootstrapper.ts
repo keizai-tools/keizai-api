@@ -12,7 +12,7 @@ export const identityProviderServiceMock: jest.MockedObject<ICognitoAuthService>
     confirmUserRegistration: jest.fn(),
     initiatePasswordReset: jest.fn(),
     loginUser: jest.fn(),
-    refreshUserSession: jest.fn(),
+    refreshSession: jest.fn(),
     registerUser: jest.fn(),
     resendUserConfirmationCode: jest.fn(),
     getUserSub: jest.fn(),
