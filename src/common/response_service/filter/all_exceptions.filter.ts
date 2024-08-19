@@ -6,48 +6,14 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 
-import { ENVIRONMENT } from '@/common/base/enum/common.enum';
-
 import { generateErrorMessages } from '../utils/utils';
 
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest();
-    const loggedMessages = new Set<string>();
-
-    if (
-      (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-        process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
-      exception instanceof Error &&
-      (Array.isArray(exception.message) ||
-        typeof exception.message === 'string')
-    ) {
-      const logMessage = (message: string) => {
-        if (
-          ![...loggedMessages].some(
-            (existingMessage) =>
-              existingMessage.includes(message) ||
-              message.includes(existingMessage),
-          )
-        ) {
-          loggedMessages.add(message);
-        }
-      };
-
-      logMessage(exception.message);
-
-      if (exception instanceof HttpException) {
-        const responseException = exception.getResponse();
-        if (typeof responseException === 'object') {
-          Object.entries(responseException).forEach(([key, value]) => {
-            logMessage(`[${key}]: ${value}`);
-          });
-        }
-      }
-    }
+    const context = host.switchToHttp();
+    const response = context.getResponse();
+    const request = context.getRequest();
 
     if (exception instanceof HttpException) {
       let responseException = exception.getResponse();
