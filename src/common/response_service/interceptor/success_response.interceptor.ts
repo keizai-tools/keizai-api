@@ -12,12 +12,15 @@ import { IResponse } from '../interface/response.interface';
 
 @Injectable()
 export class SuccessResponseInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(
+    executionContext: ExecutionContext,
+    next: CallHandler,
+  ): Observable<unknown> {
     return next.handle().pipe(
       map((data: IResponse<unknown>) => {
-        const ctx = context.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest();
+        const context = executionContext.switchToHttp();
+        const response = context.getResponse<Response>();
+        const request = context.getRequest();
         if (data?.statusCode) {
           response.status(data.statusCode);
         }
@@ -35,23 +38,23 @@ export class SuccessResponseInterceptor implements NestInterceptor {
     );
   }
 
-  private transformBigInt(obj: unknown) {
+  private transformBigInt(object: unknown) {
     return JSON.parse(
-      JSON.stringify(obj, (_key, value) =>
+      JSON.stringify(object, (_key, value) =>
         typeof value === 'bigint' ? { $bigint: value.toString() } : value,
       ),
     );
   }
 
-  private removeType(obj: unknown): unknown {
-    if (Array.isArray(obj)) {
-      return obj.map((item) => this.removeType(item));
-    } else if (obj !== null && typeof obj === 'object') {
-      return Object.keys(obj).reduce((acc, key) => {
-        if (key !== 'type') acc[key] = this.removeType(obj[key]);
+  private removeType(object: unknown): unknown {
+    if (Array.isArray(object)) {
+      return object.map((item) => this.removeType(item));
+    } else if (object !== null && typeof object === 'object') {
+      return Object.keys(object).reduce((acc, key) => {
+        if (key !== 'type') acc[key] = this.removeType(object[key]);
         return acc;
       }, {});
     }
-    return obj;
+    return object;
   }
 }
