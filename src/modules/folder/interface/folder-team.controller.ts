@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
@@ -22,6 +23,7 @@ import { UpdateFolderDto } from '../application/dto/update-folder.dto';
 import { FolderService } from '../application/service/folder.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Folder Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/folder')
 export class FolderTeamController {

@@ -8,6 +8,7 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import {
@@ -30,6 +31,7 @@ import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Invocation')
 @Controller('invocation')
 export class InvocationUserController {
   constructor(private readonly invocationService: InvocationService) {}

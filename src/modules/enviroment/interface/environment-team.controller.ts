@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
@@ -22,6 +23,7 @@ import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
 import { EnviromentService } from '../application/service/enviroment.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Environment Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/environment')
 export class EnviromentTeamController {

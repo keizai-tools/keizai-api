@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -23,6 +24,7 @@ import { UpdateMethodDto } from '../application/dto/update-method.dto';
 import { MethodService } from '../application/service/method.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Method')
 @Controller('method')
 export class MethodUserController {
   constructor(private readonly methodService: MethodService) {}

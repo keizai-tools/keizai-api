@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
@@ -28,6 +29,7 @@ import { UpdateInvocationDto } from '../application/dto/update-invocation.dto';
 import { InvocationService } from '../application/service/invocation.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Invocation Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/invocation')
 export class InvocationTeamController {

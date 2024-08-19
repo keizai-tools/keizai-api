@@ -1,6 +1,5 @@
 import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 
-
 export interface IInvocationValues {
   name: string;
   secretKey: string;

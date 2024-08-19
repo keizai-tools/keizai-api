@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -23,6 +24,7 @@ import { UpdateInvitationDto } from '../application/dto/update-invitation.dto';
 import { InvitationService } from '../application/service/invitation.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Invitation')
 @Controller('invitation')
 export class InvitationController {
   constructor(private readonly invitationService: InvitationService) {}
