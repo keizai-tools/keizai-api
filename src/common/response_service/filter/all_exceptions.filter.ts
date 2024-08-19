@@ -11,9 +11,9 @@ import { generateErrorMessages } from '../utils/utils';
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest();
+    const context = host.switchToHttp();
+    const response = context.getResponse();
+    const request = context.getRequest();
 
     if (exception instanceof HttpException) {
       let responseException = exception.getResponse();
