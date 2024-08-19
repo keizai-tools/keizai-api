@@ -16,8 +16,7 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-  status =
-    process.env.RESPONSE_MODULE !== ENVIRONMENT.PRODUCTION ? true : false;
+  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION ? true : false;
 
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
