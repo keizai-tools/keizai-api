@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
@@ -25,6 +26,7 @@ import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Collection Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/collection')
 export class CollectionTeamController {

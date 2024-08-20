@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -24,6 +25,7 @@ import { UpdateFolderDto } from '../application/dto/update-folder.dto';
 import { FolderService } from '../application/service/folder.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Folder')
 @Controller('folder')
 export class FolderUserController {
   constructor(private readonly folderService: FolderService) {}

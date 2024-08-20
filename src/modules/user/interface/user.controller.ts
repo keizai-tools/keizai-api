@@ -13,7 +13,7 @@ import {
 } from '../application/interfaces/user.service.interfaces';
 import { User } from '../domain/user.domain';
 
-@ApiTags('user')
+@ApiTags('User')
 @Controller('user')
 export class UserController implements IUserController {
   constructor(

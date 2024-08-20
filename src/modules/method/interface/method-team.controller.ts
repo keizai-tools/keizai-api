@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
@@ -20,6 +21,7 @@ import { UpdateMethodDto } from '../application/dto/update-method.dto';
 import { MethodService } from '../application/service/method.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Method Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/method')
 export class MethodTeamController {

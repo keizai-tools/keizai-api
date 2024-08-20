@@ -1,4 +1,4 @@
-import { CognitoUserSession, ISignUpResult } from 'amazon-cognito-identity-js';
+import type { AuthenticationResultType } from '@aws-sdk/client-cognito-identity-provider';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 
@@ -14,13 +14,17 @@ import { ICognitoRefreshSessionResponse } from './cognito_refresh_session_respon
 
 export const COGNITO_AUTH = 'COGNITO_AUTH';
 
+interface IRegisterUserResponse {
+  userSub: string;
+}
+
 export interface ICognitoAuthService {
   registerUser(
     userRegistrationDetails: UserRegistrationDetailsDto,
-  ): IPromiseResponse<ISignUpResult>;
+  ): IPromiseResponse<IRegisterUserResponse>;
   loginUser(
     userLoginCredentials: UserLoginCredentialsDto,
-  ): IPromiseResponse<CognitoUserSession>;
+  ): IPromiseResponse<AuthenticationResultType>;
   confirmUserRegistration(
     userConfirmationDetails: UserConfirmationDetailsDto,
   ): IPromiseResponse<void>;
@@ -33,7 +37,7 @@ export interface ICognitoAuthService {
   confirmPasswordReset(
     passwordResetConfirmation: PasswordResetConfirmationDto,
   ): IPromiseResponse<void>;
-  refreshUserSession(
+  refreshSession(
     sessionRefreshDetails: SessionRefreshDetailsDto,
   ): IPromiseResponse<ICognitoRefreshSessionResponse>;
   getUserSub(email: string): IPromiseResponse<string | null>;

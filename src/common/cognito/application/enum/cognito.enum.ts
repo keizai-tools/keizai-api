@@ -19,9 +19,20 @@ export enum CognitoMessage {
   USER_EXISTS = 'User exists',
   PASSWORD_CHANGED_SUCCESS = 'Password changed successfully',
   USER_DOES_NOT_HAVE_A_SUB_ATTRIBUTE = 'User does not have a sub attribute',
+  PASSWORD_RESET_INITIATED_SUCCESS = 'Password reset initiated successfully',
+  PASSWORD_RESET_CONFIRMED_SUCCESS = 'Password reset confirmed successfully',
+  SESSION_REFRESH_SUCCESS = 'Session refreshed successfully',
+  LIMIT_EXCEEDED_ERROR = 'Limit exceeded',
+  INVALID_PARAMETERS_ERROR = 'Invalid parameters',
+  USERNAME_EXISTS_ERROR = 'Username exists',
+  GENERIC_ERROR = 'An error occurred',
+  USER_REGISTRATION_SUCCESS = 'User registration successful',
+  COGNITO_LOCAL_UNSUPPORTED = 'Cognito local is not supported',
+  USER_ALREADY_CONFIRMED = 'User already confirmed',
 }
 
 export enum CognitoError {
+  LIMIT_EXCEEDED_EXCEPTION = 'LimitExceededException',
   INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException',
   USERNAME_EXISTS_EXCEPTION = 'UsernameExistsException',
   USER_NOT_CONFIRMED_EXCEPTION = 'UserNotConfirmedException',
@@ -31,4 +42,5 @@ export enum CognitoError {
   EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException',
   USER_NOT_FOUND_EXCEPTION = 'UserNotFoundException',
   INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException',
+  COGNITO_LOCAL_UNSUPPORTED = 'Cognito Local unsupported feature',
 }

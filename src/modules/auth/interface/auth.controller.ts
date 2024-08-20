@@ -1,7 +1,6 @@
 import { Body, Controller, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { ChangePasswordDto } from '@/common/cognito/application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '@/common/cognito/application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '@/common/cognito/application/dto/resend_confirmation_details.dto';
@@ -11,13 +10,17 @@ import { UserLoginCredentialsDto } from '@/common/cognito/application/dto/user_l
 import { UserRegistrationDetailsDto } from '@/common/cognito/application/dto/user_registration_details.dto';
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
+import { AccessToken } from '../application/decorator/accessToken.decorator';
+import { ChangePasswordDto } from '../application/dto/change_password.dto';
+import { LoginResponse } from '../application/interface/authentication.service.interface';
 import { AuthService } from '../application/service/auth.service';
 import { AuthType } from '../domain/auth_type.enum';
 
 @Controller('auth')
-@ApiTags('auth')
+@ApiTags('Auth')
 @Auth(AuthType.None)
 export class AuthController {
   constructor(private authenticationService: AuthService) {}
@@ -32,12 +35,7 @@ export class AuthController {
   @Post('/login')
   async loginUser(
     @Body() userLoginCredentials: UserLoginCredentialsDto,
-  ): IPromiseResponse<{
-    accessToken: string;
-    refreshToken: string;
-    idToken: string;
-    user: User;
-  }> {
+  ): IPromiseResponse<LoginResponse> {
     return this.authenticationService.loginUser(userLoginCredentials);
   }
 
@@ -86,10 +84,17 @@ export class AuthController {
     return this.authenticationService.refreshUserSession(sessionRefreshDetails);
   }
 
+  @Auth(AuthType.Bearer)
   @Patch('/change-password')
   async changePassword(
     @Body() changePassword: ChangePasswordDto,
+    @CurrentUser() user: User,
+    @AccessToken() accessToken: string,
   ): IPromiseResponse<void> {
-    return this.authenticationService.changePassword(changePassword);
+    return this.authenticationService.changePassword(
+      changePassword,
+      user,
+      accessToken,
+    );
   }
 }

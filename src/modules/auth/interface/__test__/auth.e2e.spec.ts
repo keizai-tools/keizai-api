@@ -27,10 +27,16 @@ import { ICognitoRefreshSessionResponse } from '@/common/cognito/application/int
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { IResponse } from '@/common/response_service/interface/response.interface';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
-import { DataObject, makeRequest } from '@/test/test.util';
+import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
-describe('Authentication Module', () => {
+import type { ChangePasswordDto } from '../../application/dto/change_password.dto';
+
+describe('Auth - [/auth]', () => {
   let app: INestApplication;
+
+  const adminToken = createAccessToken({
+    sub: '00000000-0000-0000-0000-00000000000X',
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -86,9 +92,6 @@ describe('Authentication Module', () => {
         identityProviderServiceMock.registerUser.mockResolvedValueOnce({
           payload: {
             userSub: externalId,
-            user: null,
-            userConfirmed: false,
-            codeDeliveryDetails: null,
           },
         });
 
@@ -108,12 +111,13 @@ describe('Authentication Module', () => {
           expect.objectContaining({
             success: true,
             statusCode: 201,
-            message: `User successfully registered`,
+            message: `User registration successful`,
             payload: expect.objectContaining({
               email: 'testing@testing.com',
               externalId: '00000000-0000-0000-0000-000000000001',
               id: expect.any(String),
               updatedAt: expect.any(String),
+              createdAt: expect.any(String),
             }),
             timestamp: expect.any(String),
           }),
@@ -540,18 +544,13 @@ describe('Authentication Module', () => {
           type: 'OK',
           message: 'User authenticated successfully',
           payload: {
-            getAccessToken: jest.fn().mockReturnValue({
-              getJwtToken: jest.fn().mockReturnValue('access_token'),
-            }),
-            getIdToken: jest.fn().mockReturnValue({
-              getJwtToken: jest.fn().mockReturnValue('id_token'),
-            }),
-            getRefreshToken: jest.fn().mockReturnValue({
-              getToken: jest.fn().mockReturnValue('refresh_token'),
-            }),
-            isValid: jest.fn().mockReturnValue(true),
+            AccessToken: 'access_token',
+            ExpiresIn: 3600,
+            IdToken: 'id_token',
+            RefreshToken: 'refresh_token',
           },
         });
+
         identityProviderServiceMock.getUserSub.mockResolvedValueOnce({
           payload: '00000000-0000-0000-0000-000000000001',
         });
@@ -563,7 +562,6 @@ describe('Authentication Module', () => {
 
         const response = await makeRequest({
           app,
-
           endpoint: '/auth/login',
           method: 'post',
           data: user as unknown as DataObject,
@@ -578,6 +576,7 @@ describe('Authentication Module', () => {
           payload: {
             accessToken: 'access_token',
             refreshToken: 'refresh_token',
+            expiresIn: 3600,
             idToken: 'id_token',
             user: {
               externalId: '00000000-0000-0000-0000-000000000001',
@@ -1247,34 +1246,86 @@ describe('Authentication Module', () => {
       });
     });
 
+    describe('POST - /auth/change-password', () => {
+      it('Should change the password when requested', async () => {
+        identityProviderServiceMock.changePassword.mockResolvedValueOnce({
+          success: true,
+          message: 'Password changed successfully',
+          type: 'OK',
+        });
+
+        const changePasswordRequest: ChangePasswordDto = {
+          previousPassword: '123456789Testing*',
+          proposedPassword: '987654321Testing*',
+        };
+
+        const response = await makeRequest({
+          app,
+          endpoint: '/auth/change-password',
+          method: 'patch',
+          authCode: adminToken,
+          data: changePasswordRequest as unknown as DataObject,
+        });
+
+        expect(response.body).toEqual({
+          success: true,
+          statusCode: 200,
+          message: 'Password changed successfully',
+          timestamp: expect.any(String),
+          path: '/auth/change-password',
+        });
+      });
+
+      it('Should respond with an UserNotFoundException when the user does not exist', async () => {
+        identityProviderServiceMock.changePassword.mockRejectedValueOnce(
+          new NotFoundException('User not found'),
+        );
+
+        const changePasswordRequest: ChangePasswordDto = {
+          previousPassword: '123456789Testing*',
+          proposedPassword: '987654321Testing*',
+        };
+
+        const response = await makeRequest({
+          app,
+          endpoint: '/auth/change-password',
+          method: 'patch',
+          authCode: adminToken,
+          data: changePasswordRequest as unknown as DataObject,
+        });
+
+        expect(response.body).toEqual({
+          success: false,
+          statusCode: 404,
+          details: {
+            description: 'User not found',
+            possibleCauses: ['Resource does not exist.', 'Incorrect URL.'],
+            suggestedFixes: ['Verify resource URL.', 'Ensure resource exists.'],
+          },
+          error: 'Not Found',
+          message: 'The server can not find the requested resource.',
+          path: '/auth/change-password',
+          timestamp: expect.any(String),
+        });
+      });
+    });
+
     describe('POST - /auth/refresh', () => {
       it('Should refresh the session when provided a valid refresh token', async () => {
         const successResponse: IResponse<ICognitoRefreshSessionResponse> = {
           payload: {
-            idToken: {
-              jwtToken: 'idToken',
-              payload: {
-                auth_time: 1610000000,
-                client_id: 'client_id',
-                event_id: 'event_id',
-                exp: 1610000000,
-                iat: 1610000000,
-                iss: 'iss',
-                jti: 'jti',
-                origin_jti: 'origin_jti',
-                scope: 'scope',
-                sub: 'sub',
-                token_use: 'token_use',
-                username: 'admin@test.com',
-              },
-            },
+            accessToken: 'accessToken',
+            idToken: 'idToken',
+            refreshToken: 'refreshToken',
           },
           message: 'Session refreshed successfully',
           type: 'OK',
         };
-        identityProviderServiceMock.refreshUserSession.mockResolvedValueOnce(
+
+        identityProviderServiceMock.refreshSession.mockResolvedValueOnce(
           successResponse,
         );
+
         const refreshTokenDto: SessionRefreshDetailsDto = {
           refreshToken: 'refreshToken',
           email: 'admin@test.com',
@@ -1294,14 +1345,16 @@ describe('Authentication Module', () => {
           message: 'Session refreshed successfully',
           path: '/auth/refresh',
           payload: {
-            accessToken: 'idToken',
+            accessToken: 'accessToken',
+            idToken: 'idToken',
+            refreshToken: 'refreshToken',
           },
           statusCode: 200,
         });
       });
 
       it('Should respond with an InvalidRefreshTokenError when provided an invalid refresh token', async () => {
-        identityProviderServiceMock.refreshUserSession.mockRejectedValueOnce(
+        identityProviderServiceMock.refreshSession.mockRejectedValueOnce(
           new UnauthorizedException('Invalid refresh token'),
         );
         const refreshTokenDto: SessionRefreshDetailsDto = {
@@ -1337,7 +1390,7 @@ describe('Authentication Module', () => {
       });
 
       it("Should respond with an UserNotFoundException when the user doesn't exist", async () => {
-        identityProviderServiceMock.refreshUserSession.mockRejectedValueOnce(
+        identityProviderServiceMock.refreshSession.mockRejectedValueOnce(
           new NotFoundException('User not found'),
         );
 
@@ -1370,7 +1423,7 @@ describe('Authentication Module', () => {
       });
 
       it('Should respond with an UnexpectedCodeError over unexpected errors', async () => {
-        identityProviderServiceMock.refreshUserSession.mockRejectedValueOnce(
+        identityProviderServiceMock.refreshSession.mockRejectedValueOnce(
           new Error('Unexpected error'),
         );
         const refreshTokenDto: SessionRefreshDetailsDto = {

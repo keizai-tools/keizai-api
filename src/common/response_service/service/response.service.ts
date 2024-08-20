@@ -16,11 +16,12 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-  status =
-    process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-    process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST;
+  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION ? true : false;
+
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
-    message && payload && this.status && this.verbose(`Message: ${message}`);
+    if (message && this.status) {
+      this.verbose(`Message: ${message}`);
+    }
 
     return {
       success: HttpStatus[type]
@@ -44,6 +45,10 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
       if (JSON.stringify(error).includes(this.mark)) {
         throw error;
       }
+
+      this.handleError({
+        error,
+      });
 
       const code = error.getStatus();
       throw this.createHttpException({
@@ -97,16 +102,9 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
       message = error?.message || '';
     }
 
-    const newCustomError = new HttpException(
-      {
-        message,
-      },
-      code,
-      {
-        cause: newError,
-        description: this.mark,
-      },
-    );
-    return newCustomError;
+    return new HttpException(message, code, {
+      cause: newError,
+      description: this.mark,
+    });
   }
 }

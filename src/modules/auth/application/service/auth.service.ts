@@ -5,7 +5,6 @@ import {
   Injectable,
 } from '@nestjs/common';
 
-import { ChangePasswordDto } from '@/common/cognito/application/dto/change_password.dto';
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
 import { PasswordResetRequestDto } from '@/common/cognito/application/dto/password_reset_request.dto';
 import { ResendConfirmationDetailsDto } from '@/common/cognito/application/dto/resend_confirmation_details.dto';
@@ -13,10 +12,12 @@ import { SessionRefreshDetailsDto } from '@/common/cognito/application/dto/sessi
 import { UserConfirmationDetailsDto } from '@/common/cognito/application/dto/user_confirmation_details.dto';
 import { UserLoginCredentialsDto } from '@/common/cognito/application/dto/user_login_credentials.dto';
 import { UserRegistrationDetailsDto } from '@/common/cognito/application/dto/user_registration_details.dto';
+import { CognitoMessage } from '@/common/cognito/application/enum/cognito.enum';
 import {
   COGNITO_AUTH,
   ICognitoAuthService,
 } from '@/common/cognito/application/interface/cognito.service.interface';
+import { ICognitoRefreshSessionResponse } from '@/common/cognito/application/interface/cognito_refresh_session_response.interface';
 import {
   IPromiseResponse,
   IResponseService,
@@ -27,6 +28,9 @@ import {
   USER_SERVICE,
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
+
+import type { ChangePasswordDto } from '../dto/change_password.dto';
+import { LoginResponse } from '../interface/authentication.service.interface';
 
 @Injectable()
 export class AuthService {
@@ -43,19 +47,22 @@ export class AuthService {
 
   async changePassword(
     changePasswordDetails: ChangePasswordDto,
+    user: User,
+    accessToken: string,
   ): IPromiseResponse<void> {
     try {
-      const { email } = changePasswordDetails;
-      await this.userService.getUserByEmail(email);
+      await this.userService.getUserByEmail(user.email);
 
-      const { message, type } =
-        await this.identityProviderService.changePassword(
-          changePasswordDetails,
-        );
+      const { message, type, payload } =
+        await this.identityProviderService.changePassword({
+          ...changePasswordDetails,
+          accessToken,
+        });
 
       return this.responseService.createResponse({
         type,
         message,
+        payload,
       });
     } catch (error) {
       this.handleError(error);
@@ -75,7 +82,7 @@ export class AuthService {
       });
       return this.responseService.createResponse({
         type: 'CREATED',
-        message: 'User successfully registered',
+        message: CognitoMessage.USER_REGISTRATION_SUCCESS,
         payload,
       });
     } catch (error) {
@@ -86,12 +93,7 @@ export class AuthService {
   async loginUser({
     email,
     password,
-  }: UserLoginCredentialsDto): IPromiseResponse<{
-    accessToken: string;
-    refreshToken: string;
-    idToken: string;
-    user: User;
-  }> {
+  }: UserLoginCredentialsDto): IPromiseResponse<LoginResponse> {
     try {
       const userExists = await this.validateUserExists({ email });
 
@@ -101,22 +103,22 @@ export class AuthService {
         password,
         login: true,
       });
-
       const { payload: user } = await this.userService.getUserByEmail(email);
-
       const { payload, type, message } =
         await this.identityProviderService.loginUser({
           email,
           password,
         });
-
       return this.responseService.createResponse({
         type,
         message,
         payload: {
-          accessToken: payload.getAccessToken().getJwtToken(),
-          refreshToken: payload.getRefreshToken().getToken(),
-          idToken: payload.getIdToken().getJwtToken(),
+          accessToken: payload.AccessToken,
+          expiresIn: payload.ExpiresIn,
+          tokenType: payload.TokenType,
+          refreshToken: payload.RefreshToken,
+          idToken: payload.IdToken,
+          newDeviceMetadata: payload.NewDeviceMetadata,
           user,
         },
       });
@@ -211,24 +213,20 @@ export class AuthService {
 
   async refreshUserSession(
     sessionRefreshDetails: SessionRefreshDetailsDto,
-  ): IPromiseResponse<{
-    accessToken: string;
-  }> {
+  ): IPromiseResponse<ICognitoRefreshSessionResponse> {
     try {
       const { email } = sessionRefreshDetails;
       await this.userService.getUserByEmail(email);
 
       const { payload, type, message } =
-        await this.identityProviderService.refreshUserSession(
+        await this.identityProviderService.refreshSession(
           sessionRefreshDetails,
         );
 
       return this.responseService.createResponse({
         type,
         message,
-        payload: {
-          accessToken: payload.idToken.jwtToken,
-        },
+        payload,
       });
     } catch (error) {
       this.handleError(error);
@@ -240,19 +238,12 @@ export class AuthService {
   }: {
     email: string;
   }): Promise<{ cognito: boolean; local: boolean }> {
-    try {
-      const localUser = await this.userService.getUserByEmail(email);
-      const cognitoUserSub = await this.identityProviderService.getUserSub(
-        email,
-      );
-
-      return {
-        local: !!localUser?.payload,
-        cognito: !!cognitoUserSub?.payload,
-      };
-    } catch (error) {
-      this.handleError(error);
-    }
+    const localUser = await this.userService.getUserByEmail(email);
+    const cognitoUserSub = await this.identityProviderService.getUserSub(email);
+    return {
+      local: !!localUser?.payload,
+      cognito: !!cognitoUserSub?.payload,
+    };
   }
 
   private async handleUserRegistration({
@@ -270,7 +261,6 @@ export class AuthService {
       if (cognito && local && !login) {
         throw new ConflictException('User already exists');
       }
-
       if (cognito && !local) {
         return await this.userService.createUser({
           email,
@@ -290,8 +280,12 @@ export class AuthService {
         if (!userSub) {
           throw new BadRequestException('User not registered in Cognito');
         }
+        const localUser = await this.userService.getUserByEmail(email);
 
-        await this.userService.updateUser({ email, externalId: userSub });
+        await this.userService.updateUser(
+          { email, externalId: userSub },
+          localUser.payload,
+        );
 
         return await this.userService.getUserByEmail(email);
       }
@@ -318,10 +312,6 @@ export class AuthService {
         email,
         password,
       });
-
-      if (!response || !response.payload || !response.payload.userSub) {
-        throw new BadRequestException('User not registered in Cognito');
-      }
 
       const userSub = response.payload.userSub;
 

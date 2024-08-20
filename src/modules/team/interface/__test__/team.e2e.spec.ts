@@ -183,9 +183,9 @@ describe('Team - [/team]', () => {
         data: {
           name: 'team updated',
           usersEmails: ['user1'],
+          id: 'team0',
         },
       });
-
       expect(response.body.payload).toEqual({
         name: 'team updated',
         id: 'team0',

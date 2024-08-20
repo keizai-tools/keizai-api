@@ -8,6 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -24,6 +25,7 @@ import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
 import { EnviromentService } from '../application/service/enviroment.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Environment')
 @Controller('environment')
 export class EnviromentUserController {
   constructor(private readonly enviromentService: EnviromentService) {}

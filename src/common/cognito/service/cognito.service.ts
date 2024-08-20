@@ -1,6 +1,20 @@
 import {
   AdminGetUserCommand,
+  AuthFlowType,
+  AuthenticationResultType,
+  ChangePasswordCommand,
+  ChangePasswordCommandInput,
   CognitoIdentityProviderClient,
+  ConfirmForgotPasswordCommand,
+  ConfirmForgotPasswordCommandInput,
+  ConfirmSignUpCommand,
+  ConfirmSignUpCommandInput,
+  ForgotPasswordCommand,
+  InitiateAuthCommand,
+  InitiateAuthCommandInput,
+  ResendConfirmationCodeCommand,
+  SignUpCommand,
+  SignUpCommandInput,
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
   BadRequestException,
@@ -11,18 +25,8 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  AuthenticationDetails,
-  CognitoRefreshToken,
-  CognitoUser,
-  CognitoUserAttribute,
-  CognitoUserPool,
-  CognitoUserSession,
-  ISignUpResult,
-} from 'amazon-cognito-identity-js';
 import * as fs from 'fs';
 
-import { ENVIRONMENT } from '@/common/base/enum/common.enum';
 import {
   IPromiseResponse,
   IResponseService,
@@ -44,7 +48,6 @@ import { ICognitoRequestError } from '../application/interface/cognito_request_e
 
 @Injectable()
 export class CognitoService implements ICognitoAuthService {
-  private readonly userPool: CognitoUserPool;
   private readonly cognitoClient: CognitoIdentityProviderClient;
 
   constructor(
@@ -52,18 +55,57 @@ export class CognitoService implements ICognitoAuthService {
     private readonly responseService: IResponseService,
   ) {
     this.responseService.setContext(CognitoService.name);
-    this.userPool = new CognitoUserPool({
-      UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
-      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
-      endpoint: process.env.AWS_COGNITO_ENDPOINT,
-    });
     this.cognitoClient = new CognitoIdentityProviderClient({
       region: process.env.AWS_COGNITO_REGION,
       credentials: {
         accessKeyId: process.env.AWS_COGNITO_ACCESS_KEY,
         secretAccessKey: process.env.AWS_COGNITO_SECRET_KEY,
       },
+      endpoint: process.env.AWS_COGNITO_ENDPOINT,
     });
+  }
+
+  async registerUser(
+    userRegistrationDetails: UserRegistrationDetailsDto,
+  ): IPromiseResponse<{ userSub: string }> {
+    const { email, password } = userRegistrationDetails;
+
+    if (!email || !password) {
+      return this.responseService.createResponse({
+        message: CognitoMessage.INVALID_PARAMETERS_ERROR,
+        type: 'BAD_REQUEST',
+      });
+    }
+
+    const signUpParams: SignUpCommandInput = {
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      Username: email,
+      Password: password,
+      ValidationData: [{ Name: 'email', Value: email }],
+      UserAttributes: [{ Name: 'email', Value: email }],
+    };
+
+    try {
+      await this.cognitoClient.send(new SignUpCommand(signUpParams));
+
+      const { payload } = await this.getUserSub(email);
+
+      if (process.env.DOCKER_ENV === 'true')
+        await this.confirmUserRegistration({
+          email,
+          confirmationCode: await this.getConfirmationCodeFromLocalPool(email),
+        });
+
+      return this.responseService.createResponse({
+        message: CognitoMessage.USER_REGISTRATION_SUCCESS,
+        type: 'CREATED',
+        payload: {
+          userSub: payload,
+        },
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async getUserSub(email: string): IPromiseResponse<string | null> {
@@ -87,8 +129,8 @@ export class CognitoService implements ICognitoAuthService {
           type: 'NOT_FOUND',
         });
       }
-
     }
+
     try {
       const command = new AdminGetUserCommand(params);
       const response = await this.cognitoClient.send(command);
@@ -111,7 +153,7 @@ export class CognitoService implements ICognitoAuthService {
         });
       }
     } catch (error) {
-      if (error.name === 'UserNotFoundException') {
+      if (error.name === CognitoError.USER_NOT_FOUND_EXCEPTION) {
         return this.responseService.createResponse({
           message: CognitoMessage.USER_NOT_FOUND_ERROR,
           payload: null,
@@ -123,149 +165,47 @@ export class CognitoService implements ICognitoAuthService {
     }
   }
 
-  async registerUser(
-    userRegistrationDetails: UserRegistrationDetailsDto,
-  ): IPromiseResponse<ISignUpResult> {
-    const { email, password } = userRegistrationDetails;
-    const attributeList = [
-      new CognitoUserAttribute({ Name: 'email', Value: email }),
-    ];
-
-    try {
-      const result: ISignUpResult = await new Promise((resolve, reject) => {
-        this.userPool.signUp(
-          email,
-          password,
-          attributeList,
-          null,
-          (error: ICognitoRequestError | null, result) => {
-            if (!error) {
-              return resolve(result);
-            } else if (error.code === CognitoError.INVALID_PASSWORD_EXCEPTION) {
-              return reject(
-                new BadRequestException(
-                  CognitoMessage.PASSWORD_VALIDATION_ERROR,
-                ),
-              );
-            } else if (error.code === CognitoError.USERNAME_EXISTS_EXCEPTION) {
-              return reject(
-                new ConflictException(CognitoMessage.USER_EXISTS_ERROR),
-              );
-            } else {
-              return reject(new InternalServerErrorException(error.message));
-            }
-          },
-        );
-      });
-
-      if (
-        (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT ||
-          process.env.NODE_ENV === ENVIRONMENT.AUTOMATED_TEST) &&
-        process.env.COGNITO_POOL_TYPE === ENVIRONMENT.DEVELOPMENT
-      ) {
-        this.confirmUserRegistration({
-          email,
-          confirmationCode: await this.getConfirmationCodeFromLocalPool(email),
-        });
-      }
-
-      return this.responseService.createResponse({
-        message: CognitoMessage.USER_REGISTERED_SUCCESS,
-        payload: result,
-        type: 'CREATED',
-      });
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   async loginUser(
     userLoginCredentials: UserLoginCredentialsDto,
-  ): IPromiseResponse<CognitoUserSession> {
+  ): IPromiseResponse<AuthenticationResultType> {
     const { email, password } = userLoginCredentials;
-
-    const authenticationDetails = new AuthenticationDetails({
-      Username: email,
-      Password: password,
-    });
-
-    const userCognito = new CognitoUser({
-      Username: email,
-      Pool: this.userPool,
-    });
+    const params: InitiateAuthCommandInput = {
+      AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      AuthParameters: {
+        USERNAME: email,
+        PASSWORD: password,
+      },
+    };
 
     try {
-      userCognito.setAuthenticationFlowType('USER_PASSWORD_AUTH');
-
-      const session: CognitoUserSession = await new Promise(
-        (resolve, reject) => {
-          userCognito.authenticateUser(authenticationDetails, {
-            onSuccess: (result) => {
-              return resolve(result);
-            },
-            onFailure: (error: ICognitoRequestError) => {
-              if (error.code === CognitoError.USER_NOT_CONFIRMED_EXCEPTION) {
-                this.resendUserConfirmationCode({ email });
-                return reject(
-                  new ForbiddenException(
-                    CognitoMessage.USER_NOT_CONFIRMED_ERROR,
-                  ),
-                );
-              } else if (
-                error.code === CognitoError.INVALID_PASSWORD_EXCEPTION
-              ) {
-                return reject(
-                  new UnauthorizedException(
-                    CognitoMessage.INVALID_PASSWORD_ERROR,
-                  ),
-                );
-              } else if (error.code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
-                return reject(
-                  new BadRequestException(
-                    CognitoMessage.INVALID_PASSWORD_ERROR,
-                  ),
-                );
-              } else if (
-                error.code === CognitoError.PASSWORD_RESET_REQUIRED_EXCEPTION
-              ) {
-                return reject(
-                  new UnauthorizedException(
-                    CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR,
-                  ),
-                );
-              } else if (error.code === CognitoError.USER_NOT_FOUND_EXCEPTION) {
-                return reject(
-                  new UnauthorizedException(
-                    CognitoMessage.USER_NOT_FOUND_ERROR,
-                  ),
-                );
-              } else if (
-                error.code === CognitoError.INVALID_PARAMETER_EXCEPTION
-              ) {
-                return reject(
-                  new UnauthorizedException(CognitoMessage.INVALID_CODE_ERROR),
-                );
-              } else {
-                return reject(new InternalServerErrorException(error.code));
-              }
-            },
-            newPasswordRequired: () => {
-              return reject(
-                new UnauthorizedException(
-                  CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR,
-                ),
-              );
-            },
-          });
-        },
+      const response = await this.cognitoClient.send(
+        new InitiateAuthCommand(params),
       );
       return this.responseService.createResponse({
         message: CognitoMessage.USER_AUTHENTICATED_SUCCESS,
-        payload: session,
+        payload: response.AuthenticationResult,
         type: 'OK',
       });
     } catch (error) {
-      this.handleError(error);
+      if (error.name === CognitoError.USER_NOT_CONFIRMED_EXCEPTION) {
+        this.resendUserConfirmationCode({ email });
+        throw new ForbiddenException(CognitoMessage.USER_NOT_CONFIRMED_ERROR);
+      } else if (error.name === CognitoError.INVALID_PASSWORD_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.INVALID_PASSWORD_ERROR);
+      } else if (error.name === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.INVALID_PASSWORD_ERROR);
+      } else if (
+        error.name === CognitoError.PASSWORD_RESET_REQUIRED_EXCEPTION
+      ) {
+        throw new UnauthorizedException(
+          CognitoMessage.NEW_PASSWORD_REQUIRED_ERROR,
+        );
+      } else if (error.name === CognitoError.USER_NOT_FOUND_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.USER_NOT_FOUND_ERROR);
+      } else {
+        this.handleError(error);
+      }
     }
   }
 
@@ -273,44 +213,28 @@ export class CognitoService implements ICognitoAuthService {
     userConfirmationDetails: UserConfirmationDetailsDto,
   ): IPromiseResponse<void> {
     const { email, confirmationCode } = userConfirmationDetails;
-
-    const userCognito = new CognitoUser({
+    const params: ConfirmSignUpCommandInput = {
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
       Username: email,
-      Pool: this.userPool,
-    });
+      ConfirmationCode: confirmationCode,
+    };
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        userCognito.confirmRegistration(
-          confirmationCode,
-          true,
-          (error: ICognitoRequestError | null) => {
-            if (!error) {
-              return resolve();
-            } else if (error?.code === CognitoError.CODE_MISMATCH_EXCEPTION) {
-              return reject(
-                new UnauthorizedException(CognitoMessage.CODE_MISMATCH_ERROR),
-              );
-            } else if (error?.code === CognitoError.EXPIRED_CODE_EXCEPTION) {
-              return reject(
-                new BadRequestException(CognitoMessage.EXPIRED_CODE_ERROR),
-              );
-            } else if (error?.code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
-              return reject(
-                new BadRequestException(CognitoMessage.INVALID_CODE_ERROR),
-              );
-            } else {
-              return reject(new InternalServerErrorException(error.code));
-            }
-          },
-        );
-      });
+      await this.cognitoClient.send(new ConfirmSignUpCommand(params));
       return this.responseService.createResponse({
         message: CognitoMessage.USER_REGISTRATION_CONFIRMED_SUCCESS,
         type: 'OK',
       });
     } catch (error) {
-      this.handleError(error);
+      if (error.name === CognitoError.CODE_MISMATCH_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.CODE_MISMATCH_ERROR);
+      } else if (error.name === CognitoError.EXPIRED_CODE_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.EXPIRED_CODE_ERROR);
+      } else if (error.name === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.INVALID_CODE_ERROR);
+      } else {
+        this.handleError(error);
+      }
     }
   }
 
@@ -318,24 +242,21 @@ export class CognitoService implements ICognitoAuthService {
     resendConfirmationDetails: ResendConfirmationDetailsDto,
   ): IPromiseResponse<void> {
     const { email } = resendConfirmationDetails;
-
-    const userCognito = new CognitoUser({
+    const params = {
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
       Username: email,
-      Pool: this.userPool,
-    });
+    };
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        userCognito.resendConfirmationCode(
-          (err: ICognitoRequestError | null) => {
-            if (err) {
-              return reject(new InternalServerErrorException(err.code));
-            }
+      const userStatus = await this.checkUserConfirmationStatus(email);
+      if (userStatus === 'CONFIRMED') {
+        return this.responseService.createResponse({
+          message: CognitoMessage.USER_ALREADY_CONFIRMED,
+          type: 'OK',
+        });
+      }
 
-            return resolve();
-          },
-        );
-      });
+      await this.cognitoClient.send(new ResendConfirmationCodeCommand(params));
       return this.responseService.createResponse({
         message: CognitoMessage.CONFIRMATION_CODE_RESENT_SUCCESS,
         type: 'OK',
@@ -349,25 +270,15 @@ export class CognitoService implements ICognitoAuthService {
     passwordResetRequest: PasswordResetRequestDto,
   ): IPromiseResponse<void> {
     const { email } = passwordResetRequest;
-
-    const userCognito = new CognitoUser({
+    const params = {
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
       Username: email,
-      Pool: this.userPool,
-    });
+    };
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        userCognito.forgotPassword({
-          onSuccess: () => {
-            return resolve();
-          },
-          onFailure: (error: ICognitoRequestError) => {
-            return reject(new InternalServerErrorException(error.code));
-          },
-        });
-      });
+      await this.cognitoClient.send(new ForgotPasswordCommand(params));
       return this.responseService.createResponse({
-        message: CognitoMessage.PASSWORD_RESET_SUCCESS,
+        message: CognitoMessage.PASSWORD_RESET_INITIATED_SUCCESS,
         type: 'OK',
       });
     } catch (error) {
@@ -378,129 +289,46 @@ export class CognitoService implements ICognitoAuthService {
   async confirmPasswordReset(
     passwordResetConfirmation: PasswordResetConfirmationDto,
   ): IPromiseResponse<void> {
-    const { email, code, newPassword } = passwordResetConfirmation;
-    const userCognito = new CognitoUser({
+    const { email, newPassword, code } = passwordResetConfirmation;
+    const params: ConfirmForgotPasswordCommandInput = {
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
       Username: email,
-      Pool: this.userPool,
-    });
+      ConfirmationCode: code,
+      Password: newPassword,
+    };
 
     try {
-      await new Promise((resolve, reject) => {
-        userCognito.confirmPassword(code, newPassword, {
-          onSuccess: (result) => {
-            return resolve(result);
-          },
-          onFailure: (error: ICognitoRequestError) => {
-            if (error.code === CognitoError.CODE_MISMATCH_EXCEPTION) {
-              return reject(
-                new UnauthorizedException(CognitoMessage.CODE_MISMATCH_ERROR),
-              );
-            } else if (error.code === CognitoError.EXPIRED_CODE_EXCEPTION) {
-              return reject(
-                new BadRequestException(CognitoMessage.EXPIRED_CODE_ERROR),
-              );
-            } else if (error.code === CognitoError.INVALID_PASSWORD_EXCEPTION) {
-              return reject(
-                new BadRequestException(
-                  CognitoMessage.PASSWORD_VALIDATION_ERROR,
-                ),
-              );
-            } else {
-              return reject(new InternalServerErrorException(error.code));
-            }
-          },
-        });
-      });
+      await this.cognitoClient.send(new ConfirmForgotPasswordCommand(params));
       return this.responseService.createResponse({
-        message: CognitoMessage.PASSWORD_RESET_CONFIRMATION_SUCCESS,
+        message: CognitoMessage.PASSWORD_RESET_CONFIRMED_SUCCESS,
         type: 'OK',
       });
     } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  async refreshUserSession(
-    sessionRefreshDetails: SessionRefreshDetailsDto,
-  ): IPromiseResponse<ICognitoRefreshSessionResponse> {
-    const { email, refreshToken } = sessionRefreshDetails;
-    try {
-      const userData = {
-        Username: email,
-        Pool: this.userPool,
-      };
-      const userCognito: CognitoUser = new CognitoUser(userData);
-      const token = new CognitoRefreshToken({ RefreshToken: refreshToken });
-
-      const session: ICognitoRefreshSessionResponse = await new Promise(
-        (resolve, reject) => {
-          userCognito.refreshSession(
-            token,
-            (
-              error: ICognitoRequestError | null,
-              result: ICognitoRefreshSessionResponse,
-            ) => {
-              if (!error) {
-                return resolve(result);
-              } else if (error.code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
-                return reject(
-                  new UnauthorizedException(
-                    CognitoMessage.INVALID_REFRESH_TOKEN_ERROR,
-                  ),
-                );
-              } else {
-                return reject(new InternalServerErrorException(error.code));
-              }
-            },
-          );
-        },
-      );
-      return this.responseService.createResponse({
-        message: CognitoMessage.SESSION_REFRESHED_SUCCESS,
-        payload: session,
-        type: 'OK',
-      });
-    } catch (error) {
-      this.handleError(error);
+      if (error.name === CognitoError.CODE_MISMATCH_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.CODE_MISMATCH_ERROR);
+      } else if (error.name === CognitoError.EXPIRED_CODE_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.EXPIRED_CODE_ERROR);
+      } else if (error.name === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.INVALID_CODE_ERROR);
+      } else {
+        this.handleError(error);
+      }
     }
   }
 
   async changePassword(
-    changePassword: ChangePasswordDto,
+    changePasswordDto: ChangePasswordDto,
   ): IPromiseResponse<void> {
-    const { email, newPassword, oldPassword } = changePassword;
-    const userCognito = new CognitoUser({
-      Username: email,
-      Pool: this.userPool,
-    });
+    const { accessToken, previousPassword, proposedPassword } =
+      changePasswordDto;
+    const params: ChangePasswordCommandInput = {
+      AccessToken: accessToken,
+      PreviousPassword: previousPassword,
+      ProposedPassword: proposedPassword,
+    };
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        userCognito.changePassword(
-          oldPassword,
-          newPassword,
-          (error: ICognitoRequestError) => {
-            if (error) {
-              if (error.code === CognitoError.INVALID_PASSWORD_EXCEPTION) {
-                return reject(
-                  new BadRequestException(
-                    CognitoMessage.PASSWORD_VALIDATION_ERROR,
-                  ),
-                );
-              } else if (error.code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
-                return reject(
-                  new UnauthorizedException(
-                    CognitoMessage.INVALID_PASSWORD_ERROR,
-                  ),
-                );
-              } else {
-                return reject(new InternalServerErrorException(error.code));
-              }
-            }
-            return resolve();
-          },
-        );
-      });
+      await this.cognitoClient.send(new ChangePasswordCommand(params));
       return this.responseService.createResponse({
         message: CognitoMessage.PASSWORD_CHANGED_SUCCESS,
         type: 'OK',
@@ -508,6 +336,75 @@ export class CognitoService implements ICognitoAuthService {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  async refreshSession(
+    sessionRefreshDetails: SessionRefreshDetailsDto,
+  ): IPromiseResponse<ICognitoRefreshSessionResponse> {
+    const { refreshToken } = sessionRefreshDetails;
+    const params: InitiateAuthCommandInput = {
+      AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      AuthParameters: { REFRESH_TOKEN: refreshToken },
+    };
+
+    try {
+      const response = await this.cognitoClient.send(
+        new InitiateAuthCommand(params),
+      );
+      return this.responseService.createResponse({
+        message: CognitoMessage.SESSION_REFRESH_SUCCESS,
+        payload: {
+          accessToken: response.AuthenticationResult.AccessToken,
+          idToken: response.AuthenticationResult.IdToken,
+          refreshToken: response.AuthenticationResult.RefreshToken,
+        },
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private handleError(error: ICognitoRequestError) {
+    try {
+      const { code, message } = error;
+
+      if (message.includes(CognitoError.COGNITO_LOCAL_UNSUPPORTED)) {
+        this.responseService.debug(message);
+      } else if (code === CognitoError.LIMIT_EXCEEDED_EXCEPTION) {
+        throw new InternalServerErrorException(
+          CognitoMessage.LIMIT_EXCEEDED_ERROR,
+        );
+      } else if (code === CognitoError.INVALID_PARAMETER_EXCEPTION) {
+        throw new BadRequestException(CognitoMessage.INVALID_PARAMETERS_ERROR);
+      } else if (code === CognitoError.NOT_AUTHORIZED_EXCEPTION) {
+        throw new UnauthorizedException(message);
+      } else if (code === CognitoError.USER_NOT_FOUND_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.USER_NOT_FOUND_ERROR);
+      } else if (code === CognitoError.INVALID_PASSWORD_EXCEPTION) {
+        throw new UnauthorizedException(CognitoMessage.INVALID_PASSWORD_ERROR);
+      } else if (code === CognitoError.USERNAME_EXISTS_EXCEPTION) {
+        throw new ConflictException(CognitoMessage.USERNAME_EXISTS_ERROR);
+      } else {
+        throw new InternalServerErrorException(CognitoMessage.GENERIC_ERROR);
+      }
+    } catch (err) {
+      this.responseService.errorHandler({
+        type: 'INTERNAL_SERVER_ERROR',
+        error,
+      });
+    }
+  }
+
+  private async checkUserConfirmationStatus(email: string): Promise<string> {
+    const params = {
+      UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
+      Username: email,
+    };
+
+    const user = await this.cognitoClient.send(new AdminGetUserCommand(params));
+    return user.UserStatus;
   }
 
   private async getConfirmationCodeFromLocalPool(
@@ -558,11 +455,5 @@ export class CognitoService implements ICognitoAuthService {
     } catch (err) {
       this.handleError(err);
     }
-  }
-  private handleError(error: Error): void {
-    this.responseService.errorHandler({
-      type: 'INTERNAL_SERVER_ERROR',
-      error,
-    });
   }
 }
