@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -22,9 +23,11 @@ import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../application/dto/create-team.dto';
 import { TeamResponseDto } from '../application/dto/response-team.dto';
+import { UpdateTeamDto } from '../application/dto/update-team.dto';
 import { TeamService } from '../application/service/team.service';
 
 @Auth(AuthType.Bearer)
+@ApiTags('Team')
 @Controller('team')
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
@@ -56,7 +59,7 @@ export class TeamController {
   @Patch('/:teamId')
   async update(
     @CurrentUser() data: IResponse<User>,
-    @Body() updateTeamDto: CreateTeamDto,
+    @Body() updateTeamDto: UpdateTeamDto,
     @Param('teamId') teamId: string,
   ): IPromiseResponse<TeamResponseDto> {
     return this.teamService.update(
