@@ -264,6 +264,29 @@ export class CollectionService {
     }
   }
 
+  async findInvocationsByCollectionId(
+    collectionId: string,
+  ): IPromiseResponse<Collection> {
+    try {
+      const collection =
+        await this.collectionRepository.findInvocationsByCollectionId(
+          collectionId,
+        );
+      if (!collection) {
+        throw new NotFoundException(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
+        );
+      }
+      return this.responseService.createResponse({
+        payload: collection,
+        message: COLLECTION_RESPONSE.COLLECTION_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   async createByUser(
     collectionDto: CreateCollectionDto,
     user: User,
