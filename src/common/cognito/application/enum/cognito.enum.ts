@@ -14,7 +14,6 @@ export enum CognitoMessage {
   CONFIRMATION_CODE_RESENT_SUCCESS = 'Confirmation code resent successfully',
   PASSWORD_RESET_SUCCESS = 'Password reset successfully',
   PASSWORD_RESET_CONFIRMATION_SUCCESS = 'Password reset confirmation successfully',
-  SESSION_REFRESHED_SUCCESS = 'Session refreshed successfully',
   USER_NOT_FOUND_ERROR = 'User not found',
   USER_EXISTS = 'User exists',
   PASSWORD_CHANGED_SUCCESS = 'Password changed successfully',
