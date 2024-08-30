@@ -26,6 +26,7 @@ import { CollectionResponseDto } from '../application/dto/collection-response.dt
 import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
+import { Collection } from '../domain/collection.domain';
 
 @Auth(AuthType.Bearer)
 @ApiTags('Collection')
@@ -103,6 +104,13 @@ export class CollectionController {
       id,
       environmentName,
     );
+  }
+
+  @Get('/:id/invocations')
+  findInvocationsByCollectionId(
+    @Param('id') id: string,
+  ): IPromiseResponse<Collection> {
+    return this.collectionService.findInvocationsByCollectionId(id);
   }
 
   @Patch('/')
