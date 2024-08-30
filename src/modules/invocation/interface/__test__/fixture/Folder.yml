@@ -24,3 +24,8 @@ items:
     id: 'folder4'
     name: 'folder4'
     collection: '@collection4'
+
+  folder15:
+    id: 'folder15'
+    name: 'folder15'
+    collection: '@collection5'
