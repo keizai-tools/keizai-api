@@ -29,7 +29,7 @@ import {
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
 
-import type { ChangePasswordDto } from '../dto/change_password.dto';
+import { ChangePasswordDto } from '../dto/change_password.dto';
 import { LoginResponse } from '../interface/authentication.service.interface';
 
 @Injectable()
