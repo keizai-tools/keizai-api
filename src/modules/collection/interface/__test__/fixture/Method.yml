@@ -1,0 +1,11 @@
+entity: Method
+items:
+  method0:
+    id: 'method0'
+    name: 'method0'
+    inputs: []
+    outputs: []
+    params: []
+    docs: 'docs0'
+    user: '@user0'
+    invocation: '@invocation0'

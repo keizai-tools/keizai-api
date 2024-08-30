@@ -275,6 +275,35 @@ describe('Collection - [/collection]', () => {
     });
   });
 
+  describe.only('Get invocations from a collection  - [GET /collection/:id/invocations]', () => {
+    it('should get invocations from a collection', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/collection/collection0/invocations',
+      });
+
+      expect(response.body.payload).toEqual(
+        expect.objectContaining({
+          id: 'collection0',
+          name: 'collection0',
+        }),
+      );
+    });
+
+    it('should throw error when try to get invocations from a collection without id', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/collection/invocations',
+      });
+
+      expect(response.body.details.description).toEqual(
+        COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+      );
+    });
+  });
+
   describe('Update one  - [PATCH /collection/:id]', () => {
     it('should update one collection associated with a user', async () => {
       const response = await makeRequest({
