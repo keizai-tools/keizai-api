@@ -1,4 +1,4 @@
-import { Transaction, contract, xdr } from '@stellar/stellar-sdk';
+import { Account, Transaction, contract, xdr } from '@stellar/stellar-sdk';
 
 import {
   EncodeEvent,
@@ -31,4 +31,6 @@ export interface IStellarAdapter {
   ): Promise<xdr.ContractExecutable>;
   rawGetTransaction(hash: string): Promise<RawGetTransactionResponse>;
   getTransaction(hash: string): Promise<GetTransactionResponse>;
+  prepareTransactionSimulation(tx: Transaction): Promise<Transaction>;
+  getAccount(publicKey: string): Promise<Account>;
 }
