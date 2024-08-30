@@ -94,6 +94,34 @@ export class CollectionRepository implements ICollectionRepository {
     });
   }
 
+  async findInvocationsByCollectionId(id: string): Promise<Collection> {
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const collection = await queryRunner.manager.findOne(Collection, {
+        relations: {
+          folders: { invocations: { methods: true, selectedMethod: true } },
+          enviroments: true,
+        },
+        where: { id },
+        lock:
+          process.env.NODE_ENV === 'automated_tests'
+            ? undefined
+            : { mode: 'pessimistic_read' },
+      });
+
+      await queryRunner.commitTransaction();
+      return collection;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async update(collection: Collection): Promise<Collection> {
     const queryRunner = this.repository.manager.connection.createQueryRunner();
     await queryRunner.connect();
