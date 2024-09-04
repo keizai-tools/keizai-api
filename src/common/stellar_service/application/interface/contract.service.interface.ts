@@ -1,5 +1,6 @@
 import { xdr } from '@stellar/stellar-sdk';
 
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { ContractErrorResponse, RunInvocationResponse } from './soroban';
@@ -28,8 +29,8 @@ export interface IDecodedSection extends xdr.ScSpecEntry {
 }
 
 export interface IRunInvocationParams {
-  contractId: string;
-  selectedMethod: Partial<Method>;
+  contractId?: string;
+  selectedMethod?: Partial<Method>;
   signedTransactionXDR?: string;
   publicKey?: string;
   secretKey?: string;
@@ -40,6 +41,15 @@ export interface IStellarService {
   getStellarAssetContractFunctions(): IGeneratedMethod[];
   decodeContractSpecBuffer(buffer: ArrayBuffer): Promise<xdr.ScSpecEntry[]>;
   extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;
+  deployWasmFile({
+    file,
+    signedTransactionXDR,
+    invocation,
+  }: {
+    file?: Express.Multer.File;
+    signedTransactionXDR?: string;
+    invocation?: Invocation;
+  }): Promise<string | ContractErrorResponse>;
   getContractSpecEntries(
     instanceValue: xdr.ContractExecutable,
   ): Promise<xdr.ScSpecEntry[]>;
@@ -62,4 +72,9 @@ export interface IStellarService {
     publicKey: string,
     selectedMethod: Partial<Method>,
   ): Promise<string>;
+  prepareUploadWASM(
+    file: Express.Multer.File,
+    publicKey: string,
+  ): Promise<string>;
+  runUploadWASM(signedXDR: string): Promise<string>;
 }

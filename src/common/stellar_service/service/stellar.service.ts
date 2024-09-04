@@ -1,17 +1,26 @@
 import {
+  HttpException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   RequestTimeoutException,
   UseInterceptors,
   forwardRef,
 } from '@nestjs/common';
 import {
+  Address,
+  BASE_FEE,
+  Contract,
+  FeeBumpTransaction,
+  Keypair,
   Memo,
   MemoType,
   Networks,
   Operation,
+  SorobanRpc,
   Transaction,
   TransactionBuilder,
+  scValToNative,
   xdr,
 } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
@@ -20,6 +29,7 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
@@ -27,6 +37,8 @@ import { ContractFunctions } from '../application/domain/ContractFunctions.array
 import { SCSpecTypeMap } from '../application/domain/SCSpecTypeMap.object';
 import {
   CONTRACT_EXECUTABLE_TYPE,
+  ContractMethods,
+  ErrorMessages,
   GetTransactionStatus,
   NETWORK,
   SOROBAN_CONTRACT_ERROR,
@@ -55,6 +67,9 @@ import {
 export class StellarService implements IStellarService {
   private SCSpecTypeMap: { [key: number]: string };
   private currentNetwork: string;
+
+  private deployerContractId: string;
+
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
@@ -67,6 +82,8 @@ export class StellarService implements IStellarService {
   ) {
     this.responseService.setContext(StellarService.name);
     this.currentNetwork = NETWORK.SOROBAN_FUTURENET;
+    this.deployerContractId =
+      process.env.STELLAR_FUTURENET_SOROBAN_DEPLOYER_CONTRACT_ID;
     this.SCSpecTypeMap = SCSpecTypeMap;
   }
 
@@ -78,6 +95,10 @@ export class StellarService implements IStellarService {
       if (selectedNetwork !== this.currentNetwork) {
         this.stellarAdapter.changeNetwork(selectedNetwork);
         this.currentNetwork = selectedNetwork;
+        this.deployerContractId =
+          process.env[
+            `STELLAR_${selectedNetwork}_SOROBAN_DEPLOYER_CONTRACT_ID`
+          ];
       }
 
       if (selectedNetwork === NETWORK.SOROBAN_AUTO_DETECT && contractId) {
@@ -88,7 +109,75 @@ export class StellarService implements IStellarService {
       }
       return this.currentNetwork;
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  getNetworkPassphrase(): string {
+    const networkPassphraseMap: Partial<{ [key in NETWORK]: string }> = {
+      [NETWORK.SOROBAN_MAINNET]: Networks.PUBLIC,
+      [NETWORK.SOROBAN_TESTNET]: Networks.TESTNET,
+      [NETWORK.SOROBAN_FUTURENET]: Networks.FUTURENET,
+    };
+    const networkPassphrase = networkPassphraseMap[this.currentNetwork];
+
+    if (!networkPassphrase) {
+      throw new InternalServerErrorException(ErrorMessages.UNSUPPORTED_NETWORK);
+    }
+
+    return networkPassphrase;
+  }
+
+  async deployWasmFile({
+    file,
+    signedTransactionXDR,
+    invocation,
+  }: {
+    file?: Express.Multer.File;
+    signedTransactionXDR?: string;
+    invocation?: Invocation;
+  }): Promise<string> {
+    try {
+      const contract = new Contract(this.deployerContractId);
+      let transaction: Transaction<Memo<MemoType>, Operation[]>;
+
+      if (signedTransactionXDR) {
+        transaction = TransactionBuilder.fromXDR(
+          signedTransactionXDR,
+          this.getNetworkPassphrase(),
+        ) as Transaction;
+
+        return await this.submitTransaction(transaction);
+      }
+
+      const bytes = xdr.ScVal.scvBytes(file.buffer);
+      const deployer = new Address(invocation.publicKey);
+      const keyPair = Keypair.fromSecret(invocation.secretKey);
+
+      const contractOperation = contract.call(
+        ContractMethods.DEPLOY,
+        deployer.toScVal(),
+        bytes,
+        xdr.ScVal.scvBytes(Buffer.alloc(32, Date.now())),
+      );
+
+      if (!signedTransactionXDR) {
+        transaction = await this.buildInvokeTransaction(
+          contractOperation,
+          keyPair,
+        );
+      }
+
+      const transactionSimulation =
+        await this.stellarAdapter.prepareTransactionSimulation(transaction);
+
+      transactionSimulation.sign(keyPair);
+
+      return await this.submitTransaction(transactionSimulation);
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
     }
   }
 
@@ -120,7 +209,6 @@ export class StellarService implements IStellarService {
           }
         }
         if (!success) {
-          console.log('Failed to decode further. Stopping.');
           break;
         }
         if (offset >= arrayBuffer.length) {
@@ -129,7 +217,8 @@ export class StellarService implements IStellarService {
       }
       return decodedData;
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return [];
     }
   }
@@ -166,7 +255,7 @@ export class StellarService implements IStellarService {
             const inputName = inputNameBuffer.toString('utf-8');
             const inputTypeValue = input._attributes.type._switch.value;
             const inputTypeName =
-              this.SCSpecTypeMap[inputTypeValue] || 'Unknown Type';
+              this.SCSpecTypeMap[inputTypeValue] || ErrorMessages.UNKNOWN_TYPE;
             return { name: inputName, type: inputTypeName };
           },
         );
@@ -175,14 +264,15 @@ export class StellarService implements IStellarService {
         functionObj.outputs = outputs.map((output) => {
           const outputTypeValue = output._switch.value;
           const outputTypeName =
-            this.SCSpecTypeMap[outputTypeValue] || 'Unknown Type';
+            this.SCSpecTypeMap[outputTypeValue] || ErrorMessages.UNKNOWN_TYPE;
           return { type: outputTypeName };
         });
       }
 
       return functionObj;
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return null;
     }
   }
@@ -199,7 +289,8 @@ export class StellarService implements IStellarService {
       )[0];
       return await this.decodeContractSpecBuffer(buffer);
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return [];
     }
   }
@@ -218,18 +309,13 @@ export class StellarService implements IStellarService {
           specEntries = await this.getContractSpecEntries(instanceValue);
           break;
         } catch (error) {
-          console.log(
-            `Error getting contract spec entries (Retry ${retries + 1}): ${
-              error.message
-            }`,
-          );
           retries++;
         }
       }
 
       if (retries === maxRetries) {
         throw new RequestTimeoutException(
-          'Unable to get contract spec entries.',
+          ErrorMessages.UNABLE_TO_GET_CONTRACT_SPEC_ENTRIES,
         );
       }
 
@@ -248,7 +334,8 @@ export class StellarService implements IStellarService {
 
       return contractSpec.funcArgsToScVals(selectedMethod.name, params);
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return [];
     }
   }
@@ -275,7 +362,8 @@ export class StellarService implements IStellarService {
           return Object.keys(f).length > 0 && f.name.length > 0;
         });
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return [];
     }
   }
@@ -303,7 +391,8 @@ export class StellarService implements IStellarService {
         selectedMethod,
       );
     } catch (error) {
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
       return [];
     }
   }
@@ -325,7 +414,6 @@ export class StellarService implements IStellarService {
       selectedMethod,
       signedTransactionXDR,
     } = runInvocationParams;
-
     try {
       let transaction: Transaction<Memo<MemoType>, Operation[]>;
 
@@ -411,7 +499,8 @@ export class StellarService implements IStellarService {
           errorMessage,
         );
       }
-      this.handleError(error);
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
     }
   }
 
@@ -420,19 +509,158 @@ export class StellarService implements IStellarService {
     publicKey: string,
     selectedMethod: Partial<Method>,
   ): Promise<string> {
-    const scArgs = await this.generateScArgsToFromContractId(
-      contractId,
-      selectedMethod,
-    );
+    try {
+      const scArgs = await this.generateScArgsToFromContractId(
+        contractId,
+        selectedMethod,
+      );
 
-    const transaction = await this.stellarAdapter.prepareTransaction(
-      publicKey,
-      contractId,
-      selectedMethod.name,
-      scArgs,
-    );
+      const transaction = await this.stellarAdapter.prepareTransaction(
+        publicKey,
+        contractId,
+        selectedMethod.name,
+        scArgs,
+      );
 
-    return transaction.toXDR();
+      return transaction.toXDR();
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  async runUploadWASM(signedXDR: string) {
+    try {
+      const response = await this.deployWasmFile({
+        signedTransactionXDR: signedXDR,
+      });
+
+      return response;
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  async buildInvokeTransaction(
+    invokeOperation: xdr.Operation,
+    adminKeypair: Keypair,
+  ) {
+    try {
+      const account = await this.stellarAdapter.getAccount(
+        adminKeypair.publicKey(),
+      );
+
+      const transaction = new TransactionBuilder(account, {
+        fee: BASE_FEE,
+        networkPassphrase: Networks[this.currentNetwork],
+      })
+        .addOperation(invokeOperation)
+        .setTimeout(30)
+        .build();
+
+      return transaction;
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  async submitTransaction(
+    transaction: Transaction | FeeBumpTransaction,
+  ): Promise<string> {
+    try {
+      const response = await this.stellarAdapter.rawSendTransaction(
+        transaction as Transaction,
+      );
+      const { status, hash } = response;
+
+      if (status === SendTransactionStatus.ERROR) {
+        throw new Error(
+          this.stellarMapper.fromTxResultToDisplayResponse(
+            response.errorResultXdr,
+          ),
+        );
+      }
+
+      const transactionDetails = await this.getTransactionDetails(hash);
+      if (
+        transactionDetails.status === SorobanRpc.Api.GetTransactionStatus.FAILED
+      ) {
+        throw new Error(`${JSON.stringify(transactionDetails.resultXdr)}`);
+      }
+
+      if (
+        transactionDetails.status ===
+        SorobanRpc.Api.GetTransactionStatus.SUCCESS
+      ) {
+        return scValToNative(
+          transactionDetails.resultMetaXdr.v3().sorobanMeta().returnValue(),
+        );
+      }
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  async getTransactionDetails(
+    transactionHash: string,
+  ): Promise<SorobanRpc.Api.GetTransactionResponse> {
+    try {
+      const TIMEOUT = 1000;
+      const MAX_RETRIES = 10;
+      let transactionDetails: SorobanRpc.Api.GetTransactionResponse;
+      let count = 0;
+
+      do {
+        if (count > MAX_RETRIES) {
+          throw new Error(ErrorMessages.TRANSACTION_NOT_FOUND);
+        }
+
+        transactionDetails = await this.stellarAdapter.getTransaction(
+          transactionHash,
+        );
+
+        count++;
+
+        await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
+      } while (
+        transactionDetails.status ===
+        SorobanRpc.Api.GetTransactionStatus.NOT_FOUND
+      );
+
+      return transactionDetails;
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
+  }
+
+  async prepareUploadWASM(
+    file: Express.Multer.File,
+    publicKey: string,
+  ): Promise<string> {
+    try {
+      const deployer = new Address(publicKey);
+      const scArgs = [
+        deployer.toScVal(),
+        xdr.ScVal.scvBytes(file.buffer),
+        xdr.ScVal.scvBytes(Buffer.alloc(32, Date.now())),
+      ];
+
+      const transaction = await this.stellarAdapter.prepareTransaction(
+        publicKey,
+        this.deployerContractId,
+        ContractMethods.DEPLOY,
+        scArgs,
+      );
+
+      return transaction.toXDR();
+    } catch (error) {
+      if (error instanceof HttpException) this.handleError(error);
+      else this.handleError(error.message);
+    }
   }
 
   private handleError(error: Error): void {
