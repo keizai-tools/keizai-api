@@ -29,7 +29,7 @@ import { IResponse } from '@/common/response_service/interface/response.interfac
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
-import type { ChangePasswordDto } from '../../application/dto/change_password.dto';
+import { ChangePasswordDto } from '../../application/dto/change_password.dto';
 
 describe('Auth - [/auth]', () => {
   let app: INestApplication;

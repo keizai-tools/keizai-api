@@ -10,6 +10,7 @@ export enum SOROBAN_SERVER {
   TESTNET = 'https://soroban-testnet.stellar.org',
   MAINNET = 'https://soroban-rpc.mainnet.stellar.gateway.fm',
   FRIENDBOT_TESNET = 'https://friendbot.stellar.org?addr=',
+  FRIENDBOT_FUTURENET = 'https://friendbot-futurenet.stellar.org/?addr=',
 }
 
 export enum CONTRACT_EXECUTABLE_TYPE {
@@ -53,4 +54,20 @@ export enum GetTransactionStatus {
 export enum SendTransactionStatus {
   ERROR = 'ERROR',
   PENDING = 'PENDING',
+}
+
+export enum ContractMethods {
+  DEPLOY = 'deploy',
+}
+
+export enum ErrorMessages {
+  TRANSACTION_NOT_FOUND = 'Transaction not found',
+  CONTRACT_NOT_FOUND = 'Contract not found',
+  CONTRACT_ALREADY_EXISTS = 'Contract already exists',
+  ACCOUNT_NOT_FOUND_ON_MAINNET = 'Account does not exist on mainnet.',
+  FAILED_TO_FUND_ACCOUNT = 'Failed to fund account using Friendbot.',
+  ERROR_SENDING_TRANSACTION = 'Error sending transaction',
+  UNSUPPORTED_NETWORK = 'Unsupported network',
+  UNKNOWN_TYPE = 'Unknown Type',
+  UNABLE_TO_GET_CONTRACT_SPEC_ENTRIES = 'Unable to get contract spec entries.',
 }

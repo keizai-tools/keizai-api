@@ -7,7 +7,7 @@ import {
   Parser,
   Resolver,
   fixturesIterator,
-} from 'typeorm-fixtures-cli/dist';
+} from 'typeorm-fixtures-cli';
 import { CommandUtils } from 'typeorm/commands/CommandUtils';
 
 export async function loadFixtures({

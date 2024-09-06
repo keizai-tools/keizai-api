@@ -21,4 +21,6 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_FOUND = 'Invocation found',
   INVOCATION_CREATED = 'Invocation created',
   INVOCATION_RUN = 'Invocation run',
+  INVOCATION_PUBLIC_KEY_NEEDED = 'Public key needed',
+  INVOCATION_UPLOAD_WASM = 'Wasm file uploaded',
 }

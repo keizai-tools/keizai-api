@@ -15,7 +15,7 @@ export interface IUserService {
   ): IPromiseResponse<User>;
   updateUser(
     updateUserDto: UpdateUserDto,
-    user?: User,
+    user: User,
   ): IPromiseResponse<IUpdateUserResponse>;
   findAllByEmails(emails: string[]): IPromiseResponse<User[]>;
 }

@@ -24,7 +24,11 @@ export type DataObject = Record<
   string,
   Primitive | NestedObject | Primitive[] | NestedObject[]
 >;
-export type FilesObject = Record<string, fs.ReadStream | fs.ReadStream[]>;
+
+export type FilesObject = Record<
+  string,
+  fs.ReadStream | fs.ReadStream[] | Buffer | Buffer[]
+>;
 
 export async function makeRequest({
   method = 'get',
