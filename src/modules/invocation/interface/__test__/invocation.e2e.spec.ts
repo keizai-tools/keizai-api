@@ -1,6 +1,7 @@
 import {
   ClassSerializerInterceptor,
   INestApplication,
+  NotFoundException,
   ValidationPipe,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -337,7 +338,11 @@ describe('Invocation - [/invocation]', () => {
     it('should throw error when try to update and invocation with an invalid contract id', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
-        .mockResolvedValue(new Error());
+        .mockRejectedValue(
+          new NotFoundException(
+            INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+          ),
+        );
 
       const response = await makeRequest({
         app,
@@ -359,7 +364,7 @@ describe('Invocation - [/invocation]', () => {
     it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
       jest
         .spyOn(mockedContractService, 'generateMethodsFromContractId')
-        .mockResolvedValue(new Error());
+        .mockResolvedValue([]);
 
       await makeRequest({
         app,
@@ -482,7 +487,7 @@ describe('Invocation - [/invocation]', () => {
 
     it('should change to TESTNET network', async () => {
       const responseExpected = expect.objectContaining({
-        contractId: null,
+        contractId: '{{contract_id}}',
         folder: {
           id: 'folder0',
           name: 'folder0',
@@ -490,7 +495,7 @@ describe('Invocation - [/invocation]', () => {
         id: 'invocation0',
         methods: [],
         name: 'invocation updated',
-        network: 'FUTURENET',
+        network: 'TESTNET',
         postInvocation: null,
         preInvocation: null,
         publicKey: null,
@@ -511,7 +516,7 @@ describe('Invocation - [/invocation]', () => {
 
     it('should change to FUTURENET network', async () => {
       const responseExpected = expect.objectContaining({
-        contractId: null,
+        contractId: '{{contract_id}}',
         folder: {
           id: 'folder0',
           name: 'folder0',
@@ -649,6 +654,28 @@ describe('Invocation - [/invocation]', () => {
       expect(response.body.details.description).toEqual(
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
+    });
+  });
+
+  describe('Upload wasm  - [POST /invocation/:id/upload/wasm]', () => {
+    it('should deploy a new contract', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/invocation/invocation15/upload/wasm',
+        files: {
+          wasm: Buffer.from('Ambassador'),
+        },
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 202,
+        message: 'Wasm file uploaded',
+        timestamp: expect.any(String),
+        path: '/invocation/invocation15/upload/wasm',
+      });
     });
   });
 
@@ -934,7 +961,11 @@ describe('Invocation - [/invocation]', () => {
       it('should throw error when try to update and invocation with an invalid contract id', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
-          .mockResolvedValue(new Error());
+          .mockRejectedValue(
+            new NotFoundException(
+              INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+            ),
+          );
 
         const response = await makeRequest({
           app,
@@ -956,7 +987,7 @@ describe('Invocation - [/invocation]', () => {
       it('should retry 5 times if generateMethodsFromContractId throws an error', async () => {
         jest
           .spyOn(mockedContractService, 'generateMethodsFromContractId')
-          .mockResolvedValue(new Error());
+          .mockRejectedValue([]);
 
         const response = await makeRequest({
           app,
@@ -1087,7 +1118,7 @@ describe('Invocation - [/invocation]', () => {
 
       it('should change to TESTNET network', async () => {
         const responseExpected = expect.objectContaining({
-          contractId: null,
+          contractId: '{{contract_id}}',
           folder: {
             id: 'folder2',
             name: 'folder2',
@@ -1095,9 +1126,9 @@ describe('Invocation - [/invocation]', () => {
           id: 'invocation6',
           methods: [],
           name: 'invocation updated',
-          network: 'FUTURENET',
+          network: 'TESTNET',
           postInvocation: null,
-          preInvocation: null,
+          preInvocation: 'console.log("post invocation")',
           publicKey: null,
           secretKey: null,
           selectedMethod: null,

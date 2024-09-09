@@ -6,11 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
+import { WasmFileValidationPipe } from '@/common/base/application/pipe/wasm-file-validation.pipe';
 import {
   IPromiseResponse,
   IResponse,
@@ -116,5 +119,45 @@ export class InvocationUserController {
     @Param('id') id: string,
   ): IPromiseResponse<boolean> {
     return this.invocationService.deleteByUser(id, data.payload.id);
+  }
+
+  @Post('/:id/upload/wasm')
+  @UseInterceptors(FileInterceptor('wasm'))
+  async uploadWASM(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+    @UploadedFile(WasmFileValidationPipe)
+    wasm: Express.Multer.File,
+  ): IPromiseResponse<string | ContractErrorResponse> {
+    return await this.invocationService.uploadWASM(id, data.payload.id, wasm);
+  }
+
+  @Post('/:id/upload/prepare')
+  @UseInterceptors(FileInterceptor('wasm'))
+  prepareUploadWASM(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+    @UploadedFile(WasmFileValidationPipe)
+    wasm: Express.Multer.File,
+  ): IPromiseResponse<string | ContractErrorResponse> {
+    return this.invocationService.prepareUploadWASM(id, data.payload.id, wasm);
+  }
+
+  @Post('/:id/upload/run')
+  runUploadWASM(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+    @Body()
+    {
+      signedTransactionXDR,
+    }: {
+      signedTransactionXDR: string;
+    },
+  ): IPromiseResponse<string | ContractErrorResponse> {
+    return this.invocationService.runUploadWASM(
+      signedTransactionXDR,
+      data.payload.id,
+      id,
+    );
   }
 }

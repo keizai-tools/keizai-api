@@ -5,6 +5,7 @@ import {
   GetTransactionStatus,
   SendTransactionStatus,
 } from '@/common/stellar_service/application/domain/soroban.enum';
+import { IStellarService } from '@/common/stellar_service/application/interface/contract.service.interface';
 
 export const identityProviderServiceMock: jest.MockedObject<ICognitoAuthService> =
   {
@@ -26,11 +27,20 @@ export const contractExecutable: xdr.ContractExecutable = {
   toXDR: jest.fn(),
 };
 
-export const mockedContractService = {
+export const mockedContractService: jest.MockedObject<IStellarService> = {
   runInvocation: jest.fn(),
   verifyNetwork: jest.fn(),
-  changeNetwork: jest.fn(),
   generateMethodsFromContractId: jest.fn(),
+  deployWasmFile: jest.fn(),
+  decodeContractSpecBuffer: jest.fn(),
+  extractFunctionInfo: jest.fn(),
+  generateScArgsToFromContractId: jest.fn(),
+  getContractSpecEntries: jest.fn(),
+  getPreparedTransactionXDR: jest.fn(),
+  getScValFromSmartContract: jest.fn(),
+  getStellarAssetContractFunctions: jest.fn(),
+  prepareUploadWASM: jest.fn(),
+  runUploadWASM: jest.fn(),
 };
 
 export const getTxFailed = {

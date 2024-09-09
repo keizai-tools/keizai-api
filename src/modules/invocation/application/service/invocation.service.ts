@@ -133,13 +133,11 @@ export class InvocationService {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
 
-      const response = await this.runInvocationTransaction(
-        invocation,
-        transactionXDR,
-      );
-
       return this.responseService.createResponse({
-        payload: response,
+        payload: await this.runInvocationTransaction(
+          invocation,
+          transactionXDR,
+        ),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'OK',
       });
@@ -267,7 +265,7 @@ export class InvocationService {
       });
       return invocationResult;
     } catch (error) {
-      return error;
+      this.handleError(error);
     }
   }
 
@@ -534,24 +532,14 @@ export class InvocationService {
               docs: method.docs,
               invocationId: invocation.id,
             };
+
             return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
           });
+
           await this.methodRepository.saveAll(methodsMapped);
         } catch (error) {
           throw new NotFoundException(
             INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
-          );
-        }
-      }
-
-      if (updateInvocationDto.network) {
-        try {
-          const methodIds = invocation.methods.map((method) => method.id);
-
-          await this.methodRepository.deleteAll(methodIds);
-        } catch (error) {
-          throw new BadRequestException(
-            INVOCATION_RESPONSE.INVOCATION_FAIL_DELETE_ALL_METHODS,
           );
         }
       }
@@ -566,14 +554,8 @@ export class InvocationService {
 
       const invocationUpdated = await this.invocationRepository.update({
         ...invocationMapped,
-        network,
+        network: network || updateInvocationDto.network || invocation.network,
       });
-
-      if (!invocationUpdated) {
-        throw new BadRequestException(
-          INVOCATION_RESPONSE.Invocation_NOT_UPDATED,
-        );
-      }
 
       return this.invocationMapper.fromEntityToDto(invocationUpdated);
     } catch (error) {
@@ -600,6 +582,93 @@ export class InvocationService {
       return this.responseService.createResponse({
         payload: await this.invocationRepository.delete(id),
         message: INVOCATION_RESPONSE.INVOCATION_DELETED,
+        type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async prepareUploadWASM(
+    invocationId: string,
+    userId: string,
+    file: Express.Multer.File,
+  ): IPromiseResponse<string> {
+    try {
+      const invocation = await this.findOneByInvocationAndUserId(
+        invocationId,
+        userId,
+      );
+
+      if (!invocation.publicKey) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
+        );
+      }
+
+      this.contractService.verifyNetwork(invocation.network);
+
+      return this.responseService.createResponse({
+        payload: await this.contractService.prepareUploadWASM(
+          file,
+          invocation.publicKey,
+        ),
+        message: INVOCATION_RESPONSE.INVOCATION_UPDATED,
+        type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async uploadWASM(
+    invocationId: string,
+    userId: string,
+    file: Express.Multer.File,
+  ) {
+    try {
+      const invocation = await this.findOneByInvocationAndUserId(
+        invocationId,
+        userId,
+      );
+
+      this.contractService.verifyNetwork(invocation.network);
+
+      const invocationResult = await this.contractService.deployWasmFile({
+        file,
+        invocation,
+      });
+
+      return this.responseService.createResponse({
+        payload: invocationResult,
+        message: INVOCATION_RESPONSE.INVOCATION_UPLOAD_WASM,
+        type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async runUploadWASM(
+    signedXDR: string,
+    userId: string,
+    invocationId: string,
+  ): IPromiseResponse<string | ContractErrorResponse> {
+    try {
+      const invocation = await this.findOneByInvocationAndUserId(
+        invocationId,
+        userId,
+      );
+
+      this.contractService.verifyNetwork(invocation.network);
+
+      const invocationResult = await this.contractService.runUploadWASM(
+        signedXDR,
+      );
+
+      return this.responseService.createResponse({
+        payload: invocationResult,
+        message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'ACCEPTED',
       });
     } catch (error) {

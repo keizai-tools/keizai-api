@@ -126,11 +126,11 @@ export class InvocationMapper {
     } = updateInvocationDto;
     return {
       name,
-      secretKey: network ? null : secretKey,
-      publicKey: network ? null : publicKey,
-      preInvocation: network ? null : preInvocation,
-      postInvocation: network ? null : postInvocation,
-      contractId: network ? null : contractId,
+      secretKey,
+      publicKey,
+      preInvocation,
+      postInvocation,
+      contractId,
       network,
       folderId,
       selectedMethodId,

@@ -1,4 +1,4 @@
-import type { AuthenticationResultType } from '@aws-sdk/client-cognito-identity-provider';
+import { AuthenticationResultType } from '@aws-sdk/client-cognito-identity-provider';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
 
