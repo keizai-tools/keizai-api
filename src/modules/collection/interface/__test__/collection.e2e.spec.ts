@@ -275,7 +275,7 @@ describe('Collection - [/collection]', () => {
     });
   });
 
-  describe.only('Get invocations from a collection  - [GET /collection/:id/invocations]', () => {
+  describe('Get invocations from a collection  - [GET /collection/:id/invocations]', () => {
     it('should get invocations from a collection', async () => {
       const response = await makeRequest({
         app,
@@ -284,10 +284,12 @@ describe('Collection - [/collection]', () => {
       });
 
       expect(response.body.payload).toEqual(
-        expect.objectContaining({
-          id: 'collection0',
-          name: 'collection0',
-        }),
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+          }),
+        ]),
       );
     });
 

@@ -5,3 +5,44 @@ items:
     name: 'invocation0'
     folder: '@folder0'
     network: 'FUTURENET'
+
+  invocation1:
+    id: 'invocation1'
+    name: 'invocation1'
+    folder: '@folder1'
+    network: 'FUTURENET'
+
+  invocation2:
+    id: 'invocation2'
+    name: 'invocation2'
+    folder: '@folder0'
+    network: 'FUTURENET'
+    publicKey: 'publicKey2'
+
+  invocation3:
+    id: 'invocation3'
+    name: 'invocation3'
+    folder: '@folder1'
+    network: 'FUTURENET'
+    publicKey: 'publicKey3'
+    secretKey: 'secretKey3'
+    preInvocation: 'a'
+    selectedMethod: '@method3'
+
+  invocation4:
+    id: 'invocation4'
+    name: 'invocation4'
+    folder: '@folder0'
+    network: 'FUTURENET'
+
+  invocation5:
+    id: 'invocation5'
+    name: 'invocation5'
+    folder: '@folder0'
+    network: 'FUTURENET'
+    contractId: 'contractId'
+    publicKey: 'publicKey5'
+    secretKey: 'secretKey5'
+    preInvocation: 'const a = () => "a"; a();'
+    postInvocation: 'const a = () => "a"; a();'
+    selectedMethod: '@method4'
