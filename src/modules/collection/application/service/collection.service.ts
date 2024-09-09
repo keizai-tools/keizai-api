@@ -16,6 +16,7 @@ import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/envi
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { Collection } from '../../domain/collection.domain';
@@ -266,19 +267,42 @@ export class CollectionService {
 
   async findInvocationsByCollectionId(
     collectionId: string,
-  ): IPromiseResponse<Collection> {
+  ): IPromiseResponse<Invocation[]> {
     try {
       const collection =
         await this.collectionRepository.findInvocationsByCollectionId(
           collectionId,
         );
+
       if (!collection) {
         throw new NotFoundException(
           COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
         );
       }
+
+      const allInvocations = collection.folders
+        .map((folder) => folder.invocations)
+        .flat();
+
+      const completeInvocations = allInvocations.filter((invocation) => {
+        const hasValidParams = invocation.selectedMethod?.params?.every(
+          (param) => param.name && param.value,
+        );
+
+        const hasPublicKey = !!invocation.publicKey;
+        const hasSelectedMethod = !!invocation.selectedMethod;
+
+        return hasValidParams && hasPublicKey && hasSelectedMethod;
+      });
+
+      if (completeInvocations.length === 0) {
+        throw new NotFoundException(
+          COLLECTION_RESPONSE.COLLECTION_FAILED_DELETED,
+        );
+      }
+
       return this.responseService.createResponse({
-        payload: collection,
+        payload: completeInvocations,
         message: COLLECTION_RESPONSE.COLLECTION_FOUND,
         type: 'OK',
       });

@@ -19,6 +19,7 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -26,7 +27,6 @@ import { CollectionResponseDto } from '../application/dto/collection-response.dt
 import { CreateCollectionDto } from '../application/dto/create-collection.dto';
 import { UpdateCollectionDto } from '../application/dto/update-collection.dto';
 import { CollectionService } from '../application/service/collection.service';
-import { Collection } from '../domain/collection.domain';
 
 @Auth(AuthType.Bearer)
 @ApiTags('Collection')
@@ -109,7 +109,7 @@ export class CollectionController {
   @Get('/:id/invocations')
   findInvocationsByCollectionId(
     @Param('id') id: string,
-  ): IPromiseResponse<Collection> {
+  ): IPromiseResponse<Invocation[]> {
     return this.collectionService.findInvocationsByCollectionId(id);
   }
 
