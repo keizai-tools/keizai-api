@@ -9,6 +9,7 @@ export interface ICollectionRepository {
   findAllByTeam(teamId: string): Promise<Collection[]>;
   findOneByCollectionAndUserId(id: string, userId: string): Promise<Collection>;
   findOneByCollectionAndTeamId(id: string, teamId: string): Promise<Collection>;
+  findInvocationsByCollectionId(id: string): Promise<Collection>;
   update(collection: Collection): Promise<Collection>;
   delete(id: string): Promise<boolean>;
 }

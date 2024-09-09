@@ -19,6 +19,7 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
 import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -103,6 +104,13 @@ export class CollectionController {
       id,
       environmentName,
     );
+  }
+
+  @Get('/:id/invocations')
+  findInvocationsByCollectionId(
+    @Param('id') id: string,
+  ): IPromiseResponse<Invocation[]> {
+    return this.collectionService.findInvocationsByCollectionId(id);
   }
 
   @Patch('/')
