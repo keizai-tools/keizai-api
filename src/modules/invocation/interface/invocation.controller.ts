@@ -150,14 +150,17 @@ export class InvocationUserController {
     @Body()
     {
       signedTransactionXDR,
+      deploy = false,
     }: {
       signedTransactionXDR: string;
+      deploy: boolean;
     },
   ): IPromiseResponse<string | ContractErrorResponse> {
     return this.invocationService.runUploadWASM(
       signedTransactionXDR,
       data.payload.id,
       id,
+      deploy,
     );
   }
 }
