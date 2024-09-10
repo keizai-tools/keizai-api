@@ -1,4 +1,12 @@
-import { Account, Transaction, contract, xdr } from '@stellar/stellar-sdk';
+import {
+  type Account,
+  type Keypair,
+  type Operation,
+  type SorobanRpc,
+  Transaction,
+  contract,
+  xdr,
+} from '@stellar/stellar-sdk';
 
 import {
   EncodeEvent,
@@ -9,28 +17,61 @@ import {
 
 export const CONTRACT_ADAPTER = 'CONTRACT_ADAPTER';
 
+export interface InputPrepareTransaction {
+  publicKey: string;
+  operations?: xdr.Operation<Operation.InvokeHostFunction>;
+  contractId?: string;
+  methodName?: string;
+  scArgs?: xdr.ScVal[];
+}
+
 export interface IStellarAdapter {
   changeNetwork(selectedNetwork: string): void;
-  getContractSpec(specEntries: xdr.ScSpecEntry[]): contract.Spec;
   checkContractNetwork(contractId: string): Promise<string>;
-  createInstanceKey(contractId: string): xdr.LedgerKey;
-  getScSpecEntryFromXDR(input: Uint8Array): xdr.ScSpecEntry;
-  getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer>;
-  getContractEvents(contractId: string): Promise<EncodeEvent[]>;
-  prepareTransaction(
-    publicKey: string,
-    contractId: string,
-    methodName: string,
-    scArgs: xdr.ScVal[],
-  ): Promise<Transaction>;
-  signTransaction(tx: Transaction, secretKey: string): void;
-  rawSendTransaction(tx: Transaction): Promise<RawSendTransactionResponse>;
   getInstanceValue(
     contractId: string,
     currentNetwork: string,
   ): Promise<xdr.ContractExecutable>;
-  rawGetTransaction(hash: string): Promise<RawGetTransactionResponse>;
-  getTransaction(hash: string): Promise<GetTransactionResponse>;
-  prepareTransactionSimulation(tx: Transaction): Promise<Transaction>;
-  getAccount(publicKey: string): Promise<Account>;
+  prepareTransaction(
+    account: Account | string,
+    operationsOrContractId?:
+      | xdr.Operation<Operation.InvokeHostFunction>
+      | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
+  ): Promise<Transaction>;
+  getKeypair(secretKey: string): Keypair;
+  signTransaction(transaction: Transaction, sourceKeypair: Keypair): void;
+  sendTransaction(
+    transaction: Transaction,
+    useRaw: boolean,
+  ): Promise<
+    RawSendTransactionResponse | SorobanRpc.Api.SendTransactionResponse
+  >;
+  getContractEvents(contractId: string): Promise<EncodeEvent[]>;
+  getTransaction(
+    hash: string,
+    useRaw: boolean,
+  ): Promise<RawGetTransactionResponse | GetTransactionResponse>;
+  getScSpecEntryFromXDR(input: Uint8Array): xdr.ScSpecEntry;
+  getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer>;
+  createContractSpec(entries: xdr.ScSpecEntry[]): Promise<contract.Spec>;
+  uploadWasm(
+    file: Express.Multer.File,
+    publicKey: string,
+    secretKey?: string,
+  ): Promise<string>;
+  executeTransactionWithRetry(
+    transaction: Transaction,
+  ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse>;
+  createDeployContractOperation(
+    response: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    sourceKeypair: Keypair | string,
+  ): xdr.Operation<Operation.InvokeHostFunction>;
+  getAccountOrFund(publicKey: string): Promise<Account>;
+  prepareUploadWASM(
+    file: Express.Multer.File,
+    publicKey: string,
+  ): Promise<string>;
+  extractContractAddress(
+    responseDeploy: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+  ): string;
 }

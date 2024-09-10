@@ -54,6 +54,7 @@ export enum GetTransactionStatus {
 export enum SendTransactionStatus {
   ERROR = 'ERROR',
   PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
 }
 
 export enum ContractMethods {
