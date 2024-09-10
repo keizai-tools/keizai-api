@@ -1,6 +1,6 @@
-import { xdr } from '@stellar/stellar-sdk';
+import { type SorobanRpc, xdr } from '@stellar/stellar-sdk';
 
-import { Invocation } from '@/modules/invocation/domain/invocation.domain';
+import type { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { Method } from '@/modules/method/domain/method.domain';
 
 import { ContractErrorResponse, RunInvocationResponse } from './soroban';
@@ -29,8 +29,8 @@ export interface IDecodedSection extends xdr.ScSpecEntry {
 }
 
 export interface IRunInvocationParams {
-  contractId?: string;
-  selectedMethod?: Partial<Method>;
+  contractId: string;
+  selectedMethod: Partial<Method>;
   signedTransactionXDR?: string;
   publicKey?: string;
   secretKey?: string;
@@ -38,9 +38,17 @@ export interface IRunInvocationParams {
 
 export interface IStellarService {
   verifyNetwork(selectedNetwork: string, contractId?: string): Promise<string>;
-  getStellarAssetContractFunctions(): IGeneratedMethod[];
-  decodeContractSpecBuffer(buffer: ArrayBuffer): Promise<xdr.ScSpecEntry[]>;
-  extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;
+  getPreparedTransactionXDR(
+    contractId: string,
+    publicKey: string,
+    selectedMethod: Partial<Method>,
+  ): Promise<string>;
+  runInvocation(
+    runInvocationParams: IRunInvocationParams,
+  ): Promise<RunInvocationResponse | ContractErrorResponse>;
+  generateMethodsFromContractId(
+    contractId: string,
+  ): Promise<IGeneratedMethod[]>;
   deployWasmFile({
     file,
     signedTransactionXDR,
@@ -49,32 +57,34 @@ export interface IStellarService {
     file?: Express.Multer.File;
     signedTransactionXDR?: string;
     invocation?: Invocation;
-  }): Promise<string | ContractErrorResponse>;
-  getContractSpecEntries(
-    instanceValue: xdr.ContractExecutable,
-  ): Promise<xdr.ScSpecEntry[]>;
+  }): Promise<string>;
+  prepareUploadWASM({
+    file,
+    publicKey,
+    signedTransactionXDR,
+  }: {
+    file?: Express.Multer.File;
+    publicKey?: string;
+    signedTransactionXDR?: string;
+  }): Promise<string>;
+  runUploadWASM(signedTransactionXDR: string): Promise<string>;
   getScValFromSmartContract(
     instanceValue: xdr.ContractExecutable,
     selectedMethod: Partial<Method>,
   ): Promise<xdr.ScVal[]>;
-  generateMethodsFromContractId(
-    contractId: string,
-  ): Promise<IGeneratedMethod[]>;
+  getContractSpecEntries(
+    instanceValue: xdr.ContractExecutable,
+  ): Promise<xdr.ScSpecEntry[]>;
+  getStellarAssetContractFunctions(): IGeneratedMethod[];
+  extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;
   generateScArgsToFromContractId(
     contractId: string,
-    selectedMethod: Method,
-  ): Promise<xdr.ScVal[]>;
-  runInvocation(
-    runInvocationParams: IRunInvocationParams,
-  ): Promise<RunInvocationResponse | ContractErrorResponse>;
-  getPreparedTransactionXDR(
-    contractId: string,
-    publicKey: string,
     selectedMethod: Partial<Method>,
-  ): Promise<string>;
-  prepareUploadWASM(
-    file: Express.Multer.File,
-    publicKey: string,
-  ): Promise<string>;
-  runUploadWASM(signedXDR: string): Promise<string>;
+  ): Promise<xdr.ScVal[]>;
+  pollTransactionStatus(
+    hash: string,
+  ): Promise<
+    | SorobanRpc.Api.GetSuccessfulTransactionResponse
+    | SorobanRpc.Api.GetFailedTransactionResponse
+  >;
 }
