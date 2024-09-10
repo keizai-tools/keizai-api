@@ -10,7 +10,4 @@ export const configurationValidate = Joi.object({
   DB_NAME: Joi.string().required(),
   SONAR_SERVER_URL: Joi.string().required(),
   SONAR_TOKEN: Joi.string().required(),
-  STELLAR_TESTNET_SOROBAN_DEPLOYER_CONTRACT_ID: Joi.string().required(),
-  STELLAR_FUTURENET_SOROBAN_DEPLOYER_CONTRACT_ID: Joi.string().required(),
-  STELLAR_MAINNET_SOROBAN_DEPLOYER_CONTRACT_ID: Joi.string().optional(),
 });
