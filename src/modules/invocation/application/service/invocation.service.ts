@@ -609,10 +609,10 @@ export class InvocationService {
       this.contractService.verifyNetwork(invocation.network);
 
       return this.responseService.createResponse({
-        payload: await this.contractService.prepareUploadWASM(
+        payload: await this.contractService.prepareUploadWASM({
           file,
-          invocation.publicKey,
-        ),
+          publicKey: invocation.publicKey,
+        }),
         message: INVOCATION_RESPONSE.INVOCATION_UPDATED,
         type: 'ACCEPTED',
       });
@@ -653,6 +653,7 @@ export class InvocationService {
     signedXDR: string,
     userId: string,
     invocationId: string,
+    deploy: boolean,
   ): IPromiseResponse<string | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(
@@ -662,12 +663,18 @@ export class InvocationService {
 
       this.contractService.verifyNetwork(invocation.network);
 
-      const invocationResult = await this.contractService.runUploadWASM(
-        signedXDR,
-      );
+      if (!deploy)
+        return this.responseService.createResponse({
+          payload: await this.contractService.prepareUploadWASM({
+            signedTransactionXDR: signedXDR,
+            publicKey: invocation.publicKey,
+          }),
+          message: INVOCATION_RESPONSE.INVOCATION_RUN,
+          type: 'ACCEPTED',
+        });
 
       return this.responseService.createResponse({
-        payload: invocationResult,
+        payload: await this.contractService.runUploadWASM(signedXDR),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'ACCEPTED',
       });
