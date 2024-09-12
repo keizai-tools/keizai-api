@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { PasswordResetConfirmationDto } from '@/common/cognito/application/dto/password_reset_confirmation.dto';
@@ -96,5 +96,13 @@ export class AuthController {
       user,
       accessToken,
     );
+  }
+
+  @Auth(AuthType.Bearer)
+  @Get('/validate-token')
+  async validateToken(@AccessToken() accessToken: string) {
+    if (accessToken) {
+      return { success: true };
+    }
   }
 }
