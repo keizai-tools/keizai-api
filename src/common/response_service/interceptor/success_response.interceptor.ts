@@ -25,7 +25,7 @@ export class SuccessResponseInterceptor implements NestInterceptor {
           response.status(data.statusCode);
         }
 
-        const cleanedData = this.removeType(data);
+        const cleanedData = this.removeTypeFirstLayer(data);
 
         const transformedData = this.transformBigInt(cleanedData);
 
@@ -46,12 +46,12 @@ export class SuccessResponseInterceptor implements NestInterceptor {
     );
   }
 
-  private removeType(object: unknown): unknown {
+  private removeTypeFirstLayer(object: unknown): unknown {
     if (Array.isArray(object)) {
-      return object.map((item) => this.removeType(item));
+      return object;
     } else if (object !== null && typeof object === 'object') {
       return Object.keys(object).reduce((acc, key) => {
-        if (key !== 'type') acc[key] = this.removeType(object[key]);
+        if (key !== 'type') acc[key] = object[key];
         return acc;
       }, {});
     }
