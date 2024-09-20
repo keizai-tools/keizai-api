@@ -38,11 +38,14 @@ export class MethodUserController {
   }
 
   @Get('/:id')
-  findOne(
+  async findOne(
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<MethodResponseDto> {
-    return this.methodService.findOneByMethodAndUserId(id, data.payload.id);
+    return await this.methodService.findOneByMethodAndUserId(
+      id,
+      data.payload.id,
+    );
   }
 
   @Patch()
