@@ -1,20 +1,28 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CommonModule } from '@/common/common.module';
+
+import { INVITATION_REPOSITORY } from './application/interface/invitation.repository.interface';
 import { InvitationMapper } from './application/mapper/invitation.mapper';
-import { INVITATION_REPOSITORY } from './application/repository/invitation.repository';
 import { InvitationService } from './application/service/invitation.service';
+import { InvitationRepository } from './infrastructure/persistence/invitation.repository';
 import { InvitationSchema } from './infrastructure/persistence/invitation.schema';
-import { InvitationRepository } from './infrastructure/persistence/invitation.typeorm.repository';
 import { InvitationController } from './interface/invitation.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([InvitationSchema])],
+  imports: [
+    TypeOrmModule.forFeature([InvitationSchema]),
+    forwardRef(() => CommonModule),
+  ],
   controllers: [InvitationController],
   providers: [
     InvitationService,
     InvitationMapper,
-    { provide: INVITATION_REPOSITORY, useClass: InvitationRepository },
+    {
+      useClass: InvitationRepository,
+      provide: INVITATION_REPOSITORY,
+    },
   ],
   exports: [InvitationService, InvitationMapper],
 })

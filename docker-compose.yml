@@ -1,7 +1,6 @@
 version: '3'
 
 services:
-
   db:
     image: mysql:8.0
     environment:
@@ -17,4 +16,4 @@ services:
     ports:
       - 9229:9229
     volumes:
-      - ./data/.cognito:/app/.cognito
+      - ./data/docker/volumes/cognito:/app/.cognito

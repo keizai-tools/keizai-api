@@ -9,13 +9,13 @@ import { UpdateInvocationDto } from '../dto/update-invocation.dto';
 import {
   IInvocationValues,
   IUpdateInvocationValues,
-} from '../service/invocation.service';
+} from '../interface/invocation.base.interface';
 
 export class InvocationMapper {
   constructor(
     @Inject(forwardRef(() => FolderMapper))
     private readonly folderMapper: FolderMapper,
-    @Inject(MethodMapper)
+    @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
   ) {}
 
@@ -126,11 +126,11 @@ export class InvocationMapper {
     } = updateInvocationDto;
     return {
       name,
-      secretKey: network ? null : secretKey,
-      publicKey: network ? null : publicKey,
-      preInvocation: network ? null : preInvocation,
-      postInvocation: network ? null : postInvocation,
-      contractId: network ? null : contractId,
+      secretKey,
+      publicKey,
+      preInvocation,
+      postInvocation,
+      contractId,
       network,
       folderId,
       selectedMethodId,

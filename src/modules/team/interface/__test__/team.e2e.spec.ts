@@ -1,55 +1,41 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { join } from 'path';
-import * as request from 'supertest';
 
 import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
-import { AUTH_RESPONSE } from '@/modules/auth/application/exceptions/auth-error';
-import { COGNITO_SERVICE } from '@/modules/auth/application/repository/cognito.interface.service';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
-import { JwtStrategy } from '@/modules/auth/infrastructure/jwt/jwt.strategy';
+import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
+import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
+import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
+import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { TEAM_RESPONSE } from '../../application/exceptions/team-response.enum';
 
-const mockedCognitoService = {
-  registerAccount: jest.fn(),
-  loginAccount: jest.fn(),
-};
-
-const mockedJwtStrategy = {
-  validate: jest.fn(),
-};
-
-const mockedGuard = {
-  canActivate: (context) => {
-    const req = context.switchToHttp().getRequest();
-    req.user = {
-      id: 'user0',
-    };
-    return true;
-  },
-};
-
 describe('Team - [/team]', () => {
   let app: INestApplication;
+
+  const adminToken = createAccessToken({
+    sub: '00000000-0000-0000-0000-00000000000X',
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(JwtStrategy)
-      .useValue(mockedJwtStrategy)
-      .overrideProvider(COGNITO_SERVICE)
-      .useValue(mockedCognitoService)
-      .overrideGuard(JwtAuthGuard)
-      .useValue(mockedGuard)
+      .overrideProvider(COGNITO_AUTH)
+      .useValue(identityProviderServiceMock)
       .compile();
 
-    await loadFixtures(
-      `${__dirname}/fixture`,
-      join(
+    await loadFixtures({
+      fixturesPath: `${__dirname}/fixture`,
+      dataSourcePath: join(
         __dirname,
         '..',
         '..',
@@ -57,24 +43,49 @@ describe('Team - [/team]', () => {
         '..',
         'configuration/orm.configuration.ts',
       ),
-    );
+    });
 
     app = moduleRef.createNestApplication();
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
+
+    app.useGlobalInterceptors(new SuccessResponseInterceptor());
 
     await app.init();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
   describe('Create one - [POST /team]', () => {
     it('should create a new team', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/team')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/team',
+        data: {
           name: 'test',
           usersEmails: [],
-        })
-        .expect(HttpStatus.CREATED);
+        },
+      });
 
-      expect(response.body).toEqual({
+      expect(response.body.payload).toEqual({
         name: 'test',
         id: expect.any(String),
       });
@@ -110,78 +121,108 @@ describe('Team - [/team]', () => {
         }),
       ]);
 
-      const response = await request(app.getHttpServer())
-        .get('/team')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/team',
+      });
 
-      expect(response.body).toHaveLength(4);
-      expect(response.body).toEqual(responseExpected);
+      expect(response.body.payload).toHaveLength(4);
+      expect(response.body.payload).toEqual(responseExpected);
     });
   });
 
   describe('Get one - [GET /team/:id]', () => {
     it('should get one team associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/team/team0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/team/team0',
+      });
 
-      expect(response.body).toEqual(
+      expect(response.body.payload).toEqual(
         expect.objectContaining({
           id: 'team0',
           name: 'team0',
         }),
       );
     });
+
     it('should throw error when try to get one team not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/team/2')
-        .expect(HttpStatus.NOT_FOUND);
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/team/2',
+      });
 
-      expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+      expect(response.body.details.description).toEqual(
+        TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID,
+      );
     });
-    it('should throw error when try to get one team with a user not associated a team', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/team/team3')
-        .expect(HttpStatus.UNAUTHORIZED);
 
-      expect(response.body.message).toEqual(AUTH_RESPONSE.USER_NOT_MEMBER_TEAM);
+    it('should throw error when try to get one team with a user not associated a team', async () => {
+      const response = await makeRequest({
+        app,
+        authCode: adminToken,
+        endpoint: '/team/team3',
+      });
+
+      expect(response.body.details.description).toEqual(
+        AUTH_RESPONSE.USER_NOT_MEMBER_TEAM,
+      );
     });
   });
 
   describe('Update one - [PATCH /team]', () => {
     it('should update one team associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/team/team0')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/team/team0',
+        data: {
           name: 'team updated',
           usersEmails: ['user1'],
-        })
-        .expect(HttpStatus.OK);
-
-      expect(response.body).toEqual({
+          id: 'team0',
+        },
+      });
+      expect(response.body.payload).toEqual({
         name: 'team updated',
         id: 'team0',
+        collections: expect.any(Array),
+        invitations: expect.any(Array),
+        userMembers: expect.any(Array),
       });
     });
+
     it('should throw error when try to update one team not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/team/2')
-        .send({
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/team/2',
+        data: {
           name: 'team updated',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+        },
+      });
 
-      expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+      expect(response.body.details.description).toEqual(
+        TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID,
+      );
     });
-    it('should throw error when try to update one team with a user without the admin role', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/team/team2')
-        .send({
-          name: 'team updated',
-        })
-        .expect(HttpStatus.UNAUTHORIZED);
 
-      expect(response.body.message).toEqual(
+    it('should throw error when try to update one team with a user without the admin role', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/team/team2',
+        data: {
+          name: 'team updated',
+        },
+      });
+
+      expect(response.body.details.description).toEqual(
         AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
       );
     });
@@ -189,25 +230,45 @@ describe('Team - [/team]', () => {
 
   describe('Delete one - [DELETE /team/:id]', () => {
     it('should delete one team with associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/team/team0')
-        .expect(HttpStatus.OK);
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/team/team0',
+      });
 
-      expect(response.body).toEqual({});
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 202,
+        message: 'Team deleted',
+        payload: true,
+        timestamp: expect.any(String),
+        path: '/team/team0',
+      });
     });
+
     it('should throw error when try to delete one team not associated with a user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/team/2')
-        .expect(HttpStatus.NOT_FOUND);
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/team/2',
+      });
 
-      expect(response.body.message).toEqual(TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID);
+      expect(response.body.details.description).toEqual(
+        TEAM_RESPONSE.TEAM_NOT_FOUND_BY_ID,
+      );
     });
-    it('should throw error when try to delete one team with a user without the owner role', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/team/team1')
-        .expect(HttpStatus.UNAUTHORIZED);
 
-      expect(response.body.message).toEqual(
+    it('should throw error when try to delete one team with a user without the owner role', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'delete',
+        authCode: adminToken,
+        endpoint: '/team/team1',
+      });
+
+      expect(response.body.details.description).toEqual(
         AUTH_RESPONSE.USER_ROLE_NOT_AUTHORIZED,
       );
     });

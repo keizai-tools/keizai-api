@@ -3,7 +3,7 @@ import { EnviromentResponseDto } from '../dto/enviroment-response.dto';
 import {
   IEnviromentValues,
   IUpdateEnviromentValues,
-} from '../service/enviroment.service';
+} from '../interface/enviroment.base.interface';
 
 export class EnviromentMapper {
   fromDtoToEntity(createEnviromentDto: IEnviromentValues): Enviroment {

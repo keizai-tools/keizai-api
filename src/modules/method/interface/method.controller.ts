@@ -6,47 +6,61 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateMethodDto } from '../application/dto/create-method.dto';
+import { MethodResponseDto } from '../application/dto/method-response.dto';
 import { UpdateMethodDto } from '../application/dto/update-method.dto';
 import { MethodService } from '../application/service/method.service';
 
+@Auth(AuthType.Bearer)
+@ApiTags('Method')
 @Controller('method')
-@UseGuards(JwtAuthGuard)
 export class MethodUserController {
   constructor(private readonly methodService: MethodService) {}
 
   @Post('')
   async create(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() createMethodDto: CreateMethodDto,
-  ) {
-    return this.methodService.createByUser(createMethodDto, user.id);
+  ): IPromiseResponse<MethodResponseDto> {
+    return this.methodService.createByUser(createMethodDto, data.payload.id);
   }
 
   @Get('/:id')
-  findOne(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.methodService.findOneByMethodAndUserId(id, user.id);
+  async findOne(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<MethodResponseDto> {
+    return await this.methodService.findOneByMethodAndUserId(
+      id,
+      data.payload.id,
+    );
   }
 
   @Patch()
   update(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Body() updateMethodDto: UpdateMethodDto,
-  ) {
-    return this.methodService.updateByUser(updateMethodDto, user.id);
+  ): IPromiseResponse<MethodResponseDto> {
+    return this.methodService.updateByUser(updateMethodDto, data.payload.id);
   }
 
   @Delete('/:id')
-  delete(@AuthUser() user: IUserResponse, @Param('id') id: string) {
-    return this.methodService.deleteByUser(id, user.id);
+  delete(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ): IPromiseResponse<boolean> {
+    return this.methodService.deleteByUser(id, data.payload.id);
   }
 }

@@ -2,10 +2,10 @@ entity: User
 items:
   user0:
     id: 'user0'
-    email: 'user0'
-    externalId: '1234'
+    email: 'admin@test.com'
+    externalId: '00000000-0000-0000-0000-00000000000X'
 
   user1:
     id: 'user1'
-    email: 'test'
-    externalId: '1234'
+    email: 'regular@test.com'
+    externalId: '00000000-0000-0000-0000-00000000000Y'

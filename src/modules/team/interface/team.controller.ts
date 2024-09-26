@@ -8,59 +8,72 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
-  AuthUser,
-  IUserResponse,
-} from '@/modules/auth/infrastructure/decorators/auth.decorators';
-import { AdminRoleGuard } from '@/modules/auth/infrastructure/guard/admin-role.guard';
-import { AuthTeamGuard } from '@/modules/auth/infrastructure/guard/auth-team.guard';
-import { OwnerRoleGuard } from '@/modules/auth/infrastructure/guard/owner-role.guard';
-import { JwtAuthGuard } from '@/modules/auth/infrastructure/guard/policy-auth.guard';
+  IPromiseResponse,
+  IResponse,
+} from '@/common/response_service/interface/response.interface';
+import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
+import { AuthType } from '@/modules/auth/domain/auth_type.enum';
+import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
+import { OwnerRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/owner-role.guard';
+import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
+import { User } from '@/modules/user/domain/user.domain';
 
 import { CreateTeamDto } from '../application/dto/create-team.dto';
+import { TeamResponseDto } from '../application/dto/response-team.dto';
+import { UpdateTeamDto } from '../application/dto/update-team.dto';
 import { TeamService } from '../application/service/team.service';
 
+@Auth(AuthType.Bearer)
+@ApiTags('Team')
 @Controller('team')
-@UseGuards(JwtAuthGuard)
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @Get('/')
-  async findAllByUser(@AuthUser() user: IUserResponse) {
-    return this.teamService.findAllByUser(user.id);
+  async findAllByUser(
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<TeamResponseDto[]> {
+    return this.teamService.findAllByUser(data.payload.id);
   }
 
-  @UseGuards(AuthTeamGuard)
+  @UseGuards(AdminRoleGuard)
   @Get('/:teamId')
-  async findOne(@Param('teamId') teamId: string) {
+  async findOne(
+    @Param('teamId') teamId: string,
+  ): IPromiseResponse<TeamResponseDto> {
     return this.teamService.findOne(teamId);
   }
 
   @Post('/')
   async create(
     @Body() createTeamDto: CreateTeamDto,
-    @AuthUser() user: IUserResponse,
-  ) {
-    return this.teamService.create(createTeamDto, user);
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<TeamResponseDto> {
+    return this.teamService.create(createTeamDto, data.payload);
   }
 
   @UseGuards(AdminRoleGuard)
   @Patch('/:teamId')
   async update(
-    @AuthUser() user: IUserResponse,
-    @Body() updateTeamDto: CreateTeamDto,
+    @CurrentUser() data: IResponse<User>,
+    @Body() updateTeamDto: UpdateTeamDto,
     @Param('teamId') teamId: string,
-  ) {
-    return this.teamService.update({ ...updateTeamDto, id: teamId }, user.id);
+  ): IPromiseResponse<TeamResponseDto> {
+    return this.teamService.update(
+      { ...updateTeamDto, id: teamId },
+      data.payload.id,
+    );
   }
 
   @UseGuards(OwnerRoleGuard)
   @Delete('/:teamId')
   async delete(
-    @AuthUser() user: IUserResponse,
+    @CurrentUser() data: IResponse<User>,
     @Param('teamId') teamId: string,
-  ) {
-    return this.teamService.delete(teamId, user.id);
+  ): IPromiseResponse<boolean> {
+    return this.teamService.delete(teamId, data.payload.id);
   }
 }

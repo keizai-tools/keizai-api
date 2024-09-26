@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+
+import { Role } from '@/modules/authorization/domain/role.enum';
 
 export class ResponseUserRoletoTeamDto {
   @IsString()
@@ -13,11 +15,11 @@ export class ResponseUserRoletoTeamDto {
   @IsNotEmpty()
   userId: string;
 
-  @IsString()
   @IsNotEmpty()
-  role: string;
+  @IsEnum(Role)
+  role: Role;
 
-  constructor(id: string, teamId: string, userId: string, role: string) {
+  constructor(id: string, teamId: string, userId: string, role: Role) {
     this.id = id;
     this.teamId = teamId;
     this.userId = userId;
