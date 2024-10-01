@@ -16,7 +16,7 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION ? true : false;
+  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION;
 
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
@@ -77,10 +77,10 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
     if (description) this.error(`Message: ${description}`);
     if (Array.isArray(error)) {
       error.forEach((err) => {
-        if (err && err.toString().length > 0) this.error(err.toString());
+        if (err && err.toString().length > 0) this.error(JSON.stringify(error));
       });
     } else if (error && error.toString().length > 0) {
-      this.error(error.toString());
+      this.error(JSON.stringify(error));
     }
   }
 
