@@ -62,6 +62,7 @@ export class BlockchainNetworkStatusService {
       return await this.checkNetworkStatus(url, requestBody);
     } catch (error) {
       return false;
+
     }
   }
 
@@ -76,6 +77,7 @@ export class BlockchainNetworkStatusService {
     );
     const data = response.data;
     return data?.result?.status === 'healthy';
+
   }
 
   private handleError(error: Error): void {

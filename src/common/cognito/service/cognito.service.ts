@@ -27,6 +27,7 @@ import {
 } from '@nestjs/common';
 import { promises as fs } from 'fs';
 
+
 import {
   IPromiseResponse,
   IResponseService,
@@ -91,6 +92,7 @@ export class CognitoService implements ICognitoAuthService {
       const { payload } = await this.getUserSub(email);
 
       if (process.env.AWS_COGNITO_REGION === 'local')
+
         await this.confirmUserRegistration({
           email,
           confirmationCode: await this.getConfirmationCodeFromLocalPool(email),
@@ -412,6 +414,7 @@ export class CognitoService implements ICognitoAuthService {
   ): Promise<string | undefined> {
     try {
       const data: string = await fs.readFile(
+
         process.env.COGNITO_LOCAL_PATH,
         'utf-8',
       );
