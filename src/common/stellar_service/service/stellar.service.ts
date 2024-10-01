@@ -142,9 +142,7 @@ export class StellarService implements IStellarService {
           methodName: selectedMethod.name,
           scArgs,
         });
-        const sourceKeypair = this.stellarAdapter.getKeypair(
-          secretKey as string,
-        );
+        const sourceKeypair = this.stellarAdapter.getKeypair(secretKey);
         this.stellarAdapter.signTransaction(transaction, sourceKeypair);
       } else if (signedTransactionXDR) {
         transaction = TransactionBuilder.fromXDR(
@@ -426,11 +424,7 @@ export class StellarService implements IStellarService {
         ).toXDR();
       }
 
-      const response = await this.stellarAdapter.prepareUploadWASM(
-        file,
-        publicKey,
-      );
-      return response;
+      return await this.stellarAdapter.prepareUploadWASM(file, publicKey);
     } catch (error) {
       if (error instanceof HttpException) this.handleError(error);
       else this.handleError(error.message);
