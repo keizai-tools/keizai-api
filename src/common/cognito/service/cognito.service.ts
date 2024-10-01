@@ -25,7 +25,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as fs from 'fs';
+import { promises as fs } from 'fs';
 
 import {
   IPromiseResponse,
@@ -90,7 +90,7 @@ export class CognitoService implements ICognitoAuthService {
 
       const { payload } = await this.getUserSub(email);
 
-      if (process.env.DOCKER_ENV === 'true')
+      if (process.env.AWS_COGNITO_REGION === 'local')
         await this.confirmUserRegistration({
           email,
           confirmationCode: await this.getConfirmationCodeFromLocalPool(email),
@@ -411,7 +411,7 @@ export class CognitoService implements ICognitoAuthService {
     email: string,
   ): Promise<string | undefined> {
     try {
-      const data: string = fs.readFileSync(
+      const data: string = await fs.readFile(
         process.env.COGNITO_LOCAL_PATH,
         'utf-8',
       );
@@ -432,7 +432,7 @@ export class CognitoService implements ICognitoAuthService {
 
   private async getUserSubLocal(email: string): Promise<string | null> {
     try {
-      const data: string = fs.readFileSync(
+      const data: string = await fs.readFile(
         process.env.COGNITO_LOCAL_PATH,
         'utf-8',
       );
