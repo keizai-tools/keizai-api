@@ -229,7 +229,6 @@ export class StellarAdapter implements IStellarAdapter {
     publicKey: string,
   ): Promise<string> {
     await this.getAccountOrFund(publicKey);
-
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
       const account: Account = await this.server.getAccount(publicKey);
       const operation: xdr.Operation<Operation.InvokeHostFunction> =
@@ -369,7 +368,6 @@ export class StellarAdapter implements IStellarAdapter {
       Address.fromScAddress(responseDeploy.returnValue.address()).toBuffer(),
     );
   }
-
   private setNetwork(network: string): void {
     const config = this.networkConfig[network];
     if (config) {
