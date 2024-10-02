@@ -15,6 +15,7 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
 import { BlockchainNetworkStatusModule } from './modules/blockchainNetworkStatus/blockchainNetworkStatus.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EnviromentModule } from './modules/enviroment/enviroment.module';
+import { EphemeralEnvironmentModule } from './modules/ephemeralEnvironment/ephemeralEnvironment.module';
 import { FolderModule } from './modules/folder/folder.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
 import { InvocationModule } from './modules/invocation/invocation.module';
@@ -53,6 +54,7 @@ import { UserModule } from './modules/user/user.module';
     TeamModule,
     UserModule,
     BlockchainNetworkStatusModule,
+    EphemeralEnvironmentModule,
   ],
   controllers: [],
   providers: [],
