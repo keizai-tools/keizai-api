@@ -19,6 +19,12 @@ export const UserSchema = new EntitySchema<User>({
       type: 'varchar',
       unique: true,
     },
+    memoId: {
+      name: 'memo_id',
+      type: 'varchar',
+      nullable: true,
+      unique: true,
+    },
   },
   relations: {
     collections: {

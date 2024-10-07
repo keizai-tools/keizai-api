@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module, forwardRef } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
@@ -16,7 +17,7 @@ import { StellarMapper } from './stellar_service/application/mapper/contract.map
 import { StellarService } from './stellar_service/service/stellar.service';
 
 @Module({
-  imports: [forwardRef(() => MethodModule)],
+  imports: [forwardRef(() => MethodModule), HttpModule],
   providers: [
     {
       provide: RESPONSE_SERVICE,
@@ -38,7 +39,6 @@ import { StellarService } from './stellar_service/service/stellar.service';
       provide: CONTRACT_ADAPTER,
       useClass: StellarAdapter,
     },
-
     {
       provide: CONTRACT_MAPPER,
       useClass: StellarMapper,
@@ -56,6 +56,10 @@ import { StellarService } from './stellar_service/service/stellar.service';
     {
       provide: CONTRACT_SERVICE,
       useClass: StellarService,
+    },
+    {
+      provide: CONTRACT_ADAPTER,
+      useClass: StellarAdapter,
     },
   ],
 })

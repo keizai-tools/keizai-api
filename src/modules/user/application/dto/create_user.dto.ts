@@ -8,4 +8,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   externalId?: string;
+
+  @IsOptional()
+  @IsString()
+  memoId?: number;
 }

@@ -7,7 +7,7 @@ import { IUserMapper } from '../interfaces/user.mapper.interfaces';
 @Injectable()
 export class UserMapper implements IUserMapper {
   fromDtoToEntity(userDto: CreateUserDto): User {
-    const newUser = new User(userDto.email, userDto.externalId);
+    const newUser = new User(userDto.email, userDto.externalId, userDto.memoId);
     newUser.externalId = userDto.externalId;
     return newUser;
   }

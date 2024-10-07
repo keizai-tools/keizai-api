@@ -30,14 +30,26 @@ export class UserService implements IUserService {
     this.responseService.setContext(UserService.name);
   }
 
+  private generateMemoId(userId: string): number {
+    if (!userId) {
+      throw new Error('userId is null or undefined, unable to generate memoId');
+    }
+    return parseInt(userId, 36);
+  }
+
   async createUser(user: UpdateUserDto): IPromiseResponse<User> {
     try {
       const userEntity = this.userMapper.fromDtoToEntity(user);
       const createdUser = await this.userRepository.create(userEntity);
+      if (createdUser?.id) {
+        createdUser.memoId = this.generateMemoId(createdUser.id);
+        await this.userRepository.saveOne(createdUser);
+      }
+      const userDto = this.userMapper.fromDtoToEntity(createdUser);
       return this.responseService.createResponse({
         type: 'CREATED',
         message: `${ServiceMessage.CREATE_SUCCESS}: ${ServiceMessage.WITH_ID} ${createdUser.id}`,
-        payload: createdUser,
+        payload: userDto,
       });
     } catch (error) {
       this.handleError(error);
