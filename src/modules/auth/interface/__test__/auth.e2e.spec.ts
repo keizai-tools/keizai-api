@@ -310,6 +310,7 @@ describe('Auth - [/auth]', () => {
             updatedAt: expect.any(String),
             email: 'admin@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
           },
         });
       });
@@ -580,6 +581,7 @@ describe('Auth - [/auth]', () => {
             idToken: 'id_token',
             user: {
               externalId: '00000000-0000-0000-0000-000000000001',
+              memoId: expect.any(String),
               createdAt: expect.any(String),
               email: 'testing@testing.com',
               id: expect.any(String),
