@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   Inject,
@@ -11,6 +12,7 @@ import {
   BASE_FEE,
   Contract,
   Keypair,
+  Memo,
   Networks,
   Operation,
   SorobanRpc,
@@ -46,7 +48,7 @@ import { IStellarAdapter } from '../application/interface/stellar.adapter.interf
 export class StellarAdapter implements IStellarAdapter {
   private server: SorobanRpc.Server;
   private networkPassphrase: string;
-
+  private previousTransactions = [];
   private networkConfig = {
     [NETWORK.SOROBAN_FUTURENET]: {
       server: new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET),
@@ -65,6 +67,7 @@ export class StellarAdapter implements IStellarAdapter {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
+    private readonly httpService: HttpService,
   ) {
     this.responseService.setContext(StellarAdapter.name);
     this.setNetwork(NETWORK.SOROBAN_FUTURENET);
@@ -261,9 +264,29 @@ export class StellarAdapter implements IStellarAdapter {
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
       | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
+    memo?: { type: 'id' | 'text' | 'return'; value: string },
   ): Promise<Transaction> {
     return await this.wrapWithErrorHandling(async () => {
       let transaction: Transaction;
+      let memoObj: Memo;
+      if (memo) {
+        switch (memo.type) {
+          case 'text':
+            memoObj = Memo.text(memo.value);
+            break;
+          case 'return':
+            memoObj = Memo.return(memo.value);
+            break;
+          default:
+            memoObj = Memo.id(memo.value);
+        }
+      } else {
+        const maxInt64 = BigInt('9223372036854775807');
+        const defaultMemoID = BigInt(
+          Math.floor(Math.random() * Number(maxInt64)),
+        ).toString();
+        memoObj = Memo.id(defaultMemoID);
+      }
 
       if (typeof account === 'string') {
         const publicKey = account;
@@ -279,11 +302,16 @@ export class StellarAdapter implements IStellarAdapter {
           contract,
           methodName,
           scArgs,
+          memo: memoObj,
         });
       } else {
         const operations =
           operationsOrContractId as xdr.Operation<Operation.InvokeHostFunction>;
-        transaction = this.createTransaction({ account, operations });
+        transaction = this.createTransaction({
+          account,
+          operations,
+          memo: memoObj,
+        });
       }
 
       return await this.server.prepareTransaction(transaction);
@@ -294,8 +322,9 @@ export class StellarAdapter implements IStellarAdapter {
     account: Account,
     operations: xdr.Operation<Operation.InvokeHostFunction>,
     sourceKeypair: Keypair,
+    memo?: { type: 'id' | 'text' | 'return'; value: string },
   ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse> {
-    const preparedTx = await this.prepareTransaction(account, operations);
+    const preparedTx = await this.prepareTransaction(account, operations, memo);
     this.signTransaction(preparedTx, sourceKeypair);
     return await this.executeTransactionWithRetry(preparedTx);
   }
@@ -306,17 +335,23 @@ export class StellarAdapter implements IStellarAdapter {
     methodName,
     scArgs,
     operations,
+    memo,
   }: {
     account: Account;
     contract?: Contract;
     methodName?: string;
     scArgs?: xdr.ScVal[];
     operations?: xdr.Operation<Operation.InvokeHostFunction>;
+    memo: Memo;
   }): Transaction {
     const builder = new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: this.networkPassphrase,
     }).setTimeout(60);
+
+    if (memo) {
+      builder.addMemo(memo);
+    }
 
     if (contract && methodName && scArgs) {
       builder.addOperation(contract.call(methodName, ...scArgs));
@@ -327,6 +362,66 @@ export class StellarAdapter implements IStellarAdapter {
     }
 
     return builder.build();
+  }
+
+  public async getTransactionsByMemoId(
+    publicKey: string,
+    memoId: string,
+  ): Promise<any> {
+    try {
+      const response = await this.httpService
+        .get(
+          `https://horizon-testnet.stellar.org/accounts/${publicKey}/transactions`,
+        )
+        .toPromise();
+      const transactions = response.data._embedded.records;
+      const filteredTransactions = transactions.filter(
+        (transaction: any) => transaction.memo === memoId,
+      );
+      const newTransaction = this.detectNewTransaction(
+        this.previousTransactions,
+        filteredTransactions,
+      );
+
+      if (newTransaction) {
+        console.log('Nueva transacción detectada:', newTransaction.id);
+        const operationDetails = await this.getOperationDetails(
+          newTransaction.id,
+        );
+        console.log('Detalles de la operación:', operationDetails);
+        this.previousTransactions = filteredTransactions;
+      } else {
+        console.log('No hay transacciones nuevas.');
+      }
+
+      return filteredTransactions;
+    } catch (error) {
+      console.error('Error fetching transactions:', error.message);
+      throw new NotFoundException(
+        'No transactions found with the specified MemoID.',
+      );
+    }
+  }
+
+  private detectNewTransaction(previousTransactions, currentTransactions) {
+    const previousIds = new Set(previousTransactions.map((tx) => tx.id));
+    return currentTransactions.find((tx) => !previousIds.has(tx.id));
+  }
+
+  private async getOperationDetails(transactionId: string): Promise<any> {
+    try {
+      const response = await this.httpService
+        .get(
+          `https://horizon-testnet.stellar.org/transactions/${transactionId}/operations`,
+        )
+        .toPromise();
+      return response.data._embedded.records;
+    } catch (error) {
+      console.error('Error fetching operation details:', error.message);
+      throw new NotFoundException(
+        'No operation details found for this transaction.',
+      );
+    }
   }
 
   public async getAccountOrFund(publicKey: string): Promise<Account> {
