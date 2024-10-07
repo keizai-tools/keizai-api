@@ -89,6 +89,7 @@ describe('User - [/user]', () => {
           oldUser: {
             email: 'admin@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
             id: '30a21557-582a-4bb1-9158-59132bfca0a7',
             createdAt: expect.any(String),
             updatedAt: expect.any(String),
@@ -96,6 +97,7 @@ describe('User - [/user]', () => {
           newUser: {
             email: 'test@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
             id: '30a21557-582a-4bb1-9158-59132bfca0a7',
             createdAt: expect.any(String),
             updatedAt: expect.any(String),
@@ -123,6 +125,7 @@ describe('User - [/user]', () => {
           oldUser: {
             email: 'test@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
             id: '30a21557-582a-4bb1-9158-59132bfca0a7',
             createdAt: expect.any(String),
             updatedAt: expect.any(String),
@@ -130,6 +133,7 @@ describe('User - [/user]', () => {
           newUser: {
             email: 'test@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
             id: '30a21557-582a-4bb1-9158-59132bfca0a7',
             createdAt: expect.any(String),
             updatedAt: expect.any(String),
@@ -221,6 +225,7 @@ describe('User - [/user]', () => {
         payload: {
           email: 'test@test.com',
           externalId: '00000000-0000-0000-0000-00000000000X',
+          memoId: '4027480759992350720',
           id: '30a21557-582a-4bb1-9158-59132bfca0a7',
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
