@@ -24,13 +24,13 @@ import type { IEphemeralEnvironmentService } from '../interface/ephemeralEnviron
 export class EphemeralEnvironmentService
   implements IEphemeralEnvironmentService
 {
-  private ecsClient: ECSClient;
-  private ec2Client: EC2Client;
-  private clusterName: string;
-  private taskDefinition: string;
-  private subnets: string[];
-  private securityGroupId: string;
-  private region: string;
+  private readonly ecsClient: ECSClient;
+  private readonly ec2Client: EC2Client;
+  private readonly clusterName: string;
+  private readonly taskDefinition: string;
+  private readonly subnets: string[];
+  private readonly securityGroupId: string;
+  private readonly region: string;
 
   constructor(
     @Inject(RESPONSE_SERVICE)
@@ -42,15 +42,15 @@ export class EphemeralEnvironmentService
     this.taskDefinition = process.env.TASK_DEFINITION;
     this.subnets = process.env.SUBNETS?.split(',') || [];
     this.securityGroupId = process.env.SECURITY_GROUP_ID;
-    this.ecsClient = this.createClient(ECSClient);
-    this.ec2Client = this.createClient(EC2Client);
+    this.ecsClient = this.createClient(ECSClient) as ECSClient;
+    this.ec2Client = this.createClient(EC2Client) as EC2Client;
   }
 
   private createClient(
     Client: new (options: {
       region: string;
       credentials: { accessKeyId: string; secretAccessKey: string };
-    }) => any,
+    }) => ECSClient | EC2Client,
   ) {
     return new Client({
       region: this.region,
