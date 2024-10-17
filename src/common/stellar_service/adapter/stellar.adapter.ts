@@ -101,17 +101,6 @@ export class StellarAdapter implements IStellarAdapter {
     );
   }
 
-  public async checkContractNetwork(contractId: string): Promise<string> {
-    return await this.wrapWithErrorHandling(async () => {
-      const networks = [
-        NETWORK.SOROBAN_FUTURENET,
-        NETWORK.SOROBAN_TESTNET,
-        NETWORK.SOROBAN_MAINNET,
-      ];
-      return await this.findNetworkWithContract(contractId, networks);
-    });
-  }
-
   public createContractSpec(
     entries: xdr.ScSpecEntry[],
   ): Promise<contract.Spec> {
@@ -259,6 +248,7 @@ export class StellarAdapter implements IStellarAdapter {
     file: Express.Multer.File,
     publicKey: string,
   ): Promise<string> {
+    await this.getAccountOrFund(publicKey);
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
       const account: Account = await this.server.getAccount(publicKey);
       const operation: xdr.Operation<Operation.InvokeHostFunction> =
@@ -497,22 +487,6 @@ export class StellarAdapter implements IStellarAdapter {
       Address.fromScAddress(responseDeploy.returnValue.address()).toBuffer(),
     );
   }
-
-  private async findNetworkWithContract(
-    contractId: string,
-    networks: string[],
-  ): Promise<string> {
-    for (const network of networks) {
-      this.setNetwork(network);
-      const response = await this.fetchFromServer(
-        'getLedgerEntries',
-        this.createInstanceKey(contractId),
-      );
-      if (response.entries.length > 0) return network;
-    }
-    throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
-  }
-
   private setNetwork(network: string): void {
     const config = this.networkConfig[network];
     if (config) {
@@ -577,6 +551,42 @@ export class StellarAdapter implements IStellarAdapter {
       throw new Error('Transaction failed');
     }
     return response;
+  }
+
+  public async checkContractNetwork(contractId: string): Promise<string> {
+    return await this.wrapWithErrorHandling(async () => {
+      const networks = [
+        NETWORK.SOROBAN_FUTURENET,
+        NETWORK.SOROBAN_TESTNET,
+        NETWORK.SOROBAN_MAINNET,
+      ];
+      return await this.findNetworkWithContract(contractId, networks);
+    });
+  }
+
+  private async findNetworkWithContract(
+    contractId: string,
+    networks: string[],
+  ): Promise<string> {
+    for (const network of networks) {
+      try {
+        this.setNetwork(network);
+        const response = await this.fetchFromServer(
+          'getLedgerEntries',
+          this.createInstanceKey(contractId),
+        );
+
+        if (response.entries.length > 0) return network;
+      } catch (error) {
+        if (error.response?.status >= 400 || error?.status >= 400) {
+          continue;
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
   }
 
   private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
