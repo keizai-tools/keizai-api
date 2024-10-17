@@ -73,4 +73,17 @@ export class UserRepository implements IUserRepository {
       cache: true,
     });
   }
+
+  async findByMemoId(memoId: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { memoId: parseInt(memoId) },
+        cache: true,
+      });
+      return user;
+    } catch (error) {
+      console.error('Error finding user by memoId:', error);
+      throw new Error('Could not find user with provided memoId.');
+    }
+  }
 }

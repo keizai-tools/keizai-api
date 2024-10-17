@@ -10,6 +10,7 @@ export interface IUserRepository {
   update(id: string, user: Partial<User>): Promise<IUpdateUserResponse>;
   delete(id: string): Promise<DeleteResult>;
   findByEmail(email: string): Promise<User>;
+  findByMemoId(memoId: string): Promise<User>;
   saveOne(user: User): Promise<User>;
   findByExternalId(externalId: string): Promise<User>;
   findById(id: string): Promise<User>;

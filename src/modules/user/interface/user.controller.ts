@@ -21,7 +21,7 @@ import { User } from '../domain/user.domain';
 export class UserController implements IUserController {
   constructor(
     @Inject(USER_SERVICE)
-    private userService: IUserService,
+    private readonly userService: IUserService,
   ) {}
 
   @Put('/update')
