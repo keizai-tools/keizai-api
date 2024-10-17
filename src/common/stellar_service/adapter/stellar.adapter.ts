@@ -22,16 +22,24 @@ import {
   contract,
   xdr,
 } from '@stellar/stellar-sdk';
+import * as StellarServer from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
+import { lastValueFrom } from 'rxjs';
 
 import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
+import {
+  IUserRepository,
+  USER_REPOSITORY,
+} from '@/modules/user/application/interfaces/user.repository.interfaces';
+import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 import {
   ErrorMessages,
   GetTransactionStatus,
+  HORIZON_NETWORK,
   NETWORK,
   SOROBAN_CONTRACT_ERROR,
   SOROBAN_SERVER,
@@ -46,21 +54,27 @@ import { IStellarAdapter } from '../application/interface/stellar.adapter.interf
 
 @Injectable()
 export class StellarAdapter implements IStellarAdapter {
+  private stellarServer: StellarServer.Horizon.Server;
   private server: SorobanRpc.Server;
   private networkPassphrase: string;
-  private previousTransactions = [];
+  private currentNetwork: string;
   private networkConfig = {
     [NETWORK.SOROBAN_FUTURENET]: {
       server: new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET),
       networkPassphrase: Networks.FUTURENET,
+      horizonServer: new StellarServer.Horizon.Server(
+        HORIZON_NETWORK.FUTURENET,
+      ),
     },
     [NETWORK.SOROBAN_TESTNET]: {
       server: new SorobanRpc.Server(SOROBAN_SERVER.TESTNET),
       networkPassphrase: Networks.TESTNET,
+      horizonServer: new StellarServer.Horizon.Server(HORIZON_NETWORK.TESTNET),
     },
     [NETWORK.SOROBAN_MAINNET]: {
       server: new SorobanRpc.Server(SOROBAN_SERVER.MAINNET),
       networkPassphrase: Networks.PUBLIC,
+      horizonServer: new StellarServer.Horizon.Server(HORIZON_NETWORK.MAINNET),
     },
   };
 
@@ -68,9 +82,12 @@ export class StellarAdapter implements IStellarAdapter {
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     private readonly httpService: HttpService,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
+    private readonly websocketGateway: WebsocketGateway,
   ) {
     this.responseService.setContext(StellarAdapter.name);
-    this.setNetwork(NETWORK.SOROBAN_FUTURENET);
+    this.setNetwork(NETWORK.SOROBAN_TESTNET);
   }
 
   public changeNetwork(selectedNetwork: string): void {
@@ -264,30 +281,10 @@ export class StellarAdapter implements IStellarAdapter {
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
       | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
-    memo?: { type: 'id' | 'text' | 'return'; value: string },
   ): Promise<Transaction> {
     return await this.wrapWithErrorHandling(async () => {
       let transaction: Transaction;
       let memoObj: Memo;
-      if (memo) {
-        switch (memo.type) {
-          case 'text':
-            memoObj = Memo.text(memo.value);
-            break;
-          case 'return':
-            memoObj = Memo.return(memo.value);
-            break;
-          default:
-            memoObj = Memo.id(memo.value);
-        }
-      } else {
-        const maxInt64 = BigInt('9223372036854775807');
-        const defaultMemoID = BigInt(
-          Math.floor(Math.random() * Number(maxInt64)),
-        ).toString();
-        memoObj = Memo.id(defaultMemoID);
-      }
-
       if (typeof account === 'string') {
         const publicKey = account;
         const { contractId, methodName, scArgs } = operationsOrContractId as {
@@ -322,9 +319,8 @@ export class StellarAdapter implements IStellarAdapter {
     account: Account,
     operations: xdr.Operation<Operation.InvokeHostFunction>,
     sourceKeypair: Keypair,
-    memo?: { type: 'id' | 'text' | 'return'; value: string },
   ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse> {
-    const preparedTx = await this.prepareTransaction(account, operations, memo);
+    const preparedTx = await this.prepareTransaction(account, operations);
     this.signTransaction(preparedTx, sourceKeypair);
     return await this.executeTransactionWithRetry(preparedTx);
   }
@@ -335,7 +331,6 @@ export class StellarAdapter implements IStellarAdapter {
     methodName,
     scArgs,
     operations,
-    memo,
   }: {
     account: Account;
     contract?: Contract;
@@ -349,10 +344,6 @@ export class StellarAdapter implements IStellarAdapter {
       networkPassphrase: this.networkPassphrase,
     }).setTimeout(60);
 
-    if (memo) {
-      builder.addMemo(memo);
-    }
-
     if (contract && methodName && scArgs) {
       builder.addOperation(contract.call(methodName, ...scArgs));
     }
@@ -364,64 +355,97 @@ export class StellarAdapter implements IStellarAdapter {
     return builder.build();
   }
 
-  public async getTransactionsByMemoId(
+  public getPublicKeyForCurrentNetwork(): string {
+    const publicKeyMap: { [key: string]: string | undefined } = {
+      [NETWORK.SOROBAN_TESTNET]: process.env.PUBLIC_KEY_TESTNET,
+      [NETWORK.SOROBAN_FUTURENET]: process.env.PUBLIC_KEY_FUTURENET,
+      [NETWORK.SOROBAN_MAINNET]: process.env.PUBLIC_KEY_MAINNET,
+    };
+    const publicKey = publicKeyMap[this.currentNetwork];
+    if (!publicKey) {
+      throw new Error('Network not supported or public key not configured');
+    }
+    return publicKey;
+  }
+
+  public async streamTransactionsByMemoId(
     publicKey: string,
-    memoId: string,
-  ): Promise<any> {
+    memoId?: string,
+  ): Promise<void> {
     try {
-      const response = await this.httpService
-        .get(
-          `https://horizon-testnet.stellar.org/accounts/${publicKey}/transactions`,
-        )
-        .toPromise();
-      const transactions = response.data._embedded.records;
-      const filteredTransactions = transactions.filter(
-        (transaction: any) => transaction.memo === memoId,
-      );
-      const newTransaction = this.detectNewTransaction(
-        this.previousTransactions,
-        filteredTransactions,
-      );
-
-      if (newTransaction) {
-        console.log('Nueva transacción detectada:', newTransaction.id);
-        const operationDetails = await this.getOperationDetails(
-          newTransaction.id,
-        );
-        console.log('Detalles de la operación:', operationDetails);
-        this.previousTransactions = filteredTransactions;
-      } else {
-        console.log('No hay transacciones nuevas.');
-      }
-
-      return filteredTransactions;
+      this.stellarServer
+        .transactions()
+        .forAccount(publicKey)
+        .cursor('now')
+        .stream({
+          onmessage: async (
+            transaction: StellarServer.Horizon.ServerApi.CollectionPage<StellarServer.Horizon.ServerApi.TransactionRecord>,
+          ) => {
+            const _transaction =
+              transaction as unknown as StellarServer.Horizon.HorizonApi.TransactionResponse;
+            if (
+              _transaction.memo &&
+              (memoId === undefined || _transaction.memo === memoId)
+            ) {
+              const operationDetails = await this.getOperationDetails(
+                _transaction.id,
+              );
+              const amounts: string[] = operationDetails
+                .filter((op: Operation) => op.type === 'payment')
+                .map((op: Operation.Payment) => op.amount);
+              await this.updateUserBalance(_transaction.memo, amounts);
+            }
+          },
+          onerror: (error) => {
+            console.error(error);
+          },
+        });
     } catch (error) {
-      console.error('Error fetching transactions:', error.message);
-      throw new NotFoundException(
-        'No transactions found with the specified MemoID.',
-      );
+      console.error(error);
+      throw error;
     }
   }
 
-  private detectNewTransaction(previousTransactions, currentTransactions) {
-    const previousIds = new Set(previousTransactions.map((tx) => tx.id));
-    return currentTransactions.find((tx) => !previousIds.has(tx.id));
-  }
-
-  private async getOperationDetails(transactionId: string): Promise<any> {
+  private async getOperationDetails(
+    transactionId: string,
+  ): Promise<Operation[]> {
     try {
-      const response = await this.httpService
-        .get(
-          `https://horizon-testnet.stellar.org/transactions/${transactionId}/operations`,
-        )
-        .toPromise();
+      const response = await lastValueFrom(
+        this.httpService.get(
+          `${this.stellarServer.serverURL}transactions/${transactionId}/operations`,
+        ),
+      );
       return response.data._embedded.records;
     } catch (error) {
-      console.error('Error fetching operation details:', error.message);
+      console.error(error.message);
       throw new NotFoundException(
-        'No operation details found for this transaction.',
+        'Could not find transaction with provided transactionId.',
       );
     }
+  }
+
+  private async updateUserBalance(
+    memoId: string,
+    amounts: string[],
+  ): Promise<void> {
+    if (!memoId) {
+      console.warn('MemoID is required to update user balance.');
+      return;
+    }
+    const user = await this.userRepository.findByMemoId(memoId);
+    if (!user) {
+      console.error('User not found with MemoID:', memoId);
+      return;
+    }
+    const totalAmount = amounts.reduce(
+      (sum, amount) => sum + parseFloat(amount),
+      0,
+    );
+    user.balance += totalAmount;
+    await this.userRepository.update(user.id, user);
+    console.log(`User balance updated. New balance: ${user.balance}`);
+    this.websocketGateway.notifyBalanceUpdate(user.id, user.balance);
+    console.log(`Notified balance update to clients...`);
   }
 
   public async getAccountOrFund(publicKey: string): Promise<Account> {
@@ -494,6 +518,8 @@ export class StellarAdapter implements IStellarAdapter {
     if (config) {
       this.server = config.server;
       this.networkPassphrase = config.networkPassphrase;
+      this.stellarServer = config.horizonServer;
+      this.currentNetwork = network;
     }
   }
 
