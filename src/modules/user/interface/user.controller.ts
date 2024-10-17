@@ -1,9 +1,7 @@
-import { Body, Controller, Get, Inject, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
-import { StellarAdapter } from '@/common/stellar_service/adapter/stellar.adapter';
-import { CONTRACT_ADAPTER } from '@/common/stellar_service/application/interface/stellar.adapter.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 
@@ -22,8 +20,6 @@ import { User } from '../domain/user.domain';
 @Controller('user')
 export class UserController implements IUserController {
   constructor(
-    @Inject(CONTRACT_ADAPTER)
-    private readonly stellarAdapter: StellarAdapter,
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
   ) {}
@@ -39,13 +35,5 @@ export class UserController implements IUserController {
   @Get('/me')
   async getMe(@CurrentUser() user: User): Promise<User> {
     return user;
-  }
-
-  @Get('by-memo')
-  async getTransactionsByMemoId(
-    @Query('publicKey') publicKey: string,
-    @Query('memoId') memoId: string,
-  ) {
-    return await this.stellarAdapter.getTransactionsByMemoId(publicKey, memoId);
   }
 }
