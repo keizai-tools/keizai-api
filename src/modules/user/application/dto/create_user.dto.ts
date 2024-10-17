@@ -12,4 +12,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   memoId?: number;
+
+  @IsOptional()
+  @IsString()
+  balance: number;
 }

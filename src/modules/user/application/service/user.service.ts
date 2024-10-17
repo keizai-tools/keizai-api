@@ -40,12 +40,14 @@ export class UserService implements IUserService {
   async createUser(user: UpdateUserDto): IPromiseResponse<User> {
     try {
       const userEntity = this.userMapper.fromDtoToEntity(user);
+      userEntity.balance = userEntity.balance || 0;
       const createdUser = await this.userRepository.create(userEntity);
       if (createdUser?.id) {
         createdUser.memoId = this.generateMemoId(createdUser.id);
         await this.userRepository.saveOne(createdUser);
       }
-      const userDto = this.userMapper.fromDtoToEntity(createdUser);
+      const _user = await this.userRepository.findByEmail(createdUser.email);
+      const userDto = this.userMapper.fromDtoToEntity(_user);
       return this.responseService.createResponse({
         type: 'CREATED',
         message: `${ServiceMessage.CREATE_SUCCESS}: ${ServiceMessage.WITH_ID} ${createdUser.id}`,
@@ -62,13 +64,27 @@ export class UserService implements IUserService {
       if (!user && error) {
         throw new NotFoundException(ServiceMessage.NOT_FOUND);
       }
+      if (user && !user.memoId) {
+        user.memoId = this.generateMemoId(user.id);
+        await this.userRepository.update(user.id, user);
+      }
+      const _user = await this.userRepository.findByEmail(email);
       return this.responseService.createResponse({
         type: user ? 'OK' : 'NOT_FOUND',
         message: user ? ServiceMessage.FOUND : ServiceMessage.NOT_FOUND,
-        payload: user,
+        payload: _user,
       });
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  async getUserByMemoId(memoId: string): Promise<User> {
+    try {
+      return await this.userRepository.findByMemoId(memoId);
+    } catch (error) {
+      console.error('Error finding user by memoId:', error);
+      throw new Error('Could not find user with provided memoId.');
     }
   }
 

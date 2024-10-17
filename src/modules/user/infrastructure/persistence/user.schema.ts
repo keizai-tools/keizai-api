@@ -24,6 +24,11 @@ export const UserSchema = new EntitySchema<User>({
       type: 'varchar',
       nullable: true,
     },
+    balance: {
+      name: 'balance',
+      type: 'int',
+      nullable: true,
+    },
   },
   relations: {
     collections: {

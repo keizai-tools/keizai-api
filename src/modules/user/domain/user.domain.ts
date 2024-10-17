@@ -12,11 +12,18 @@ export class User extends Base {
   memberTeams?: UserRoleToTeam[];
   invitationsReceived?: Invitation[];
   memoId: number;
+  balance: number;
 
-  constructor(email: string, externalId: string, memoId: number) {
+  constructor(
+    email: string,
+    externalId: string,
+    memoId: number,
+    balance: number,
+  ) {
     super();
     this.email = email;
     this.externalId = externalId;
     this.memoId = memoId;
+    this.balance = balance;
   }
 }
