@@ -21,6 +21,10 @@ import {
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import {
+  FOLDER_REPOSITORY,
+  IFolderRepository,
+} from '@/modules/folder/application/interface/folder.repository.interface';
 import { FolderService } from '@/modules/folder/application/service/folder.service';
 import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 import {
@@ -59,6 +63,8 @@ export class InvocationService {
     private readonly folderService: FolderService,
     @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
+    @Inject(forwardRef(() => FOLDER_REPOSITORY))
+    private readonly folderRepository: IFolderRepository,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IStellarService,
     private readonly invocationException: InvocationException,
@@ -83,9 +89,12 @@ export class InvocationService {
   async getContractAddress(invocation: Invocation, contractId: string) {
     try {
       const contractIdValue = this.getContractIdValue(contractId);
+      const collectionId =
+        invocation.folder?.collectionId || invocation.collectionId;
+
       const environment = await this.enviromentService.findOneByName(
         contractIdValue,
-        invocation.folder.collectionId,
+        collectionId,
       );
       return environment ? environment.value : contractIdValue;
     } catch (error) {
@@ -189,7 +198,7 @@ export class InvocationService {
             envsNames &&
             (await this.enviromentService.findByNames(
               envsNames,
-              invocation.folder.collectionId,
+              invocation.folder.collectionId || invocation.collectionId,
             ));
 
           const envsValues: { name: string; value: string }[] = Array.isArray(
@@ -311,6 +320,36 @@ export class InvocationService {
     createFolderDto: CreateInvocationDto,
   ): Promise<InvocationResponseDto> {
     try {
+      if (createFolderDto.folderId && createFolderDto.collectionId) {
+        throw new BadRequestException(
+          'No se debe proporcionar collectionId cuando se proporciona folderId.',
+        );
+      }
+
+      if (!createFolderDto.folderId && !createFolderDto.collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
+      let collectionId = createFolderDto.collectionId;
+
+      if (createFolderDto.folderId) {
+        const folder = await this.folderRepository.findOne(
+          createFolderDto.folderId,
+        );
+        if (!folder) {
+          throw new BadRequestException(INVOCATION_RESPONSE.Folder_NOT_FOUND);
+        }
+        collectionId = folder.collectionId;
+      }
+
+      if (!collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
       const invocationValues: IInvocationValues = {
         name: createFolderDto.name,
         secretKey: createFolderDto.secretKey,
@@ -318,12 +357,13 @@ export class InvocationService {
         preInvocation: createFolderDto.preInvocation,
         postInvocation: createFolderDto.postInvocation,
         contractId: createFolderDto.contractId,
-        folderId: createFolderDto.folderId,
+        folderId: createFolderDto.folderId || null,
         network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
+        collectionId: collectionId,
       };
-
       const invocation =
         this.invocationMapper.fromDtoToEntity(invocationValues);
+
       const invocationSaved = await this.invocationRepository.save(invocation);
       if (!invocationSaved) {
         throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
@@ -410,12 +450,28 @@ export class InvocationService {
         throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
       }
 
-      const { folder } = invocation;
-
-      if (folder.collection.userId !== userId) {
-        throw new BadRequestException(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-        );
+      if (invocation.folder) {
+        if (!invocation.folder.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
+          );
+        }
+        if (invocation.folder.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
+      } else {
+        if (!invocation.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_COLLECTION_NOT_FOUND,
+          );
+        }
+        if (invocation.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
       }
       return invocation;
     } catch (error) {

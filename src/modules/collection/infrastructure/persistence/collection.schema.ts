@@ -54,5 +54,13 @@ export const CollectionSchema = new EntitySchema<Collection>({
       },
       inverseSide: 'collection',
     },
+    invocations: {
+      target: 'Invocation',
+      type: 'one-to-many',
+      joinColumn: {
+        name: 'collection_id',
+      },
+      inverseSide: 'collection',
+    },
   },
 });

@@ -40,6 +40,7 @@ export class InvocationRepository implements IInvocationRepository {
         },
         selectedMethod: true,
         methods: true,
+        collection: true,
       },
       where: {
         id,

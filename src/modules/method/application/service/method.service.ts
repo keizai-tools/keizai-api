@@ -156,7 +156,14 @@ export class MethodService {
         throw new NotFoundException(METHOD_RESPONSE.METHOD_NOT_FOUND);
       }
 
-      const collectionUserId = method.invocation.folder.collection.userId;
+      const collectionUserId =
+        method.invocation.folder?.collection.userId || userId;
+
+      if (!collectionUserId) {
+        throw new BadRequestException(
+          METHOD_RESPONSE.METHOD_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
 
       if (collectionUserId !== userId) {
         throw new BadRequestException(

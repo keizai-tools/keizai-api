@@ -16,6 +16,7 @@ import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/envi
 import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
 import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -241,6 +242,30 @@ export class CollectionService {
     }
   }
 
+  async findInvocationsByCollectionUserId(
+    id: string,
+    userId: string,
+  ): IPromiseResponse<InvocationResponseDto[]> {
+    try {
+      const collection = await this.findOneByCollectionAndUserId(id, userId);
+      if (!collection) {
+        throw new NotFoundException(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
+      const filteredInvocations = collection.payload.invocations.filter(
+        (invocation) => !invocation.folderId,
+      );
+      return this.responseService.createResponse({
+        payload: filteredInvocations,
+        message: COLLECTION_RESPONSE.COLLECTION_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   async findFoldersByCollectionTeamId(
     collectionId: string,
     teamId: string,
@@ -267,6 +292,7 @@ export class CollectionService {
 
   async findInvocationsByCollectionId(
     collectionId: string,
+    folderId: string | undefined,
   ): IPromiseResponse<Invocation[]> {
     try {
       const collection =
@@ -280,9 +306,33 @@ export class CollectionService {
         );
       }
 
-      const allInvocations = collection.folders
+      const FolderInvocations = collection.folders
         .map((folder) => folder.invocations)
         .flat();
+
+      const invocations = collection.invocations.filter((invocation) => {
+        return (
+          folderId === undefined ||
+          invocation.folderId === folderId ||
+          invocation.folderId === undefined
+        );
+      });
+      const uniqueInvocations = new Set<string>();
+      const allInvocations = FolderInvocations.concat(invocations).filter(
+        (invocation) => {
+          if (uniqueInvocations.has(invocation.id)) {
+            return false;
+          }
+          uniqueInvocations.add(invocation.id);
+          return true;
+        },
+      );
+
+      allInvocations.forEach((invocation) => {
+        invocation.selectedMethod = invocation.methods.find(
+          (method) => method.id === invocation.selectedMethodId,
+        );
+      });
 
       const completeInvocations = allInvocations.filter((invocation) => {
         const hasValidParams = invocation.selectedMethod?.params?.every(
@@ -297,7 +347,7 @@ export class CollectionService {
 
       if (completeInvocations.length === 0) {
         throw new NotFoundException(
-          COLLECTION_RESPONSE.COLLECTION_FAILED_DELETED,
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
         );
       }
 
