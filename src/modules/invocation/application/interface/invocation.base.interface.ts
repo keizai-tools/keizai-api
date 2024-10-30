@@ -8,6 +8,7 @@ export interface IInvocationValues {
   postInvocation: string;
   contractId: string;
   folderId: string;
+  collectionId: string;
   network: string;
 }
 

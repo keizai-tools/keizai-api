@@ -25,9 +25,13 @@ export class CreateInvocationDto {
   @IsString()
   contractId: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   folderId: string;
+
+  @IsOptional()
+  @IsString()
+  collectionId: string;
 
   @IsOptional()
   @IsString()
