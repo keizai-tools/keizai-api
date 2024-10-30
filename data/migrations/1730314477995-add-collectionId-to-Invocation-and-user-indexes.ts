@@ -1,10 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddCollectionIdToInvocationAndUniqueIndexesOnUserMigration1730300437513
+export class AddCollectionIdToInvocationAndUserIndexes1730314477995
   implements MigrationInterface
 {
-  name =
-    ' AddCollectionIdToInvocationAndUniqueIndexesOnUserMigration1730300437513';
+  name = ' AddCollectionIdToInvocationAndUserIndexes1730314477995';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
