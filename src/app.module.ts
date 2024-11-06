@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { ResilienceModule } from 'nestjs-resilience';
 import { DataSource } from 'typeorm';
 
@@ -31,6 +33,7 @@ import { WebsocketGateway } from './websocket/websocket.gateway';
       validationSchema: configurationValidate,
       isGlobal: true,
     }),
+    SentryModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
         ...datasourceOptions,
@@ -56,7 +59,13 @@ import { WebsocketGateway } from './websocket/websocket.gateway';
     BlockchainNetworkStatusModule,
   ],
   controllers: [],
-  providers: [WebsocketGateway],
+  providers: [
+    WebsocketGateway,
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
   exports: [],
 })
 export class AppModule {}
