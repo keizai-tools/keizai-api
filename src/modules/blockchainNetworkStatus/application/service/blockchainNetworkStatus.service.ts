@@ -24,37 +24,45 @@ export class BlockchainNetworkStatusService {
     testNetwork: boolean;
     mainNetwork: boolean;
   }> {
+    const requestBody = {
+      jsonrpc: '2.0',
+      id: 8675309,
+      method: 'getHealth',
+    };
+
+    const futureNetwork = await this.safeCheckNetworkStatus(
+      SOROBAN_SERVER.FUTURENET,
+      requestBody,
+    );
+    const testNetwork = await this.safeCheckNetworkStatus(
+      SOROBAN_SERVER.TESTNET,
+      requestBody,
+    );
+    const mainNetwork = await this.safeCheckNetworkStatus(
+      SOROBAN_SERVER.MAINNET,
+      requestBody,
+    );
+
+    return this.responseService.createResponse({
+      payload: {
+        futureNetwork,
+        testNetwork,
+        mainNetwork,
+      },
+      message: 'Network status',
+      type: 'OK',
+    });
+  }
+
+  private async safeCheckNetworkStatus(
+    url: string,
+    requestBody: object,
+  ): Promise<boolean> {
     try {
-      const requestBody = {
-        jsonrpc: '2.0',
-        id: 8675309,
-        method: 'getHealth',
-      };
-
-      const futureNetwork = await this.checkNetworkStatus(
-        SOROBAN_SERVER.FUTURENET,
-        requestBody,
-      );
-      const testNetwork = await this.checkNetworkStatus(
-        SOROBAN_SERVER.TESTNET,
-        requestBody,
-      );
-      const mainNetwork = await this.checkNetworkStatus(
-        SOROBAN_SERVER.MAINNET,
-        requestBody,
-      );
-
-      return this.responseService.createResponse({
-        payload: {
-          futureNetwork,
-          testNetwork,
-          mainNetwork,
-        },
-        message: 'Network status',
-        type: 'OK',
-      });
+      return await this.checkNetworkStatus(url, requestBody);
     } catch (error) {
-      this.handleError(error);
+      return false;
+
     }
   }
 
@@ -62,17 +70,14 @@ export class BlockchainNetworkStatusService {
     url: string,
     requestBody: object,
   ): Promise<boolean> {
-    try {
-      const response = await lastValueFrom(
-        this.httpService.post(url, requestBody, {
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      );
-      const data = response.data;
-      return data?.result?.status === 'healthy';
-    } catch (error) {
-      this.handleError(error);
-    }
+    const response = await lastValueFrom(
+      this.httpService.post(url, requestBody, {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const data = response.data;
+    return data?.result?.status === 'healthy';
+
   }
 
   private handleError(error: Error): void {
