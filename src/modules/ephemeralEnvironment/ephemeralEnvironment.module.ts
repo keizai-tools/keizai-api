@@ -4,6 +4,7 @@ import { CommonModule } from '@/common/common.module';
 
 import { EPHEMERAL_ENVIRONMENT_SERVICE } from './application/interface/ephemeralEnvironment.interface';
 import { EphemeralEnvironmentService } from './application/service/ephemeralEnvironment.service';
+import { EphemeralEnvironmentController } from './controller/ephemeralEnvironment.controller';
 
 @Module({
   imports: [CommonModule],
@@ -13,5 +14,6 @@ import { EphemeralEnvironmentService } from './application/service/ephemeralEnvi
       useClass: EphemeralEnvironmentService,
     },
   ],
+  controllers: [EphemeralEnvironmentController],
 })
 export class EphemeralEnvironmentModule {}
