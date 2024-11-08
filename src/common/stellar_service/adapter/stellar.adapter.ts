@@ -85,7 +85,7 @@ export class StellarAdapter implements IStellarAdapter {
     private readonly userRepository: IUserRepository,
   ) {
     this.responseService.setContext(StellarAdapter.name);
-    this.setNetwork(NETWORK.SOROBAN_TESTNET);
+    this.setNetwork(NETWORK.SOROBAN_FUTURENET);
   }
 
   public changeNetwork(selectedNetwork: string): void {
