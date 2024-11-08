@@ -4,7 +4,6 @@ import { APP_FILTER } from '@nestjs/core';
 
 import { MethodModule } from '@/modules/method/method.module';
 import { UserModule } from '@/modules/user/user.module';
-import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 import { COGNITO_AUTH } from './cognito/application/interface/cognito.service.interface';
 import { CognitoService } from './cognito/service/cognito.service';
@@ -25,7 +24,6 @@ import { StellarService } from './stellar_service/service/stellar.service';
     forwardRef(() => UserModule),
   ],
   providers: [
-    WebsocketGateway,
     {
       provide: RESPONSE_SERVICE,
       useClass: ResponseService,
@@ -52,7 +50,6 @@ import { StellarService } from './stellar_service/service/stellar.service';
     },
   ],
   exports: [
-    WebsocketGateway,
     {
       provide: RESPONSE_SERVICE,
       useClass: ResponseService,
@@ -74,15 +71,12 @@ import { StellarService } from './stellar_service/service/stellar.service';
 export class CommonModule implements OnModuleInit {
   constructor(
     @Inject(CONTRACT_ADAPTER) private readonly stellarAdapter: StellarAdapter,
-    private readonly websocketGateway: WebsocketGateway,
   ) {}
 
   onModuleInit() {
     try {
       const publicKey = this.stellarAdapter.getPublicKeyForCurrentNetwork();
       this.stellarAdapter.streamTransactionsByMemoId(publicKey);
-
-      this.websocketGateway.notifyBalanceUpdate(publicKey, 0);
     } catch (error) {
       console.error('Listener start failed with error:', error);
     }

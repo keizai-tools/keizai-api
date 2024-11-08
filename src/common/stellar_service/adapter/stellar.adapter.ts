@@ -34,7 +34,6 @@ import {
   IUserRepository,
   USER_REPOSITORY,
 } from '@/modules/user/application/interfaces/user.repository.interfaces';
-import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 import {
   ErrorMessages,
@@ -84,10 +83,9 @@ export class StellarAdapter implements IStellarAdapter {
     private readonly httpService: HttpService,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-    private readonly websocketGateway: WebsocketGateway,
   ) {
     this.responseService.setContext(StellarAdapter.name);
-    this.setNetwork(NETWORK.SOROBAN_FUTURENET);
+    this.setNetwork(NETWORK.SOROBAN_TESTNET);
   }
 
   public changeNetwork(selectedNetwork: string): void {
@@ -434,7 +432,6 @@ export class StellarAdapter implements IStellarAdapter {
     user.balance += totalAmount;
     await this.userRepository.update(user.id, user);
     console.log(`User balance updated. New balance: ${user.balance}`);
-    this.websocketGateway.notifyBalanceUpdate(user.id, user.balance);
     console.log(`Notified balance update to clients...`);
   }
 
