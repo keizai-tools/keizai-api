@@ -22,7 +22,6 @@ import { MethodModule } from './modules/method/method.module';
 import { UserRoleToTeamModule } from './modules/role/role.module';
 import { TeamModule } from './modules/team/team.module';
 import { UserModule } from './modules/user/user.module';
-import { WebsocketGateway } from './websocket/websocket.gateway';
 
 @Module({
   imports: [
@@ -56,7 +55,7 @@ import { WebsocketGateway } from './websocket/websocket.gateway';
     BlockchainNetworkStatusModule,
   ],
   controllers: [],
-  providers: [WebsocketGateway],
+  providers: [],
   exports: [],
 })
 export class AppModule {}
