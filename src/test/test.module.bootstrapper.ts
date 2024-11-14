@@ -1,4 +1,4 @@
-import { SorobanRpc, xdr } from '@stellar/stellar-sdk';
+import { rpc, xdr } from '@stellar/stellar-sdk';
 
 import { ICognitoAuthService } from '@/common/cognito/application/interface/cognito.service.interface';
 import {
@@ -65,29 +65,20 @@ export const mockedContractService: jest.MockedObject<IStellarService> = {
   pollTransactionStatus: jest.fn(),
 };
 
-export const getTxFailed = {
+export const rawGetTxFailed: rpc.Api.GetTransactionResponse = {
   status: GetTransactionStatus.FAILED,
+  resultXdr: {} as xdr.TransactionResult,
+  latestLedger: 0,
+  latestLedgerCloseTime: 0,
+  oldestLedger: 0,
+  oldestLedgerCloseTime: 0,
   ledger: 0,
   createdAt: 0,
   applicationOrder: 0,
   feeBump: false,
   envelopeXdr: undefined,
-  resultXdr: undefined,
   resultMetaXdr: undefined,
-  latestLedger: 0,
-  latestLedgerCloseTime: 0,
-  oldestLedger: 0,
-  oldestLedgerCloseTime: 0,
-  returnValue: undefined,
-};
-
-export const rawGetTxFailed = {
-  status: GetTransactionStatus.FAILED,
-  resultXdr: '',
-  latestLedger: 0,
-  latestLedgerCloseTime: 0,
-  oldestLedger: 0,
-  oldestLedgerCloseTime: 0,
+  txHash: '',
 };
 
 export const rawSendTxPending = {
@@ -98,7 +89,7 @@ export const rawSendTxPending = {
   latestLedgerCloseTime: 0,
 };
 
-export const rawSendTxError: SorobanRpc.Api.RawSendTransactionResponse = {
+export const rawSendTxError: rpc.Api.RawSendTransactionResponse = {
   status: SendTransactionStatus.ERROR,
   errorResultXdr: '',
   hash: '',
