@@ -13,11 +13,11 @@ import {
   Keypair,
   Networks,
   Operation,
-  SorobanRpc,
   StrKey,
   Transaction,
   TransactionBuilder,
   contract,
+  rpc,
   xdr,
 } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
@@ -44,20 +44,20 @@ import { IStellarAdapter } from '../application/interface/stellar.adapter.interf
 
 @Injectable()
 export class StellarAdapter implements IStellarAdapter {
-  private server: SorobanRpc.Server;
+  private server: rpc.Server;
   private networkPassphrase: string;
 
   private readonly networkConfig = {
     [NETWORK.SOROBAN_FUTURENET]: {
-      server: new SorobanRpc.Server(SOROBAN_SERVER.FUTURENET),
+      server: new rpc.Server(SOROBAN_SERVER.FUTURENET),
       networkPassphrase: Networks.FUTURENET,
     },
     [NETWORK.SOROBAN_TESTNET]: {
-      server: new SorobanRpc.Server(SOROBAN_SERVER.TESTNET),
+      server: new rpc.Server(SOROBAN_SERVER.TESTNET),
       networkPassphrase: Networks.TESTNET,
     },
     [NETWORK.SOROBAN_MAINNET]: {
-      server: new SorobanRpc.Server(SOROBAN_SERVER.MAINNET),
+      server: new rpc.Server(SOROBAN_SERVER.MAINNET),
       networkPassphrase: Networks.PUBLIC,
     },
   };
@@ -90,7 +90,7 @@ export class StellarAdapter implements IStellarAdapter {
   public async contractExists(
     contractId: string,
     currentNetwork: string,
-  ): Promise<SorobanRpc.Api.GetLedgerEntriesResponse> {
+  ): Promise<rpc.Api.GetLedgerEntriesResponse> {
     return await this.wrapWithErrorHandling(async () => {
       const network =
         currentNetwork === NETWORK.SOROBAN_AUTO_DETECT
@@ -151,9 +151,7 @@ export class StellarAdapter implements IStellarAdapter {
   public async sendTransaction(
     transaction: Transaction,
     useRaw = false,
-  ): Promise<
-    RawSendTransactionResponse | SorobanRpc.Api.SendTransactionResponse
-  > {
+  ): Promise<RawSendTransactionResponse | rpc.Api.SendTransactionResponse> {
     return await this.wrapWithErrorHandling(async () => {
       return useRaw
         ? await this.fetchFromServer('_sendTransaction', transaction)
@@ -194,7 +192,7 @@ export class StellarAdapter implements IStellarAdapter {
   }
 
   public async deployContract(
-    response: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
@@ -204,7 +202,7 @@ export class StellarAdapter implements IStellarAdapter {
         sourceKeypair,
       );
 
-      const responseDeploy: SorobanRpc.Api.GetSuccessfulTransactionResponse =
+      const responseDeploy: rpc.Api.GetSuccessfulTransactionResponse =
         await this.buildAndSendTransaction(account, operation, sourceKeypair);
       return this.extractContractAddress(responseDeploy);
     });
@@ -212,13 +210,13 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async submitSignedTransaction(
     signedXdr: string,
-  ): Promise<SorobanRpc.Api.SendTransactionResponse> {
+  ): Promise<rpc.Api.SendTransactionResponse> {
     return await this.wrapWithErrorHandling(async () => {
       const transaction = TransactionBuilder.fromXDR(
         signedXdr,
         this.networkPassphrase,
       );
-      const response: SorobanRpc.Api.SendTransactionResponse =
+      const response: rpc.Api.SendTransactionResponse =
         await this.server.sendTransaction(transaction);
       return response;
     });
@@ -255,7 +253,6 @@ export class StellarAdapter implements IStellarAdapter {
   ): Promise<Transaction> {
     return await this.wrapWithErrorHandling(async () => {
       let transaction: Transaction;
-
       if (typeof account === 'string') {
         const publicKey = account;
         const { contractId, methodName, scArgs } = operationsOrContractId as {
@@ -276,7 +273,6 @@ export class StellarAdapter implements IStellarAdapter {
           operationsOrContractId as xdr.Operation<Operation.InvokeHostFunction>;
         transaction = this.createTransaction({ account, operations });
       }
-
       return await this.server.prepareTransaction(transaction);
     });
   }
@@ -285,7 +281,7 @@ export class StellarAdapter implements IStellarAdapter {
     account: Account,
     operations: xdr.Operation<Operation.InvokeHostFunction>,
     sourceKeypair: Keypair,
-  ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse> {
+  ): Promise<rpc.Api.GetSuccessfulTransactionResponse> {
     const preparedTx = await this.prepareTransaction(account, operations);
     this.signTransaction(preparedTx, sourceKeypair);
     return await this.executeTransactionWithRetry(preparedTx);
@@ -312,11 +308,9 @@ export class StellarAdapter implements IStellarAdapter {
     if (contract && methodName && scArgs) {
       builder.addOperation(contract.call(methodName, ...scArgs));
     }
-
     if (operations) {
       builder.addOperation(operations);
     }
-
     return builder.build();
   }
 
@@ -348,7 +342,7 @@ export class StellarAdapter implements IStellarAdapter {
   }
 
   public createDeployContractOperation(
-    response: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair | string,
   ): xdr.Operation<Operation.InvokeHostFunction> {
     return Operation.createCustomContract({
@@ -363,7 +357,7 @@ export class StellarAdapter implements IStellarAdapter {
   }
 
   public extractContractAddress(
-    responseDeploy: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    responseDeploy: rpc.Api.GetSuccessfulTransactionResponse,
   ): string {
     return StrKey.encodeContract(
       Address.fromScAddress(responseDeploy.returnValue.address()).toBuffer(),
@@ -384,7 +378,8 @@ export class StellarAdapter implements IStellarAdapter {
 
   private async wrapWithErrorHandling<T>(fn: () => T | Promise<T>): Promise<T> {
     try {
-      return await fn();
+      const response = await fn();
+      return response;
     } catch (error) {
       this.handleError(error);
       throw error;
@@ -408,7 +403,7 @@ export class StellarAdapter implements IStellarAdapter {
   }
 
   private extractExecutableFromLedgerResponse(
-    response: SorobanRpc.Api.GetLedgerEntriesResponse,
+    response: rpc.Api.GetLedgerEntriesResponse,
   ): xdr.ContractExecutable {
     return response.entries[0].val.contractData().val().instance().executable();
   }
@@ -419,7 +414,7 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async executeTransactionWithRetry(
     transaction: Transaction,
-  ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse> {
+  ): Promise<rpc.Api.GetSuccessfulTransactionResponse> {
     const hash = (await this.server.sendTransaction(transaction)).hash;
     let response: GetTransactionResponse;
     do {

@@ -2,9 +2,9 @@ import {
   type Account,
   type Keypair,
   type Operation,
-  type SorobanRpc,
   Transaction,
   contract,
+  type rpc,
   xdr,
 } from '@stellar/stellar-sdk';
 
@@ -43,9 +43,7 @@ export interface IStellarAdapter {
   sendTransaction(
     transaction: Transaction,
     useRaw: boolean,
-  ): Promise<
-    RawSendTransactionResponse | SorobanRpc.Api.SendTransactionResponse
-  >;
+  ): Promise<RawSendTransactionResponse | rpc.Api.SendTransactionResponse>;
   getContractEvents(contractId: string): Promise<EncodeEvent[]>;
   getTransaction(
     hash: string,
@@ -61,9 +59,9 @@ export interface IStellarAdapter {
   ): Promise<string>;
   executeTransactionWithRetry(
     transaction: Transaction,
-  ): Promise<SorobanRpc.Api.GetSuccessfulTransactionResponse>;
+  ): Promise<rpc.Api.GetSuccessfulTransactionResponse>;
   createDeployContractOperation(
-    response: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair | string,
   ): xdr.Operation<Operation.InvokeHostFunction>;
   getAccountOrFund(publicKey: string): Promise<Account>;
@@ -72,6 +70,6 @@ export interface IStellarAdapter {
     publicKey: string,
   ): Promise<string>;
   extractContractAddress(
-    responseDeploy: SorobanRpc.Api.GetSuccessfulTransactionResponse,
+    responseDeploy: rpc.Api.GetSuccessfulTransactionResponse,
   ): string;
 }
