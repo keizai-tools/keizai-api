@@ -423,7 +423,6 @@ export class StellarService implements IStellarService {
           await this.stellarAdapter.prepareTransaction(account, operation)
         ).toXDR();
       }
-
       return await this.stellarAdapter.prepareUploadWASM(file, publicKey);
     } catch (error) {
       if (error instanceof HttpException) this.handleError(error);

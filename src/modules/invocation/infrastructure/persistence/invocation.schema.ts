@@ -34,11 +34,16 @@ export const InvocationSchema = new EntitySchema<Invocation>({
     },
     folderId: {
       type: String,
+      nullable: true,
     },
     network: {
       type: String,
     },
     selectedMethodId: {
+      type: String,
+      nullable: true,
+    },
+    collectionId: {
       type: String,
       nullable: true,
     },
@@ -50,6 +55,7 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       joinColumn: {
         name: 'folder_id',
       },
+      nullable: true,
       onDelete: 'CASCADE',
     },
     methods: {
@@ -69,6 +75,15 @@ export const InvocationSchema = new EntitySchema<Invocation>({
       onDelete: 'SET NULL',
       nullable: true,
       onUpdate: 'CASCADE',
+    },
+    collection: {
+      target: 'Collection',
+      type: 'many-to-one',
+      joinColumn: {
+        name: 'collection_id',
+      },
+      nullable: true,
+      onDelete: 'CASCADE',
     },
   },
 });

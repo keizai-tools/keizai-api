@@ -33,14 +33,20 @@ export class InvocationResponseDto extends Base {
   @IsString()
   network: string;
 
-  @IsNotEmpty()
-  folder: FolderResponseDto;
+  @IsOptional()
+  folder?: FolderResponseDto;
+
+  @IsOptional()
+  folderId?: string;
 
   @IsOptional()
   selectedMethod?: MethodResponseDto;
 
   @IsOptional()
   methods?: MethodResponseDto[];
+
+  @IsOptional()
+  collectionId?: string;
 
   constructor(
     name: string,
@@ -51,9 +57,11 @@ export class InvocationResponseDto extends Base {
     contractId: string,
     network: string,
     folder: FolderResponseDto,
+    folderId?: string,
     methods?: MethodResponseDto[],
     selectedMethod?: MethodResponseDto,
     id?: string,
+    collectionId?: string,
   ) {
     super();
     this.name = name;
@@ -65,7 +73,9 @@ export class InvocationResponseDto extends Base {
     this.network = network;
     this.id = id;
     this.folder = folder;
+    this.folderId = folderId;
     this.methods = methods;
     this.selectedMethod = selectedMethod;
+    this.collectionId = collectionId;
   }
 }

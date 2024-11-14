@@ -5,6 +5,7 @@ import { CommonModule } from '@/common/common.module';
 
 import { EnviromentModule } from '../enviroment/enviroment.module';
 import { FolderModule } from '../folder/folder.module';
+import { InvocationModule } from '../invocation/invocation.module';
 import { TeamModule } from '../team/team.module';
 import { COLLECTION_REPOSITORY } from './application/interface/collection.repository.interface';
 import { CollectionMapper } from './application/mapper/collection.mapper';
@@ -21,6 +22,7 @@ import { CollectionController } from './interface/collection.controller';
     forwardRef(() => EnviromentModule),
     forwardRef(() => CommonModule),
     forwardRef(() => TeamModule),
+    forwardRef(() => InvocationModule),
   ],
   controllers: [CollectionController, CollectionTeamController],
   providers: [

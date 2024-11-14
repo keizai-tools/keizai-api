@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { ResilienceModule } from 'nestjs-resilience';
 import { DataSource } from 'typeorm';
 
@@ -30,6 +32,7 @@ import { UserModule } from './modules/user/user.module';
       validationSchema: configurationValidate,
       isGlobal: true,
     }),
+    SentryModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
         ...datasourceOptions,
@@ -55,7 +58,12 @@ import { UserModule } from './modules/user/user.module';
     BlockchainNetworkStatusModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
   exports: [],
 })
 export class AppModule {}

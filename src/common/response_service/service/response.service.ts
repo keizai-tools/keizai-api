@@ -17,7 +17,6 @@ import {
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
   status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION;
-
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
       this.verbose(`Message: ${message}`);

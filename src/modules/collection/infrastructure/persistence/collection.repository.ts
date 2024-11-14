@@ -41,6 +41,7 @@ export class CollectionRepository implements ICollectionRepository {
         user: true,
         folders: { invocations: true },
         enviroments: true,
+        invocations: true,
       },
       where: {
         id,
@@ -104,6 +105,7 @@ export class CollectionRepository implements ICollectionRepository {
         relations: {
           folders: { invocations: { methods: true, selectedMethod: true } },
           enviroments: true,
+          invocations: { methods: true, selectedMethod: true },
         },
         where: { id },
         lock:
