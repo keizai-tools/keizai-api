@@ -1,6 +1,6 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { EnvironmentResponseDto } from '@/modules/environment/application/dto/environment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
 
@@ -23,19 +23,19 @@ export class CollectionResponseDto {
 
   @IsNotEmpty()
   @IsArray()
-  enviroments: EnviromentResponseDto[];
+  environments: EnvironmentResponseDto[];
 
   constructor(
     id: string,
     name: string,
     folders: FolderResponseDto[],
     invocations: InvocationResponseDto[],
-    enviroments: EnviromentResponseDto[],
+    environments: EnvironmentResponseDto[],
   ) {
     this.id = id;
     this.name = name;
     this.folders = folders;
     this.invocations = invocations;
-    this.enviroments = enviroments;
+    this.environments = environments;
   }
 }

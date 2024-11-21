@@ -17,42 +17,42 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
 import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
 
-import { CreateEnviromentDto } from '../application/dto/create-enviroment.dto';
-import { EnviromentResponseDto } from '../application/dto/enviroment-response.dto';
-import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
-import { EnviromentService } from '../application/service/enviroment.service';
+import { CreateEnvironmentDto } from '../application/dto/create-environment.dto';
+import { EnvironmentResponseDto } from '../application/dto/environment-response.dto';
+import { UpdateEnvironmentDto } from '../application/dto/update-environment.dto';
+import { EnvironmentService } from '../application/service/environment.service';
 
 @Auth(AuthType.Bearer)
 @ApiTags('Environment Team')
 @UseGuards(AuthTeamGuard)
 @Controller('/team/:teamId/environment')
-export class EnviromentTeamController {
-  constructor(private readonly enviromentService: EnviromentService) {}
+export class EnvironmentTeamController {
+  constructor(private readonly environmentService: EnvironmentService) {}
 
   @UseGuards(AdminRoleGuard)
   @Post('/')
   async create(
     @Param('teamId') teamId: string,
-    @Body() createEnviromentDto: CreateEnviromentDto,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.createByTeam(createEnviromentDto, teamId);
+    @Body() createEnvironmentDto: CreateEnvironmentDto,
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.createByTeam(createEnvironmentDto, teamId);
   }
 
   @Get('/:id')
   findOne(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.findOneByEnvAndTeamId(id, teamId);
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.findOneByEnvAndTeamId(id, teamId);
   }
 
   @UseGuards(AdminRoleGuard)
   @Patch('')
   update(
     @Param('teamId') teamId: string,
-    @Body() updateEnviromentDto: UpdateEnviromentDto,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.updateByTeam(updateEnviromentDto, teamId);
+    @Body() updateEnvironmentDto: UpdateEnvironmentDto,
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.updateByTeam(updateEnvironmentDto, teamId);
   }
 
   @UseGuards(AdminRoleGuard)
@@ -61,7 +61,7 @@ export class EnviromentTeamController {
     @Param('teamId') teamId: string,
     @Param('id') id: string,
   ): IPromiseResponse<boolean> {
-    return this.enviromentService.deleteByTeam(id, teamId);
+    return this.environmentService.deleteByTeam(id, teamId);
   }
 
   @UseGuards(AdminRoleGuard)
@@ -70,6 +70,6 @@ export class EnviromentTeamController {
     @Query('name') name: string,
     @Query('collectionId') collectionId: string,
   ): IPromiseResponse<boolean> {
-    return this.enviromentService.deleteByName(name, collectionId);
+    return this.environmentService.deleteByName(name, collectionId);
   }
 }

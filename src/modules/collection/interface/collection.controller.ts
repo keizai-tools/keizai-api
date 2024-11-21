@@ -16,8 +16,8 @@ import {
 } from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
-import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
-import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { CreateEnvironmentsDto } from '@/modules/environment/application/dto/create-all-environments.dto';
+import { EnvironmentResponseDto } from '@/modules/environment/application/dto/environment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
@@ -48,7 +48,7 @@ export class CollectionController {
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
     @Param('id') id: string,
     @CurrentUser() data: IResponse<User>,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     return this.collectionService.createAllEnvironmentsByUser(
       id,
       createEnvironmentsDto,
@@ -100,7 +100,7 @@ export class CollectionController {
   async findEnvironmentsByCollection(
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     return this.collectionService.findEnvironmentsByCollectionAndUserId(
       id,
       data.payload.id,
@@ -111,7 +111,7 @@ export class CollectionController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ): IPromiseResponse<EnviromentResponseDto> {
+  ): IPromiseResponse<EnvironmentResponseDto> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,

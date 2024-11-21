@@ -17,7 +17,7 @@ import { COLLECTION_RESPONSE } from '@/modules/collection/application/exceptions
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
 
-import { ENVIROMENT_RESPONSE } from '../../application/exceptions/enviroment-response.enum';
+import { ENVIRONMENT_RESPONSE } from '../../application/exceptions/environment-response.enum';
 
 describe('Environment - [/environment]', () => {
   let app: INestApplication;
@@ -74,7 +74,7 @@ describe('Environment - [/environment]', () => {
   });
 
   describe('Create one - [POST /environment]', () => {
-    const enviromentDto = {
+    const environmentDto = {
       name: 'test',
       value: 'test',
     };
@@ -85,11 +85,11 @@ describe('Environment - [/environment]', () => {
         method: 'post',
         authCode: adminToken,
         endpoint: '/environment',
-        data: { ...enviromentDto, collectionId: 'collection0' },
+        data: { ...environmentDto, collectionId: 'collection0' },
       });
 
       expect(response.body.payload).toEqual({
-        ...enviromentDto,
+        ...environmentDto,
         id: expect.any(String),
       });
     });
@@ -100,7 +100,7 @@ describe('Environment - [/environment]', () => {
         method: 'post',
         authCode: adminToken,
         endpoint: '/environment',
-        data: { ...enviromentDto, collectionId: 'collection' },
+        data: { ...environmentDto, collectionId: 'collection' },
       });
 
       expect(response.body.details.description).toEqual(
@@ -110,7 +110,7 @@ describe('Environment - [/environment]', () => {
 
     it('should update value of an environment if it already exists with the same name', async () => {
       const responseExpected = expect.objectContaining({
-        ...enviromentDto,
+        ...environmentDto,
         id: expect.any(String),
       });
       const response = await makeRequest({
@@ -118,7 +118,7 @@ describe('Environment - [/environment]', () => {
         method: 'post',
         authCode: adminToken,
         endpoint: '/environment',
-        data: { ...enviromentDto, collectionId: 'collection0' },
+        data: { ...environmentDto, collectionId: 'collection0' },
       });
 
       expect(response.body.payload).toEqual(responseExpected);
@@ -130,13 +130,13 @@ describe('Environment - [/environment]', () => {
       const response = await makeRequest({
         app,
         authCode: adminToken,
-        endpoint: '/environment/enviroment0',
+        endpoint: '/environment/environment0',
       });
 
       expect(response.body.payload).toEqual({
-        id: 'enviroment0',
-        name: 'enviroment0',
-        value: 'enviroment0',
+        id: 'environment0',
+        name: 'environment0',
+        value: 'environment0',
       });
     });
 
@@ -144,32 +144,32 @@ describe('Environment - [/environment]', () => {
       const response = await makeRequest({
         app,
         authCode: adminToken,
-        endpoint: '/environment/enviroment',
+        endpoint: '/environment/environment',
       });
 
       expect(response.body.details.description).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
 
   describe('Update one  - [PATCH /environment/:id]', () => {
-    it('should update one enviroment associated with a user', async () => {
+    it('should update one environment associated with a user', async () => {
       const response = await makeRequest({
         app,
         method: 'patch',
         authCode: adminToken,
         endpoint: '/environment',
         data: {
-          name: 'enviroment updated',
-          id: 'enviroment0',
+          name: 'environment updated',
+          id: 'environment0',
         },
       });
 
       expect(response.body.payload).toEqual({
-        id: 'enviroment0',
-        name: 'enviroment updated',
-        value: 'enviroment0',
+        id: 'environment0',
+        name: 'environment updated',
+        value: 'environment0',
       });
     });
 
@@ -180,13 +180,13 @@ describe('Environment - [/environment]', () => {
         authCode: adminToken,
         endpoint: '/environment',
         data: {
-          name: 'enviroment updated',
-          id: 'enviroment',
+          name: 'environment updated',
+          id: 'environment',
         },
       });
 
       expect(response.body.details.description).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
@@ -197,7 +197,7 @@ describe('Environment - [/environment]', () => {
         app,
         method: 'delete',
         authCode: adminToken,
-        endpoint: '/environment/enviroment0',
+        endpoint: '/environment/environment0',
       });
 
       expect(response.body).toEqual({
@@ -206,7 +206,7 @@ describe('Environment - [/environment]', () => {
         message: 'Variable deleted',
         payload: true,
         timestamp: expect.any(String),
-        path: '/environment/enviroment0',
+        path: '/environment/environment0',
       });
     });
 
@@ -217,7 +217,7 @@ describe('Environment - [/environment]', () => {
         authCode: adminToken,
         endpoint: '/environment',
         query: {
-          name: 'enviroment1',
+          name: 'environment1',
           collectionId: 'collection1',
         },
       });
@@ -228,7 +228,7 @@ describe('Environment - [/environment]', () => {
         message: 'Variable deleted',
         payload: true,
         timestamp: expect.any(String),
-        path: '/environment?name=enviroment1&collectionId=collection1',
+        path: '/environment?name=environment1&collectionId=collection1',
       });
     });
 
@@ -237,11 +237,11 @@ describe('Environment - [/environment]', () => {
         app,
         method: 'delete',
         authCode: adminToken,
-        endpoint: '/environment/enviroment',
+        endpoint: '/environment/environment',
       });
 
       expect(response.body.details.description).toEqual(
-        ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_USER_ID,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_USER_ID,
       );
     });
   });
@@ -252,7 +252,7 @@ describe('Environment - [/environment]', () => {
     const unauthorizeRoute = '/team/team2';
 
     describe('Create one - [POST /environment]', () => {
-      const enviromentDto = {
+      const environmentDto = {
         name: 'test',
         value: 'test',
       };
@@ -263,11 +263,11 @@ describe('Environment - [/environment]', () => {
           method: 'post',
           authCode: adminToken,
           endpoint: `${validTeamRoute}/environment/`,
-          data: { ...enviromentDto, collectionId: 'collection3' },
+          data: { ...environmentDto, collectionId: 'collection3' },
         });
 
         expect(response.body.payload).toEqual({
-          ...enviromentDto,
+          ...environmentDto,
           id: expect.any(String),
         });
       });
@@ -278,7 +278,7 @@ describe('Environment - [/environment]', () => {
           method: 'post',
           authCode: adminToken,
           endpoint: `${invalidTeamRoute}/environment/`,
-          data: { ...enviromentDto, collectionId: 'collection' },
+          data: { ...environmentDto, collectionId: 'collection' },
         });
 
         expect(response.body.details.description).toEqual(
@@ -288,7 +288,7 @@ describe('Environment - [/environment]', () => {
 
       it('should update value of an environment if it already exists with the same name', async () => {
         const responseExpected = expect.objectContaining({
-          ...enviromentDto,
+          ...environmentDto,
           id: expect.any(String),
         });
 
@@ -297,7 +297,7 @@ describe('Environment - [/environment]', () => {
           method: 'post',
           authCode: adminToken,
           endpoint: `${validTeamRoute}/environment/`,
-          data: { ...enviromentDto, collectionId: 'collection3' },
+          data: { ...environmentDto, collectionId: 'collection3' },
         });
 
         expect(response.body.payload).toEqual(responseExpected);
@@ -309,7 +309,7 @@ describe('Environment - [/environment]', () => {
           method: 'post',
           authCode: adminToken,
           endpoint: `${unauthorizeRoute}/environment/`,
-          data: { ...enviromentDto, collectionId: 'collection2' },
+          data: { ...environmentDto, collectionId: 'collection2' },
         });
 
         expect(response.body.details.description).toEqual(
@@ -323,13 +323,13 @@ describe('Environment - [/environment]', () => {
         const response = await makeRequest({
           app,
           authCode: adminToken,
-          endpoint: `${validTeamRoute}/environment/enviroment2`,
+          endpoint: `${validTeamRoute}/environment/environment2`,
         });
 
         expect(response.body.payload).toEqual({
-          id: 'enviroment2',
-          name: 'enviroment2',
-          value: 'enviroment2',
+          id: 'environment2',
+          name: 'environment2',
+          value: 'environment2',
         });
       });
 
@@ -337,32 +337,32 @@ describe('Environment - [/environment]', () => {
         const response = await makeRequest({
           app,
           authCode: adminToken,
-          endpoint: `${invalidTeamRoute}/environment/enviroment3`,
+          endpoint: `${invalidTeamRoute}/environment/environment3`,
         });
 
         expect(response.body.details.description).toEqual(
-          ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_TEAM_ID,
+          ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_TEAM_ID,
         );
       });
     });
 
     describe('Update one  - [PATCH /environment/:id]', () => {
-      it('should update one enviroment associated with a team', async () => {
+      it('should update one environment associated with a team', async () => {
         const response = await makeRequest({
           app,
           method: 'patch',
           authCode: adminToken,
           endpoint: `${validTeamRoute}/environment`,
           data: {
-            name: 'enviroment updated',
-            id: 'enviroment2',
+            name: 'environment updated',
+            id: 'environment2',
           },
         });
 
         expect(response.body.payload).toEqual({
-          id: 'enviroment2',
-          name: 'enviroment updated',
-          value: 'enviroment2',
+          id: 'environment2',
+          name: 'environment updated',
+          value: 'environment2',
         });
       });
 
@@ -373,13 +373,13 @@ describe('Environment - [/environment]', () => {
           authCode: adminToken,
           endpoint: `${invalidTeamRoute}/environment`,
           data: {
-            name: 'enviroment updated',
-            id: 'enviroment3',
+            name: 'environment updated',
+            id: 'environment3',
           },
         });
 
         expect(response.body.details.description).toEqual(
-          ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_TEAM_ID,
+          ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_TEAM_ID,
         );
       });
 
@@ -390,8 +390,8 @@ describe('Environment - [/environment]', () => {
           authCode: adminToken,
           endpoint: `${unauthorizeRoute}/environment`,
           data: {
-            name: 'enviroment updated',
-            id: 'enviroment3',
+            name: 'environment updated',
+            id: 'environment3',
           },
         });
 
@@ -407,7 +407,7 @@ describe('Environment - [/environment]', () => {
           app,
           method: 'delete',
           authCode: adminToken,
-          endpoint: `${validTeamRoute}/environment/enviroment2`,
+          endpoint: `${validTeamRoute}/environment/environment2`,
         });
 
         expect(response.body).toEqual({
@@ -416,7 +416,7 @@ describe('Environment - [/environment]', () => {
           message: 'Variable deleted',
           payload: true,
           timestamp: expect.any(String),
-          path: '/team/team0/environment/enviroment2',
+          path: '/team/team0/environment/environment2',
         });
       });
 
@@ -427,7 +427,7 @@ describe('Environment - [/environment]', () => {
           authCode: adminToken,
           endpoint: `${validTeamRoute}/environment/`,
           query: {
-            name: 'enviroment4',
+            name: 'environment4',
             collectionId: 'collection3',
           },
         });
@@ -438,7 +438,7 @@ describe('Environment - [/environment]', () => {
           message: 'Variable deleted',
           payload: true,
           timestamp: expect.any(String),
-          path: '/team/team0/environment/?name=enviroment4&collectionId=collection3',
+          path: '/team/team0/environment/?name=environment4&collectionId=collection3',
         });
       });
 
@@ -447,11 +447,11 @@ describe('Environment - [/environment]', () => {
           app,
           method: 'delete',
           authCode: adminToken,
-          endpoint: `${invalidTeamRoute}/environment/enviroment3`,
+          endpoint: `${invalidTeamRoute}/environment/environment3`,
         });
 
         expect(response.body.details.description).toEqual(
-          ENVIROMENT_RESPONSE.ENVIROMENT_NOT_FOUND_BY_TEAM_ID,
+          ENVIRONMENT_RESPONSE.ENVIRONMENT_NOT_FOUND_BY_TEAM_ID,
         );
       });
 
@@ -460,7 +460,7 @@ describe('Environment - [/environment]', () => {
           app,
           method: 'delete',
           authCode: adminToken,
-          endpoint: `${unauthorizeRoute}/environment/enviroment3`,
+          endpoint: `${unauthorizeRoute}/environment/environment3`,
         });
 
         expect(response.body.details.description).toEqual(
