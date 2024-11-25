@@ -1,9 +1,9 @@
 import { PartialType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-import { CreateEnviromentDto } from './create-enviroment.dto';
+import { CreateEnvironmentDto } from './create-environment.dto';
 
-export class UpdateEnviromentDto extends PartialType(CreateEnviromentDto) {
+export class UpdateEnvironmentDto extends PartialType(CreateEnvironmentDto) {
   @IsNotEmpty()
   @IsString()
   id: string;

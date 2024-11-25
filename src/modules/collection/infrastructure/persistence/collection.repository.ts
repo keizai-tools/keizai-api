@@ -23,7 +23,7 @@ export class CollectionRepository implements ICollectionRepository {
         team: true,
         user: true,
         folders: { invocations: true },
-        enviroments: true,
+        environments: true,
       },
       where: {
         id,
@@ -40,7 +40,7 @@ export class CollectionRepository implements ICollectionRepository {
         team: true,
         user: true,
         folders: { invocations: true },
-        enviroments: true,
+        environments: true,
         invocations: true,
       },
       where: {
@@ -55,7 +55,7 @@ export class CollectionRepository implements ICollectionRepository {
     teamId: string,
   ): Promise<Collection> {
     return await this.repository.findOne({
-      relations: { folders: { invocations: true }, enviroments: true },
+      relations: { folders: { invocations: true }, environments: true },
       where: {
         id,
         teamId,
@@ -67,7 +67,7 @@ export class CollectionRepository implements ICollectionRepository {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
-        enviroments: true,
+        environments: true,
         folders: {
           invocations: { methods: true, selectedMethod: true },
         },
@@ -84,7 +84,7 @@ export class CollectionRepository implements ICollectionRepository {
     return await this.repository.find({
       order: { createdAt: 'DESC' },
       relations: {
-        enviroments: true,
+        environments: true,
         folders: {
           invocations: { methods: true, selectedMethod: true },
         },
@@ -104,7 +104,7 @@ export class CollectionRepository implements ICollectionRepository {
       const collection = await queryRunner.manager.findOne(Collection, {
         relations: {
           folders: { invocations: { methods: true, selectedMethod: true } },
-          enviroments: true,
+          environments: true,
           invocations: { methods: true, selectedMethod: true },
         },
         where: { id },

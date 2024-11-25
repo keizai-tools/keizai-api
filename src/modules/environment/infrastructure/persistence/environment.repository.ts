@@ -2,26 +2,26 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
 
-import { IEnviromentRepository } from '../../application/interface/enviroment.repository.interface';
-import { Enviroment } from '../../domain/enviroment.domain';
-import { EnviromentSchema } from './enviroment.schema';
+import { IEnvironmentRepository } from '../../application/interface/environment.repository.interface';
+import { Environment } from '../../domain/environment.domain';
+import { EnvironmentSchema } from './environment.schema';
 
 @Injectable()
-export class EnviromentRepository implements IEnviromentRepository {
+export class EnvironmentRepository implements IEnvironmentRepository {
   constructor(
-    @InjectRepository(EnviromentSchema)
-    private readonly repository: Repository<Enviroment>,
+    @InjectRepository(EnvironmentSchema)
+    private readonly repository: Repository<Environment>,
   ) {}
 
-  async save(enviroment: Enviroment): Promise<Enviroment> {
-    return this.repository.save(enviroment);
-  }
-
-  async saveAll(environment: Enviroment[]): Promise<Enviroment[]> {
+  async save(environment: Environment): Promise<Environment> {
     return this.repository.save(environment);
   }
 
-  async findOne(id: string): Promise<Enviroment> {
+  async saveAll(environment: Environment[]): Promise<Environment[]> {
+    return this.repository.save(environment);
+  }
+
+  async findOne(id: string): Promise<Environment> {
     return await this.repository.findOne({
       where: {
         id,
@@ -29,7 +29,10 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
-  async findOneByName(name: string, collectionId: string): Promise<Enviroment> {
+  async findOneByName(
+    name: string,
+    collectionId: string,
+  ): Promise<Environment> {
     return await this.repository.findOne({
       where: {
         name,
@@ -38,7 +41,10 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
-  async findOneByEnvAndUserId(id: string, userId: string): Promise<Enviroment> {
+  async findOneByEnvAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<Environment> {
     return await this.repository.findOne({
       where: {
         id,
@@ -47,7 +53,10 @@ export class EnviromentRepository implements IEnviromentRepository {
     });
   }
 
-  async findOneByEnvAndTeamId(id: string, teamId: string): Promise<Enviroment> {
+  async findOneByEnvAndTeamId(
+    id: string,
+    teamId: string,
+  ): Promise<Environment> {
     return await this.repository.findOne({
       where: {
         id,
@@ -59,22 +68,29 @@ export class EnviromentRepository implements IEnviromentRepository {
   async findByNames(
     names: string[],
     collectionId: string,
-  ): Promise<Enviroment[]> {
+  ): Promise<Environment[]> {
     return this.repository.find({ where: { name: In(names), collectionId } });
   }
 
-  async update(enviroment: Enviroment): Promise<Enviroment> {
+  async update(environment: Environment): Promise<Environment> {
     const queryRunner = this.repository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const existingCollection = await queryRunner.manager.findOne(Enviroment, {
-        where: { id: enviroment.id },
-      });
+      const existingCollection = await queryRunner.manager.findOne(
+        Environment,
+        {
+          where: { id: environment.id },
+        },
+      );
       if (existingCollection)
-        await queryRunner.manager.update(Enviroment, enviroment.id, enviroment);
+        await queryRunner.manager.update(
+          Environment,
+          environment.id,
+          environment,
+        );
       await queryRunner.commitTransaction();
-      return await this.findOne(enviroment.id);
+      return await this.findOne(environment.id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -84,8 +100,8 @@ export class EnviromentRepository implements IEnviromentRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const enviroment = await this.findOne(id);
-    if (enviroment) {
+    const environment = await this.findOne(id);
+    if (environment) {
       await this.repository.delete(id);
       return true;
     }
