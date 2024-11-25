@@ -1,7 +1,7 @@
 import { Base } from '@/common/base/domain/base.domain';
 import { Collection } from '@/modules/collection/domain/collection.domain';
 
-export class Enviroment extends Base {
+export class Environment extends Base {
   name: string;
   value: string;
   collectionId: string;

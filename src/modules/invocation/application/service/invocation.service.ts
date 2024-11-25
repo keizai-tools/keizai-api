@@ -20,7 +20,7 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import { EnvironmentService } from '@/modules/environment/application/service/environment.service';
 import {
   FOLDER_REPOSITORY,
   IFolderRepository,
@@ -71,7 +71,7 @@ export class InvocationService {
     @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
     private readonly methodService: MethodService,
-    private readonly enviromentService: EnviromentService,
+    private readonly environmentService: EnvironmentService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }
@@ -92,7 +92,7 @@ export class InvocationService {
       const collectionId =
         invocation.folder?.collectionId || invocation.collectionId;
 
-      const environment = await this.enviromentService.findOneByName(
+      const environment = await this.environmentService.findOneByName(
         contractIdValue,
         collectionId,
       );
@@ -196,7 +196,7 @@ export class InvocationService {
           );
           const envsByName =
             envsNames &&
-            (await this.enviromentService.findByNames(
+            (await this.environmentService.findByNames(
               envsNames,
               invocation.folder.collectionId || invocation.collectionId,
             ));
@@ -279,16 +279,16 @@ export class InvocationService {
   }
 
   async createByUser(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     userId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndUserId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         userId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
         type: 'CREATED',
       });
@@ -298,16 +298,16 @@ export class InvocationService {
   }
 
   async createByTeam(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     teamId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndTeamId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         teamId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         type: 'OK',
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
       });
@@ -317,26 +317,26 @@ export class InvocationService {
   }
 
   async create(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
   ): Promise<InvocationResponseDto> {
     try {
-      if (createFolderDto.folderId && createFolderDto.collectionId) {
+      if (createInvocationDto.folderId && createInvocationDto.collectionId) {
         throw new BadRequestException(
           'No se debe proporcionar collectionId cuando se proporciona folderId.',
         );
       }
 
-      if (!createFolderDto.folderId && !createFolderDto.collectionId) {
+      if (!createInvocationDto.folderId && !createInvocationDto.collectionId) {
         throw new BadRequestException(
           INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
         );
       }
 
-      let collectionId = createFolderDto.collectionId;
+      let collectionId = createInvocationDto.collectionId;
 
-      if (createFolderDto.folderId) {
+      if (createInvocationDto.folderId) {
         const folder = await this.folderRepository.findOne(
-          createFolderDto.folderId,
+          createInvocationDto.folderId,
         );
         if (!folder) {
           throw new BadRequestException(INVOCATION_RESPONSE.Folder_NOT_FOUND);
@@ -351,14 +351,14 @@ export class InvocationService {
       }
 
       const invocationValues: IInvocationValues = {
-        name: createFolderDto.name,
-        secretKey: createFolderDto.secretKey,
-        publicKey: createFolderDto.publicKey,
-        preInvocation: createFolderDto.preInvocation,
-        postInvocation: createFolderDto.postInvocation,
-        contractId: createFolderDto.contractId,
-        folderId: createFolderDto.folderId || null,
-        network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
+        name: createInvocationDto.name,
+        secretKey: createInvocationDto.secretKey,
+        publicKey: createInvocationDto.publicKey,
+        preInvocation: createInvocationDto.preInvocation,
+        postInvocation: createInvocationDto.postInvocation,
+        contractId: createInvocationDto.contractId,
+        folderId: createInvocationDto.folderId || null,
+        network: createInvocationDto.network || NETWORK.SOROBAN_AUTO_DETECT,
         collectionId: collectionId,
       };
       const invocation =

@@ -19,24 +19,24 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { CreateEnviromentDto } from '../application/dto/create-enviroment.dto';
-import { EnviromentResponseDto } from '../application/dto/enviroment-response.dto';
-import { UpdateEnviromentDto } from '../application/dto/update-enviroment.dto';
-import { EnviromentService } from '../application/service/enviroment.service';
+import { CreateEnvironmentDto } from '../application/dto/create-environment.dto';
+import { EnvironmentResponseDto } from '../application/dto/environment-response.dto';
+import { UpdateEnvironmentDto } from '../application/dto/update-environment.dto';
+import { EnvironmentService } from '../application/service/environment.service';
 
 @Auth(AuthType.Bearer)
 @ApiTags('Environment')
 @Controller('environment')
-export class EnviromentUserController {
-  constructor(private readonly enviromentService: EnviromentService) {}
+export class EnvironmentUserController {
+  constructor(private readonly environmentService: EnvironmentService) {}
 
   @Post('')
   async create(
     @CurrentUser() data: IResponse<User>,
-    @Body() createEnviromentDto: CreateEnviromentDto,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.createByUser(
-      createEnviromentDto,
+    @Body() createEnvironmentDto: CreateEnvironmentDto,
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.createByUser(
+      createEnvironmentDto,
       data.payload.id,
     );
   }
@@ -45,17 +45,17 @@ export class EnviromentUserController {
   findOne(
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.findOneByEnvAndUserId(id, data.payload.id);
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.findOneByEnvAndUserId(id, data.payload.id);
   }
 
   @Patch()
   update(
     @CurrentUser() data: IResponse<User>,
-    @Body() updateEnviromentDto: UpdateEnviromentDto,
-  ): IPromiseResponse<EnviromentResponseDto> {
-    return this.enviromentService.updateByUser(
-      updateEnviromentDto,
+    @Body() updateEnvironmentDto: UpdateEnvironmentDto,
+  ): IPromiseResponse<EnvironmentResponseDto> {
+    return this.environmentService.updateByUser(
+      updateEnvironmentDto,
       data.payload.id,
     );
   }
@@ -65,7 +65,7 @@ export class EnviromentUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<boolean> {
-    return this.enviromentService.deleteByUser(id, data.payload.id);
+    return this.environmentService.deleteByUser(id, data.payload.id);
   }
 
   @Delete('/')
@@ -73,6 +73,6 @@ export class EnviromentUserController {
     @Query('name') name: string,
     @Query('collectionId') collectionId: string,
   ): IPromiseResponse<boolean> {
-    return this.enviromentService.deleteByName(name, collectionId);
+    return this.environmentService.deleteByName(name, collectionId);
   }
 }
