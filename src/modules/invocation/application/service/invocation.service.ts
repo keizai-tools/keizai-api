@@ -100,7 +100,7 @@ export class InvocationService {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
       return this.responseService.createResponse({
-        payload: await this.prepareInvocationTransaction(invocation),
+        payload: await this.prepareInvocationTransaction(invocation, userId),
         message: INVOCATION_RESPONSE.METHODS_FOUND,
         type: 'OK',
       });
@@ -116,7 +116,7 @@ export class InvocationService {
     try {
       const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
       return this.responseService.createResponse({
-        payload: await this.prepareInvocationTransaction(invocation),
+        payload: await this.prepareInvocationTransaction(invocation, teamId),
         message: INVOCATION_RESPONSE.METHODS_FOUND,
         type: 'OK',
       });
@@ -166,7 +166,10 @@ export class InvocationService {
     }
   }
 
-  async prepareInvocationTransaction(invocation: Invocation): Promise<string> {
+  async prepareInvocationTransaction(
+    invocation: Invocation,
+    userId: string,
+  ): Promise<string> {
     try {
       const hasEmptyParameters = invocation.selectedMethod?.params?.some(
         (param) => !param.value,
@@ -221,13 +224,17 @@ export class InvocationService {
         invocation.contractId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
       try {
         const preparedTransaction =
           await this.contractService.getPreparedTransactionXDR(
             contractId,
             invocation.publicKey,
             selectedMethodMapped,
+            userId,
           );
         return preparedTransaction;
       } catch (error) {
@@ -240,6 +247,7 @@ export class InvocationService {
 
   async runInvocationTransaction(
     invocation: Invocation,
+    userId: string,
     transactionXDR?: string,
   ): Promise<RunInvocationResponse | ContractErrorResponse> {
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
@@ -254,15 +262,21 @@ export class InvocationService {
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }
-    this.contractService.verifyNetwork(invocation.network);
+    this.contractService.verifyNetwork({
+      selectedNetwork: invocation.network,
+      userId: invocation.folder.collection.userId,
+    });
     try {
-      const invocationResult = await this.contractService.runInvocation({
-        contractId: invocation.contractId,
-        selectedMethod: invocation.selectedMethod,
-        signedTransactionXDR: transactionXDR,
-        publicKey: invocation.publicKey,
-        secretKey: invocation.secretKey,
-      });
+      const invocationResult = await this.contractService.runInvocation(
+        {
+          contractId: invocation.contractId,
+          selectedMethod: invocation.selectedMethod,
+          signedTransactionXDR: transactionXDR,
+          publicKey: invocation.publicKey,
+          secretKey: invocation.secretKey,
+        },
+        userId,
+      );
       return invocationResult;
     } catch (error) {
       this.handleError(error);
@@ -496,7 +510,7 @@ export class InvocationService {
         updateInvocationDto,
       );
 
-      let network: string;
+      let network: NETWORK;
 
       if (updateInvocationDto.contractId) {
         try {
@@ -505,10 +519,11 @@ export class InvocationService {
             updateInvocationDto.contractId,
           );
 
-          network = await this.contractService.verifyNetwork(
-            invocation.network,
+          network = await this.contractService.verifyNetwork({
+            selectedNetwork: updateInvocationDto.network,
             contractId,
-          );
+            userId: invocation.folder.collection.userId,
+          });
 
           const generatedMethods =
             await this.contractService.generateMethodsFromContractId(
@@ -606,10 +621,14 @@ export class InvocationService {
         );
       }
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
 
       return this.responseService.createResponse({
         payload: await this.contractService.prepareUploadWASM({
+          userId,
           file,
           publicKey: invocation.publicKey,
         }),
@@ -632,11 +651,15 @@ export class InvocationService {
         userId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
 
       const invocationResult = await this.contractService.deployWasmFile({
         file,
         invocation,
+        userId: invocation.folder.collection.userId,
       });
 
       return this.responseService.createResponse({
@@ -661,11 +684,15 @@ export class InvocationService {
         userId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
 
       if (!deploy)
         return this.responseService.createResponse({
           payload: await this.contractService.prepareUploadWASM({
+            userId,
             signedTransactionXDR: signedXDR,
             publicKey: invocation.publicKey,
           }),
