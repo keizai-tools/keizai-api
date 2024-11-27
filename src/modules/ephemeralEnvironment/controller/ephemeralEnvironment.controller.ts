@@ -58,6 +58,7 @@ export class EphemeralEnvironmentController {
     status: string;
   }> {
     return await this.ephemeralEnvironmentService.stopTask(user.payload.id);
+
   }
 
   @Get('status')
@@ -67,5 +68,6 @@ export class EphemeralEnvironmentController {
     return await this.ephemeralEnvironmentService.getTaskStatus(
       user.payload.id,
     );
+
   }
 }

@@ -27,6 +27,7 @@ import {
   LambdaClient,
 } from '@aws-sdk/client-lambda';
 import { HttpService } from '@nestjs/axios';
+
 import {
   ConflictException,
   Inject,
@@ -35,6 +36,7 @@ import {
 } from '@nestjs/common';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+
 
 import {
   IPromiseResponse,
@@ -173,8 +175,8 @@ export class EphemeralEnvironmentService {
   private async handleCommand<T>(command: Promise<T>, successMessage: string) {
     try {
       const response = await command;
-      // this.responseService.verbose(successMessage);
-      // this.responseService.verbose(JSON.stringify(response));
+      this.responseService.verbose(successMessage);
+      this.responseService.verbose(JSON.stringify(response));
       return response;
     } catch (error) {
       this.responseService.error(error);
@@ -225,6 +227,7 @@ export class EphemeralEnvironmentService {
     }
   }
 
+
   async startTask(
     clientId: string,
     intervalMinutes: number,
@@ -242,7 +245,9 @@ export class EphemeralEnvironmentService {
     }
     const taskID = `${clientId}-task-${uuidv4()}`;
 
+
     const runTaskParams: RunTaskCommandInput = {
+      clientToken: clientId,
       cluster: this.clusterName,
       taskDefinition: this.taskDefinition,
       launchType: LaunchType.FARGATE,
@@ -271,13 +276,9 @@ export class EphemeralEnvironmentService {
       }
 
       await this.waitForTaskToRun(task?.taskArn);
-      // this.configureFargateStopRule(taskID, intervalMinutes);
-
       const publicIpResponse = await this.getTaskPublicIp(task?.taskArn);
       const publicIp = publicIpResponse.payload?.publicIp;
-
       await this.checkStellarContainerStatus(publicIp, clientId);
-
       return this.responseService.createResponse({
         payload: { taskArn: task?.taskArn, publicIp },
         message: MessagesEphemeralEnvironment.FARGATE_TASK_STARTED_SUCCESS,
@@ -413,6 +414,7 @@ export class EphemeralEnvironmentService {
   private async waitForTaskToStop(taskArn: string): Promise<string> {
     if (!taskArn) {
       return DesiredStatus.STOPPED;
+
     }
 
     const maxAttempts = 100;
@@ -529,5 +531,111 @@ export class EphemeralEnvironmentService {
     );
     await this.stopTask(clientId);
     return false;
+  }
+
+  private async waitForTaskToRun(taskArn: string): Promise<void> {
+    const maxAttempts = 100;
+    const waitTime = 4000;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const describeTaskParams: DescribeTasksCommandInput = {
+        cluster: this.clusterName,
+        tasks: [taskArn],
+      };
+
+      const response = await this.handleCommand(
+        this.ecsClient.send(new DescribeTasksCommand(describeTaskParams)),
+        MessagesEphemeralEnvironment.DESCRIBED_TASK_FOR_WAITING,
+      );
+
+      const task = response.tasks?.[0];
+      if (task && task.lastStatus === DesiredStatus.RUNNING) {
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      attempts++;
+    }
+
+    throw new InternalServerErrorException(
+      MessagesEphemeralEnvironment.TASK_DID_NOT_TRANSITION_TO_RUNNING,
+    );
+  }
+
+  private async waitForTaskToStop(taskArn: string): Promise<string> {
+    if (!taskArn) {
+      return DesiredStatus.STOPPED;
+    }
+
+    const maxAttempts = 100;
+    const waitTime = 4000;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const describeTaskParams: DescribeTasksCommandInput = {
+        cluster: this.clusterName,
+        tasks: [taskArn],
+      };
+
+      try {
+        const response = await this.handleCommand(
+          this.ecsClient.send(new DescribeTasksCommand(describeTaskParams)),
+          MessagesEphemeralEnvironment.DESCRIBED_TASK_FOR_WAITING,
+        );
+
+        const task = response.tasks?.[0];
+        if (!task) {
+          this.responseService.verbose(
+            `${MessagesEphemeralEnvironment.TASK_HAS_STOPPED_OR_DOES_NOT_EXIST} ${taskArn}`,
+          );
+          return DesiredStatus.STOPPED;
+        }
+
+        if (task.lastStatus === DesiredStatus.STOPPED) {
+          return DesiredStatus.STOPPED;
+        }
+      } catch (error) {
+        if (error.name === 'ResourceNotFoundException') {
+          this.responseService.verbose(
+            `${MessagesEphemeralEnvironment.TASK_NOT_FOUND_CONSIDERING_STOPPED} ${taskArn}`,
+          );
+          return DesiredStatus.STOPPED;
+        }
+        this.responseService.errorHandler({ error });
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      attempts++;
+    }
+
+    this.responseService.verbose(
+      MessagesEphemeralEnvironment.TASK_DID_NOT_STOP_WITHIN_EXPECTED_TIME,
+    );
+  }
+
+  async getTaskStatus(clientId: string): IPromiseResponse<{
+    status: string;
+    taskArn: string;
+    publicIp: string;
+  }> {
+    const task = await this.getClientTask(clientId);
+
+    if (!task) {
+      throw new NotFoundException(
+        MessagesEphemeralEnvironment.NO_RUNNING_TASKS,
+      );
+    }
+
+    return this.responseService.createResponse({
+      payload: {
+        status: task.lastStatus || DesiredStatus.STOPPED,
+        taskArn: task.taskArn || '',
+        publicIp:
+          (await this.getTaskPublicIp(task.taskArn)).payload.publicIp || '',
+      },
+      message: MessagesEphemeralEnvironment.TASK_STATUS_RETRIEVED,
+      type: 'OK',
+    });
   }
 }
