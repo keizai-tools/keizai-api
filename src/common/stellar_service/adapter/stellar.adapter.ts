@@ -134,6 +134,7 @@ export class StellarAdapter implements IStellarAdapter {
     });
   }
 
+
   public createContractSpec(
     entries: xdr.ScSpecEntry[],
   ): Promise<contract.Spec> {
@@ -298,6 +299,8 @@ export class StellarAdapter implements IStellarAdapter {
     publicKey: string,
     userId: string,
   ): Promise<string> {
+    await this.getAccountOrFund(publicKey);
+
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
       if (!this.getAccountOrFund)
         await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
@@ -479,6 +482,7 @@ export class StellarAdapter implements IStellarAdapter {
     throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
   }
 
+
   private setNetwork(network: string): void {
     const config = this.networkConfig[network];
     if (config) {
@@ -541,6 +545,42 @@ export class StellarAdapter implements IStellarAdapter {
       throw new Error('Transaction failed');
     }
     return response;
+  }
+
+  public async checkContractNetwork(contractId: string): Promise<string> {
+    return await this.wrapWithErrorHandling(async () => {
+      const networks = [
+        NETWORK.SOROBAN_FUTURENET,
+        NETWORK.SOROBAN_TESTNET,
+        NETWORK.SOROBAN_MAINNET,
+      ];
+      return await this.findNetworkWithContract(contractId, networks);
+    });
+  }
+
+  private async findNetworkWithContract(
+    contractId: string,
+    networks: string[],
+  ): Promise<string> {
+    for (const network of networks) {
+      try {
+        this.setNetwork(network);
+        const response = await this.fetchFromServer(
+          'getLedgerEntries',
+          this.createInstanceKey(contractId),
+        );
+
+        if (response.entries.length > 0) return network;
+      } catch (error) {
+        if (error.response?.status >= 400 || error?.status >= 400) {
+          continue;
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
   }
 
   private async fetchFromServer(method: string, ...args: any[]): Promise<any> {

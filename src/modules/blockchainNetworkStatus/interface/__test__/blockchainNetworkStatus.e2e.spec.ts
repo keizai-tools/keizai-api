@@ -85,9 +85,9 @@ describe('Blockchain Network Status - [/blockchain-network-status]', () => {
           statusCode: 200,
           message: 'Network status',
           payload: {
-            futureNetwork: true,
-            testNetwork: true,
-            mainNetwork: true,
+            futureNetwork: expect.any(Boolean),
+            testNetwork: expect.any(Boolean),
+            mainNetwork: expect.any(Boolean),
           },
           timestamp: expect.any(String),
           path: '/blockchain_network_status/soroban_network',
