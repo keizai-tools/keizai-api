@@ -4,20 +4,18 @@ import {
   Memo,
   MemoType,
   Operation,
-  SorobanRpc,
   Transaction as Tx,
+  rpc,
   xdr,
 } from '@stellar/stellar-sdk';
 
 export type Transaction = Tx<Memo<MemoType>, Operation[]>;
 
-export type GetTransactionResponse = SorobanRpc.Api.GetTransactionResponse;
+export type GetTransactionResponse = rpc.Api.GetTransactionResponse;
 
-export type RawSendTransactionResponse =
-  SorobanRpc.Api.RawSendTransactionResponse;
+export type RawSendTransactionResponse = rpc.Api.RawSendTransactionResponse;
 
-export type RawGetTransactionResponse =
-  SorobanRpc.Api.RawGetTransactionResponse;
+export type RawGetTransactionResponse = rpc.Api.RawGetTransactionResponse;
 
 interface BaseEventResponse {
   id: string;
