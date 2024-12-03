@@ -12,9 +12,9 @@ import {
   MemoType,
   Networks,
   Operation,
-  SorobanRpc,
   Transaction,
   TransactionBuilder,
+  rpc,
   xdr,
 } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
@@ -27,6 +27,7 @@ import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
+import type { StellarAdapter } from '../adapter/stellar.adapter';
 import { ContractFunctions } from '../application/domain/ContractFunctions.array';
 import { SCSpecTypeMap } from '../application/domain/SCSpecTypeMap.object';
 import {
@@ -41,16 +42,13 @@ import {
   IDecodedSection,
   IGeneratedMethod,
   IRunInvocationParams,
-  IStellarService,
+  type IStellarService,
 } from '../application/interface/contract.service.interface';
 import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '../application/interface/soroban';
-import {
-  CONTRACT_ADAPTER,
-  IStellarAdapter,
-} from '../application/interface/stellar.adapter.interface';
+import { CONTRACT_ADAPTER } from '../application/interface/stellar.adapter.interface';
 import {
   CONTRACT_MAPPER,
   IStellarMapper,
@@ -59,13 +57,12 @@ import {
 @Injectable()
 export class StellarService implements IStellarService {
   private readonly SCSpecTypeMap: { [key: number]: string } = SCSpecTypeMap;
-  private currentNetwork: string = NETWORK.SOROBAN_FUTURENET;
-
+  private currentNetwork: NETWORK = NETWORK.SOROBAN_FUTURENET;
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(CONTRACT_ADAPTER)
-    private readonly stellarAdapter: IStellarAdapter,
+    private readonly stellarAdapter: StellarAdapter,
     @Inject(CONTRACT_MAPPER)
     private readonly stellarMapper: IStellarMapper,
     @Inject(forwardRef(() => MethodMapper))
@@ -74,12 +71,17 @@ export class StellarService implements IStellarService {
     this.responseService.setContext(StellarService.name);
   }
 
-  public async verifyNetwork(
-    selectedNetwork: string,
-    contractId?: string,
-  ): Promise<string> {
+  public async verifyNetwork({
+    selectedNetwork,
+    contractId,
+    userId,
+  }: {
+    selectedNetwork: NETWORK;
+    contractId?: string;
+    userId: string;
+  }): Promise<NETWORK> {
     if (selectedNetwork !== this.currentNetwork) {
-      this.stellarAdapter.changeNetwork(selectedNetwork);
+      this.stellarAdapter.changeNetwork(selectedNetwork, userId);
       this.currentNetwork = selectedNetwork;
     }
 
@@ -89,6 +91,7 @@ export class StellarService implements IStellarService {
       );
       this.currentNetwork = response;
     }
+
     return this.currentNetwork;
   }
 
@@ -120,6 +123,7 @@ export class StellarService implements IStellarService {
   )
   public async runInvocation(
     runInvocationParams: IRunInvocationParams,
+    userId: string,
   ): Promise<RunInvocationResponse | ContractErrorResponse> {
     const {
       contractId,
@@ -137,11 +141,15 @@ export class StellarService implements IStellarService {
           contractId,
           selectedMethod,
         );
-        transaction = await this.stellarAdapter.prepareTransaction(publicKey, {
-          contractId,
-          methodName: selectedMethod.name,
-          scArgs,
-        });
+        transaction = await this.stellarAdapter.prepareTransaction(
+          publicKey,
+          userId,
+          {
+            contractId,
+            methodName: selectedMethod.name,
+            scArgs,
+          },
+        );
         const sourceKeypair = this.stellarAdapter.getKeypair(secretKey);
         this.stellarAdapter.signTransaction(transaction, sourceKeypair);
       } else if (signedTransactionXDR) {
@@ -151,7 +159,7 @@ export class StellarService implements IStellarService {
         ) as Transaction;
       }
 
-      const response: SorobanRpc.Api.RawSendTransactionResponse =
+      const response: rpc.Api.RawSendTransactionResponse =
         await this.stellarAdapter.sendTransaction(transaction, true);
 
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
@@ -182,7 +190,7 @@ export class StellarService implements IStellarService {
       const rawResponse = (await this.stellarAdapter.getTransaction(
         response.hash,
         true,
-      )) as SorobanRpc.Api.RawGetTransactionResponse;
+      )) as rpc.Api.RawGetTransactionResponse;
       return {
         status: rawResponse.status,
         response: this.stellarMapper.fromTxResultToDisplayResponse(
@@ -199,6 +207,7 @@ export class StellarService implements IStellarService {
     contractId: string,
     publicKey: string,
     selectedMethod: Partial<Method>,
+    userId: string,
   ): Promise<string> {
     const scArgs: xdr.ScVal[] = await this.generateScArgsToFromContractId(
       contractId,
@@ -206,6 +215,7 @@ export class StellarService implements IStellarService {
     );
     const transaction = await this.stellarAdapter.prepareTransaction(
       publicKey,
+      userId,
       { contractId, methodName: selectedMethod.name, scArgs },
     );
     return transaction.toXDR();
@@ -214,19 +224,19 @@ export class StellarService implements IStellarService {
   public async pollTransactionStatus(
     hash: string,
   ): Promise<
-    | SorobanRpc.Api.GetSuccessfulTransactionResponse
-    | SorobanRpc.Api.GetFailedTransactionResponse
+    | rpc.Api.GetSuccessfulTransactionResponse
+    | rpc.Api.GetFailedTransactionResponse
   > {
     let response = (await this.stellarAdapter.getTransaction(
       hash,
       false,
-    )) as SorobanRpc.Api.GetTransactionResponse;
+    )) as rpc.Api.GetTransactionResponse;
     while (response.status === GetTransactionStatus.NOT_FOUND) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = (await this.stellarAdapter.getTransaction(
         hash,
         false,
-      )) as SorobanRpc.Api.GetTransactionResponse;
+      )) as rpc.Api.GetTransactionResponse;
     }
     return response;
   }
@@ -376,13 +386,16 @@ export class StellarService implements IStellarService {
   async deployWasmFile({
     file,
     invocation,
+    userId,
   }: {
     file?: Express.Multer.File;
     invocation?: Invocation;
+    userId: string;
   }): Promise<string> {
     try {
       return await this.stellarAdapter.uploadWasm(
         file,
+        userId,
         invocation.publicKey,
         invocation.secretKey,
       );
@@ -393,10 +406,12 @@ export class StellarService implements IStellarService {
   }
 
   async prepareUploadWASM({
+    userId,
     file,
     publicKey,
     signedTransactionXDR,
   }: {
+    userId: string;
     file?: Express.Multer.File;
     publicKey?: string;
     signedTransactionXDR?: string;
@@ -418,13 +433,25 @@ export class StellarService implements IStellarService {
           publicKey,
         );
 
-        const account = await this.stellarAdapter.getAccountOrFund(publicKey);
+        const account = await this.stellarAdapter.getAccountOrFund(
+          publicKey,
+          userId,
+        );
         return (
-          await this.stellarAdapter.prepareTransaction(account, operation)
+          await this.stellarAdapter.prepareTransaction(
+            account,
+            userId,
+            operation,
+          )
         ).toXDR();
       }
 
-      return await this.stellarAdapter.prepareUploadWASM(file, publicKey);
+      const response = await this.stellarAdapter.prepareUploadWASM(
+        file,
+        publicKey,
+        userId,
+      );
+      return response;
     } catch (error) {
       if (error instanceof HttpException) this.handleError(error);
       else this.handleError(error.message);
@@ -436,6 +463,7 @@ export class StellarService implements IStellarService {
       [NETWORK.SOROBAN_MAINNET]: Networks.PUBLIC,
       [NETWORK.SOROBAN_TESTNET]: Networks.TESTNET,
       [NETWORK.SOROBAN_FUTURENET]: Networks.FUTURENET,
+      [NETWORK.SOROBAN_EPHEMERAL]: Networks.STANDALONE,
     };
     const networkPassphrase = networkPassphraseMap[this.currentNetwork];
 
