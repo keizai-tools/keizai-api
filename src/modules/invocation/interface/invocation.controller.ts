@@ -39,7 +39,7 @@ import { InvocationService } from '../application/service/invocation.service';
 export class InvocationUserController {
   constructor(private readonly invocationService: InvocationService) {}
 
-  @Post('')
+  @Post()
   async create(
     @CurrentUser() data: IResponse<User>,
     @Body() createInvocationDto: CreateInvocationDto,
