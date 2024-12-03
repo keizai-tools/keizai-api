@@ -12,9 +12,9 @@ import {
   MemoType,
   Networks,
   Operation,
-  SorobanRpc,
   Transaction,
   TransactionBuilder,
+  rpc,
   xdr,
 } from '@stellar/stellar-sdk';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
@@ -151,7 +151,7 @@ export class StellarService implements IStellarService {
         ) as Transaction;
       }
 
-      const response: SorobanRpc.Api.RawSendTransactionResponse =
+      const response: rpc.Api.RawSendTransactionResponse =
         await this.stellarAdapter.sendTransaction(transaction, true);
 
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
@@ -182,7 +182,7 @@ export class StellarService implements IStellarService {
       const rawResponse = (await this.stellarAdapter.getTransaction(
         response.hash,
         true,
-      )) as SorobanRpc.Api.RawGetTransactionResponse;
+      )) as rpc.Api.RawGetTransactionResponse;
       return {
         status: rawResponse.status,
         response: this.stellarMapper.fromTxResultToDisplayResponse(
@@ -214,19 +214,19 @@ export class StellarService implements IStellarService {
   public async pollTransactionStatus(
     hash: string,
   ): Promise<
-    | SorobanRpc.Api.GetSuccessfulTransactionResponse
-    | SorobanRpc.Api.GetFailedTransactionResponse
+    | rpc.Api.GetSuccessfulTransactionResponse
+    | rpc.Api.GetFailedTransactionResponse
   > {
     let response = (await this.stellarAdapter.getTransaction(
       hash,
       false,
-    )) as SorobanRpc.Api.GetTransactionResponse;
+    )) as rpc.Api.GetTransactionResponse;
     while (response.status === GetTransactionStatus.NOT_FOUND) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = (await this.stellarAdapter.getTransaction(
         hash,
         false,
-      )) as SorobanRpc.Api.GetTransactionResponse;
+      )) as rpc.Api.GetTransactionResponse;
     }
     return response;
   }

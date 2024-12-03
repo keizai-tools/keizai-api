@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import type { SorobanRpc } from '@stellar/stellar-sdk';
+import type { rpc } from '@stellar/stellar-sdk';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
@@ -19,7 +19,6 @@ import {
 import { Method } from '@/modules/method/domain/method.domain';
 import {
   contractExecutable,
-  getTxFailed,
   identityProviderServiceMock,
   mockedAdapterContract,
   rawGetTxFailed,
@@ -344,14 +343,14 @@ describe('StellarService', () => {
       jest
         .spyOn(stellarAdapter, 'sendTransaction')
         .mockResolvedValue(
-          rawSendTxPending as SorobanRpc.Api.RawSendTransactionResponse,
+          rawSendTxPending as rpc.Api.RawSendTransactionResponse,
         );
       jest
         .spyOn(stellarMapper, 'fromTxResultToDisplayResponse')
         .mockReturnValue('txFailed');
       jest
         .spyOn(stellarAdapter, 'getTransaction')
-        .mockResolvedValue(getTxFailed);
+        .mockResolvedValue(rawGetTxFailed);
       jest
         .spyOn(stellarAdapter, 'getTransaction')
         .mockResolvedValue(rawGetTxFailed);

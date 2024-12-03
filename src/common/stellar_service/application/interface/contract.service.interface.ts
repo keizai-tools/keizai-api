@@ -1,4 +1,4 @@
-import { type SorobanRpc, xdr } from '@stellar/stellar-sdk';
+import { type rpc, xdr } from '@stellar/stellar-sdk';
 
 import type { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { Method } from '@/modules/method/domain/method.domain';
@@ -84,7 +84,7 @@ export interface IStellarService {
   pollTransactionStatus(
     hash: string,
   ): Promise<
-    | SorobanRpc.Api.GetSuccessfulTransactionResponse
-    | SorobanRpc.Api.GetFailedTransactionResponse
+    | rpc.Api.GetSuccessfulTransactionResponse
+    | rpc.Api.GetFailedTransactionResponse
   >;
 }
