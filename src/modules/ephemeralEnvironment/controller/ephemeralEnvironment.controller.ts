@@ -10,6 +10,7 @@ import {
 
 import {
   IPromiseResponse,
+  IResponse,
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
@@ -40,24 +41,33 @@ export class EphemeralEnvironmentController {
 
   @Post('start')
   async handleStartFargate(
-    @CurrentUser() user: User,
+    @CurrentUser() data: IResponse<User>,
     @Query('interval') interval: number,
   ): IPromiseResponse<ITaskInfo> {
-    return await this.ephemeralEnvironmentService.startTask(user.id, interval);
+    return await this.ephemeralEnvironmentService.startTask(
+      data.payload.id,
+      interval,
+    );
   }
 
   @Delete('stop')
-  async handleStopFargate(@CurrentUser() user: User): IPromiseResponse<{
+  async handleStopFargate(
+    @CurrentUser() user: IResponse<User>,
+  ): IPromiseResponse<{
     taskArn: string;
     status: string;
   }> {
-    return await this.ephemeralEnvironmentService.stopTask(user.id);
+    return await this.ephemeralEnvironmentService.stopTask(user.payload.id);
+
   }
 
   @Get('status')
   async handleGetTaskStatus(
-    @CurrentUser() user: User,
+    @CurrentUser() user: IResponse<User>,
   ): IPromiseResponse<{ status: string; taskArn: string; publicIp: string }> {
-    return await this.ephemeralEnvironmentService.getTaskStatus(user.id);
+    return await this.ephemeralEnvironmentService.getTaskStatus(
+      user.payload.id,
+    );
+
   }
 }

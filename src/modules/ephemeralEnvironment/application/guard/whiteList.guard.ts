@@ -1,5 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
+import type { IResponse } from '@/common/response_service/interface/response.interface';
+import { REQUEST_USER_KEY } from '@/modules/auth/domain/auth_type.enum';
 import { User } from '@/modules/user/domain/user.domain';
 
 @Injectable()
@@ -13,7 +15,7 @@ export class WhiteListGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const user = request.user as User;
-    return user && this.whitelist.includes(user.email);
+    const user = request[REQUEST_USER_KEY] as IResponse<User>;
+    return user && this.whitelist.includes(user.payload.email);
   }
 }

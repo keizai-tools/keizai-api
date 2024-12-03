@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { CommonModule } from '@/common/common.module';
 
@@ -7,7 +8,7 @@ import { EphemeralEnvironmentService } from './application/service/ephemeralEnvi
 import { EphemeralEnvironmentController } from './controller/ephemeralEnvironment.controller';
 
 @Module({
-  imports: [CommonModule],
+  imports: [forwardRef(() => CommonModule), HttpModule],
   providers: [
     {
       provide: EPHEMERAL_ENVIRONMENT_SERVICE,
@@ -15,5 +16,6 @@ import { EphemeralEnvironmentController } from './controller/ephemeralEnvironmen
     },
   ],
   controllers: [EphemeralEnvironmentController],
+  exports: [EPHEMERAL_ENVIRONMENT_SERVICE],
 })
 export class EphemeralEnvironmentModule {}
