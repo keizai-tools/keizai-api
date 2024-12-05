@@ -123,18 +123,6 @@ export class StellarAdapter implements IStellarAdapter {
     );
   }
 
-  public async checkContractNetwork(contractId: string): Promise<NETWORK> {
-    return await this.wrapWithErrorHandling(async () => {
-      const networks: NETWORK[] = [
-        NETWORK.SOROBAN_FUTURENET,
-        NETWORK.SOROBAN_TESTNET,
-        NETWORK.SOROBAN_MAINNET,
-      ];
-      return await this.findNetworkWithContract(contractId, networks);
-    });
-  }
-
-
   public createContractSpec(
     entries: xdr.ScSpecEntry[],
   ): Promise<contract.Spec> {
@@ -299,7 +287,7 @@ export class StellarAdapter implements IStellarAdapter {
     publicKey: string,
     userId: string,
   ): Promise<string> {
-    await this.getAccountOrFund(publicKey);
+    await this.getAccountOrFund(publicKey, userId);
 
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
       if (!this.getAccountOrFund)
@@ -467,22 +455,6 @@ export class StellarAdapter implements IStellarAdapter {
     );
   }
 
-  private async findNetworkWithContract(
-    contractId: string,
-    networks: NETWORK[],
-  ): Promise<NETWORK> {
-    for (const network of networks) {
-      this.setNetwork(network);
-      const response = await this.fetchFromServer(
-        'getLedgerEntries',
-        this.createInstanceKey(contractId),
-      );
-      if (response.entries.length > 0) return network;
-    }
-    throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
-  }
-
-
   private setNetwork(network: string): void {
     const config = this.networkConfig[network];
     if (config) {
@@ -547,9 +519,13 @@ export class StellarAdapter implements IStellarAdapter {
     return response;
   }
 
-  public async checkContractNetwork(contractId: string): Promise<string> {
+  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
+    return await this.server[method](...args);
+  }
+
+  public async checkContractNetwork(contractId: string): Promise<NETWORK> {
     return await this.wrapWithErrorHandling(async () => {
-      const networks = [
+      const networks: NETWORK[] = [
         NETWORK.SOROBAN_FUTURENET,
         NETWORK.SOROBAN_TESTNET,
         NETWORK.SOROBAN_MAINNET,
@@ -560,30 +536,16 @@ export class StellarAdapter implements IStellarAdapter {
 
   private async findNetworkWithContract(
     contractId: string,
-    networks: string[],
-  ): Promise<string> {
+    networks: NETWORK[],
+  ): Promise<NETWORK> {
     for (const network of networks) {
-      try {
-        this.setNetwork(network);
-        const response = await this.fetchFromServer(
-          'getLedgerEntries',
-          this.createInstanceKey(contractId),
-        );
-
-        if (response.entries.length > 0) return network;
-      } catch (error) {
-        if (error.response?.status >= 400 || error?.status >= 400) {
-          continue;
-        } else {
-          throw error;
-        }
-      }
+      this.setNetwork(network);
+      const response = await this.fetchFromServer(
+        'getLedgerEntries',
+        this.createInstanceKey(contractId),
+      );
+      if (response.entries.length > 0) return network;
     }
-
     throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
-  }
-
-  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
-    return await this.server[method](...args);
   }
 }
