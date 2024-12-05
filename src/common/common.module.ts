@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
+import { EphemeralEnvironmentModule } from '@/modules/ephemeralEnvironment/ephemeralEnvironment.module';
 import { MethodModule } from '@/modules/method/method.module';
 
 import { COGNITO_AUTH } from './cognito/application/interface/cognito.service.interface';
@@ -16,7 +17,10 @@ import { StellarMapper } from './stellar_service/application/mapper/contract.map
 import { StellarService } from './stellar_service/service/stellar.service';
 
 @Module({
-  imports: [forwardRef(() => MethodModule)],
+  imports: [
+    forwardRef(() => MethodModule),
+    forwardRef(() => EphemeralEnvironmentModule),
+  ],
   providers: [
     {
       provide: RESPONSE_SERVICE,

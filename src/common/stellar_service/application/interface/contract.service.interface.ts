@@ -3,6 +3,7 @@ import { type rpc, xdr } from '@stellar/stellar-sdk';
 import type { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { Method } from '@/modules/method/domain/method.domain';
 
+import type { NETWORK } from '../domain/soroban.enum';
 import { ContractErrorResponse, RunInvocationResponse } from './soroban';
 
 export const CONTRACT_SERVICE = 'CONTRACT_SERVICE';
@@ -37,14 +38,24 @@ export interface IRunInvocationParams {
 }
 
 export interface IStellarService {
-  verifyNetwork(selectedNetwork: string, contractId?: string): Promise<string>;
+  verifyNetwork({
+    selectedNetwork,
+    contractId,
+    userId,
+  }: {
+    selectedNetwork: NETWORK;
+    contractId?: string;
+    userId: string;
+  }): Promise<NETWORK>;
   getPreparedTransactionXDR(
     contractId: string,
     publicKey: string,
     selectedMethod: Partial<Method>,
+    userId: string,
   ): Promise<string>;
   runInvocation(
     runInvocationParams: IRunInvocationParams,
+    userId: string,
   ): Promise<RunInvocationResponse | ContractErrorResponse>;
   generateMethodsFromContractId(
     contractId: string,
@@ -53,16 +64,20 @@ export interface IStellarService {
     file,
     signedTransactionXDR,
     invocation,
+    userId,
   }: {
     file?: Express.Multer.File;
     signedTransactionXDR?: string;
     invocation?: Invocation;
+    userId: string;
   }): Promise<string>;
   prepareUploadWASM({
+    userId,
     file,
     publicKey,
     signedTransactionXDR,
   }: {
+    userId: string;
     file?: Express.Multer.File;
     publicKey?: string;
     signedTransactionXDR?: string;

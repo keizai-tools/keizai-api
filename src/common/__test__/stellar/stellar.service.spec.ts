@@ -63,7 +63,10 @@ describe('StellarService', () => {
       const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
 
       const selectedNetwork = NETWORK.SOROBAN_FUTURENET;
-      service.verifyNetwork(selectedNetwork);
+      service.verifyNetwork({
+        selectedNetwork,
+        userId: 'userId',
+      });
 
       expect(changeNetworkSpy).not.toHaveBeenCalled();
     });
@@ -72,9 +75,11 @@ describe('StellarService', () => {
       const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
 
       const selectedNetwork = NETWORK.SOROBAN_TESTNET;
-      service.verifyNetwork(selectedNetwork);
-
-      expect(changeNetworkSpy).toHaveBeenCalledWith(selectedNetwork);
+      service.verifyNetwork({
+        selectedNetwork,
+        userId: 'userId',
+      });
+      expect(changeNetworkSpy).toHaveBeenCalledWith(selectedNetwork, 'userId');
       expect(changeNetworkSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -321,12 +326,15 @@ describe('StellarService', () => {
 
       setupCommonMocks();
 
-      const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: mockedMethod,
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
-      });
+      const result = await service.runInvocation(
+        {
+          contractId: 'contractId',
+          selectedMethod: mockedMethod,
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
+        'userId',
+      );
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
       expect(stellarMapper.fromTxResultToDisplayResponse).toHaveBeenCalled();
@@ -355,19 +363,22 @@ describe('StellarService', () => {
         .spyOn(stellarAdapter, 'getTransaction')
         .mockResolvedValue(getTxFailed);
 
-      const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: new Method(
-          'increment',
-          [],
-          [{ type: 'SC_SPEC_TYPE_U32' }],
-          [],
-          '',
-          '41e62067',
-        ),
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
-      });
+      const result = await service.runInvocation(
+        {
+          contractId: 'contractId',
+          selectedMethod: new Method(
+            'increment',
+            [],
+            [{ type: 'SC_SPEC_TYPE_U32' }],
+            [],
+            '',
+            '41e62067',
+          ),
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
+        'userId',
+      );
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
       expect(stellarAdapter.getTransaction).toHaveBeenCalled();
@@ -389,19 +400,22 @@ describe('StellarService', () => {
           'Caused by:\n    HostError: Error(Contract, #2)\n    \n',
         );
 
-      const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: new Method(
-          'increment',
-          [],
-          [{ type: 'SC_SPEC_TYPE_U32' }],
-          [],
-          '',
-          '41e62067',
-        ),
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
-      });
+      const result = await service.runInvocation(
+        {
+          contractId: 'contractId',
+          selectedMethod: new Method(
+            'increment',
+            [],
+            [{ type: 'SC_SPEC_TYPE_U32' }],
+            [],
+            '',
+            '41e62067',
+          ),
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
+        'userId',
+      );
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
       expect(result).toEqual(

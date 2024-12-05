@@ -26,6 +26,8 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
+import { EPHEMERAL_ENVIRONMENT_SERVICE } from '@/modules/ephemeralEnvironment/application/interface/ephemeralEnvironment.interface';
+import { EphemeralEnvironmentService } from '@/modules/ephemeralEnvironment/application/service/ephemeralEnvironment.service';
 
 import {
   ErrorMessages,
@@ -46,7 +48,6 @@ import { IStellarAdapter } from '../application/interface/stellar.adapter.interf
 export class StellarAdapter implements IStellarAdapter {
   private server: rpc.Server;
   private networkPassphrase: string;
-
   private readonly networkConfig = {
     [NETWORK.SOROBAN_FUTURENET]: {
       server: new rpc.Server(SOROBAN_SERVER.FUTURENET),
@@ -60,18 +61,59 @@ export class StellarAdapter implements IStellarAdapter {
       server: new rpc.Server(SOROBAN_SERVER.MAINNET),
       networkPassphrase: Networks.PUBLIC,
     },
+    [NETWORK.SOROBAN_EPHEMERAL]: {
+      server: null,
+      networkPassphrase: Networks.STANDALONE,
+    },
   };
 
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
+    @Inject(EPHEMERAL_ENVIRONMENT_SERVICE)
+    private readonly ephemeralEnvironmentService: EphemeralEnvironmentService,
   ) {
     this.responseService.setContext(StellarAdapter.name);
     this.setNetwork(NETWORK.SOROBAN_FUTURENET);
   }
 
-  public changeNetwork(selectedNetwork: string): void {
-    this.wrapWithErrorHandling(() => this.setNetwork(selectedNetwork));
+  public async changeNetwork(
+    selectedNetwork: NETWORK,
+    userId: string,
+  ): Promise<void> {
+    await this.wrapWithErrorHandling(async () => {
+      if (selectedNetwork === NETWORK.SOROBAN_EPHEMERAL) {
+        await this.validateEphemeralNetwork(selectedNetwork, userId);
+      }
+      this.setNetwork(selectedNetwork);
+    });
+  }
+
+  private async validateEphemeralNetwork(network: string, userId?: string) {
+    if (!userId) {
+      throw new BadRequestException(ErrorMessages.NO_USER_PROVIDED);
+    }
+
+    const isEphemeral = (
+      await this.ephemeralEnvironmentService.getTaskStatus(userId)
+    ).payload;
+
+    if (!isEphemeral) {
+      throw new InternalServerErrorException(
+        `Network ${network} is not an ephemeral network.`,
+      );
+    }
+    const url = `http://${isEphemeral.publicIp}:8000/soroban/rpc`;
+
+    this.networkConfig[NETWORK.SOROBAN_EPHEMERAL].server = new rpc.Server(url, {
+      allowHttp: true,
+    });
+
+    return {
+      status: isEphemeral.status,
+      taskArn: isEphemeral.taskArn,
+      publicIp: isEphemeral.publicIp,
+    };
   }
 
   public getScSpecEntryFromXDR(input: Uint8Array): xdr.ScSpecEntry {
@@ -172,19 +214,26 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async uploadWasm(
     file: Express.Multer.File,
+    userId: string,
     publicKey: string,
     secretKey?: string,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
       const operation = Operation.uploadContractWasm({ wasm: file.buffer });
-      const account = await this.server.getAccount(publicKey);
-      const preparedTx = await this.prepareTransaction(account, operation);
+      if (!this.getAccountOrFund)
+        await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
+      const account = await this.getAccountOrFund(publicKey, userId);
+      const preparedTx = await this.prepareTransaction(
+        account,
+        userId,
+        operation,
+      );
 
       if (secretKey) {
         const sourceKeypair = Keypair.fromSecret(secretKey);
         this.signTransaction(preparedTx, sourceKeypair);
         const response = await this.executeTransactionWithRetry(preparedTx);
-        return await this.deployContract(response, sourceKeypair);
+        return await this.deployContract(response, sourceKeypair, userId);
       } else {
         return preparedTx.toXDR();
       }
@@ -194,16 +243,27 @@ export class StellarAdapter implements IStellarAdapter {
   public async deployContract(
     response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair,
+    userId: string,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
-      const account = await this.server.getAccount(sourceKeypair.publicKey());
+      if (!this.getAccountOrFund)
+        await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
+      const account = await this.getAccountOrFund(
+        sourceKeypair.publicKey(),
+        userId,
+      );
       const operation = this.createDeployContractOperation(
         response,
         sourceKeypair,
       );
 
       const responseDeploy: rpc.Api.GetSuccessfulTransactionResponse =
-        await this.buildAndSendTransaction(account, operation, sourceKeypair);
+        await this.buildAndSendTransaction(
+          account,
+          operation,
+          sourceKeypair,
+          userId,
+        );
       return this.extractContractAddress(responseDeploy);
     });
   }
@@ -225,16 +285,21 @@ export class StellarAdapter implements IStellarAdapter {
   public async prepareUploadWASM(
     file: Express.Multer.File,
     publicKey: string,
+    userId: string,
   ): Promise<string> {
-    await this.getAccountOrFund(publicKey);
+    await this.getAccountOrFund(publicKey, userId);
 
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
-      const account: Account = await this.server.getAccount(publicKey);
+      if (!this.getAccountOrFund)
+        await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
+      const account: Account = await this.getAccountOrFund(publicKey, userId);
       const operation: xdr.Operation<Operation.InvokeHostFunction> =
         Operation.uploadContractWasm({
           wasm: file.buffer,
         });
-      return (await this.prepareTransaction(account, operation)).toXDR();
+      return (
+        await this.prepareTransaction(account, userId, operation)
+      ).toXDR();
     });
   }
 
@@ -247,6 +312,7 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async prepareTransaction(
     account: Account | string,
+    userId: string,
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
       | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
@@ -261,7 +327,7 @@ export class StellarAdapter implements IStellarAdapter {
           methodName: string;
           scArgs: xdr.ScVal[];
         };
-        const accountObj = await this.getAccountOrFund(publicKey);
+        const accountObj = await this.getAccountOrFund(publicKey, userId);
         const contract = new Contract(contractId);
         transaction = this.createTransaction({
           account: accountObj,
@@ -283,8 +349,13 @@ export class StellarAdapter implements IStellarAdapter {
     account: Account,
     operations: xdr.Operation<Operation.InvokeHostFunction>,
     sourceKeypair: Keypair,
+    userId: string,
   ): Promise<rpc.Api.GetSuccessfulTransactionResponse> {
-    const preparedTx = await this.prepareTransaction(account, operations);
+    const preparedTx = await this.prepareTransaction(
+      account,
+      userId,
+      operations,
+    );
     this.signTransaction(preparedTx, sourceKeypair);
     return await this.executeTransactionWithRetry(preparedTx);
   }
@@ -318,8 +389,14 @@ export class StellarAdapter implements IStellarAdapter {
     return builder.build();
   }
 
-  public async getAccountOrFund(publicKey: string): Promise<Account> {
+  public async getAccountOrFund(
+    publicKey: string,
+    userId: string,
+  ): Promise<Account> {
     try {
+      if (!this.server.getAccount) {
+        await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
+      }
       return await this.server.getAccount(publicKey);
     } catch (error) {
       if (error.code === 404) {
@@ -328,20 +405,30 @@ export class StellarAdapter implements IStellarAdapter {
             ErrorMessages.ACCOUNT_NOT_FOUND_ON_MAINNET,
           );
         }
-        const friendbotUrl = `${
-          this.networkPassphrase === Networks.TESTNET
-            ? SOROBAN_SERVER.FRIENDBOT_TESNET
-            : SOROBAN_SERVER.FRIENDBOT_FUTURENET
-        }${publicKey}`;
-        const response = await fetch(friendbotUrl);
-        if (!response.ok) {
-          throw new InternalServerErrorException(
-            ErrorMessages.FAILED_TO_FUND_ACCOUNT,
-          );
-        }
+        await this.fundAccount(publicKey, userId);
         return await this.server.getAccount(publicKey);
       }
       throw error;
+    }
+  }
+
+  private async fundAccount(publicKey: string, userId: string): Promise<void> {
+    const isEphemeral = (
+      await this.ephemeralEnvironmentService.getTaskStatus(userId)
+    ).payload;
+    const url = `http://${isEphemeral.publicIp}:8000/?addr=`;
+    const friendbotUrl = `${
+      this.networkPassphrase === Networks.TESTNET
+        ? SOROBAN_SERVER.FRIENDBOT_TESNET
+        : this.networkPassphrase === Networks.STANDALONE
+        ? url
+        : SOROBAN_SERVER.FRIENDBOT_FUTURENET
+    }${publicKey}`;
+    const response = await fetch(friendbotUrl);
+    if (!response.ok) {
+      throw new InternalServerErrorException(
+        ErrorMessages.FAILED_TO_FUND_ACCOUNT,
+      );
     }
   }
 
@@ -432,9 +519,13 @@ export class StellarAdapter implements IStellarAdapter {
     return response;
   }
 
-  public async checkContractNetwork(contractId: string): Promise<string> {
+  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
+    return await this.server[method](...args);
+  }
+
+  public async checkContractNetwork(contractId: string): Promise<NETWORK> {
     return await this.wrapWithErrorHandling(async () => {
-      const networks = [
+      const networks: NETWORK[] = [
         NETWORK.SOROBAN_FUTURENET,
         NETWORK.SOROBAN_TESTNET,
         NETWORK.SOROBAN_MAINNET,
@@ -445,30 +536,16 @@ export class StellarAdapter implements IStellarAdapter {
 
   private async findNetworkWithContract(
     contractId: string,
-    networks: string[],
-  ): Promise<string> {
+    networks: NETWORK[],
+  ): Promise<NETWORK> {
     for (const network of networks) {
-      try {
-        this.setNetwork(network);
-        const response = await this.fetchFromServer(
-          'getLedgerEntries',
-          this.createInstanceKey(contractId),
-        );
-
-        if (response.entries.length > 0) return network;
-      } catch (error) {
-        if (error.response?.status >= 400 || error?.status >= 400) {
-          continue;
-        } else {
-          throw error;
-        }
-      }
+      this.setNetwork(network);
+      const response = await this.fetchFromServer(
+        'getLedgerEntries',
+        this.createInstanceKey(contractId),
+      );
+      if (response.entries.length > 0) return network;
     }
-
     throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
-  }
-
-  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
-    return await this.server[method](...args);
   }
 }
