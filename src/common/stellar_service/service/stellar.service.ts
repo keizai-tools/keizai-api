@@ -445,7 +445,6 @@ export class StellarService implements IStellarService {
           )
         ).toXDR();
       }
-
       const response = await this.stellarAdapter.prepareUploadWASM(
         file,
         publicKey,

@@ -27,7 +27,7 @@ export class CreateInvocationDto {
   @IsString()
   contractId: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   folderId: string;
 
@@ -35,6 +35,10 @@ export class CreateInvocationDto {
   @IsString()
   @IsEnum(NETWORK)
   network: NETWORK;
+
+  @IsOptional()
+  @IsString()
+  collectionId: string;
 
   @IsOptional()
   @IsString()

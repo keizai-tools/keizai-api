@@ -11,11 +11,12 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
-import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
-import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
-import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import { CreateEnvironmentsDto } from '@/modules/environment/application/dto/create-all-environments.dto';
+import { EnvironmentResponseDto } from '@/modules/environment/application/dto/environment-response.dto';
+import { ENVIRONMENT_RESPONSE } from '@/modules/environment/application/exceptions/environment-response.enum';
+import { EnvironmentService } from '@/modules/environment/application/service/environment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
+import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { User } from '@/modules/user/domain/user.domain';
 
@@ -42,8 +43,8 @@ export class CollectionService {
     private readonly responseService: IResponseService,
     @Inject(COLLECTION_REPOSITORY)
     private readonly collectionRepository: ICollectionRepository,
-    @Inject(forwardRef(() => EnviromentService))
-    private readonly environmentService: EnviromentService,
+    @Inject(forwardRef(() => EnvironmentService))
+    private readonly environmentService: EnvironmentService,
   ) {
     this.responseService.setContext(CollectionService.name);
   }
@@ -153,7 +154,7 @@ export class CollectionService {
   async findEnvironmentsByCollectionAndUserId(
     collectionId: string,
     userId: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     try {
       const collection = await this.findOneByCollectionAndUserId(
         collectionId,
@@ -165,7 +166,7 @@ export class CollectionService {
         );
       }
       return this.responseService.createResponse({
-        payload: collection.payload.enviroments,
+        payload: collection.payload.environments,
         message: COLLECTION_RESPONSE.COLLECTION_FOUND,
         type: 'OK',
       });
@@ -177,7 +178,7 @@ export class CollectionService {
   async findEnvironmentsByCollectionAndTeamId(
     collectionId: string,
     teamId: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     try {
       const collection = await this.findOneByCollectionAndTeamId(
         collectionId,
@@ -189,7 +190,7 @@ export class CollectionService {
         );
       }
       return this.responseService.createResponse({
-        payload: collection.payload.enviroments,
+        payload: collection.payload.environments,
         type: 'OK',
         message: COLLECTION_RESPONSE.COLLECTION_FOUND,
       });
@@ -201,18 +202,18 @@ export class CollectionService {
   async findEnvironmentByCollectionId(
     collectionId: string,
     environmentName: string,
-  ): IPromiseResponse<EnviromentResponseDto> {
+  ): IPromiseResponse<EnvironmentResponseDto> {
     try {
       const environment = await this.environmentService.findByNames(
         [environmentName],
         collectionId,
       );
       if (!environment || environment.length === 0) {
-        throw new NotFoundException(ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS);
+        throw new NotFoundException(ENVIRONMENT_RESPONSE.ENVIRONMENT_EXISTS);
       }
       return this.responseService.createResponse({
         payload: environment[0],
-        message: ENVIROMENT_RESPONSE.ENVIRONMENT_FOUND,
+        message: ENVIRONMENT_RESPONSE.ENVIRONMENT_FOUND,
         type: 'OK',
       });
     } catch (error) {
@@ -233,6 +234,30 @@ export class CollectionService {
       }
       return this.responseService.createResponse({
         payload: collection.payload.folders,
+        message: COLLECTION_RESPONSE.COLLECTION_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async findInvocationsByCollectionUserId(
+    id: string,
+    userId: string,
+  ): IPromiseResponse<InvocationResponseDto[]> {
+    try {
+      const collection = await this.findOneByCollectionAndUserId(id, userId);
+      if (!collection) {
+        throw new NotFoundException(
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_USER_AND_ID,
+        );
+      }
+      const filteredInvocations = collection.payload.invocations.filter(
+        (invocation) => !invocation.folderId,
+      );
+      return this.responseService.createResponse({
+        payload: filteredInvocations,
         message: COLLECTION_RESPONSE.COLLECTION_FOUND,
         type: 'OK',
       });
@@ -267,6 +292,7 @@ export class CollectionService {
 
   async findInvocationsByCollectionId(
     collectionId: string,
+    folderId: string | undefined,
   ): IPromiseResponse<Invocation[]> {
     try {
       const collection =
@@ -280,9 +306,33 @@ export class CollectionService {
         );
       }
 
-      const allInvocations = collection.folders
+      const FolderInvocations = collection.folders
         .map((folder) => folder.invocations)
         .flat();
+
+      const invocations = collection.invocations.filter((invocation) => {
+        return (
+          folderId === undefined ||
+          invocation.folderId === folderId ||
+          invocation.folderId === undefined
+        );
+      });
+      const uniqueInvocations = new Set<string>();
+      const allInvocations = FolderInvocations.concat(invocations).filter(
+        (invocation) => {
+          if (uniqueInvocations.has(invocation.id)) {
+            return false;
+          }
+          uniqueInvocations.add(invocation.id);
+          return true;
+        },
+      );
+
+      allInvocations.forEach((invocation) => {
+        invocation.selectedMethod = invocation.methods.find(
+          (method) => method.id === invocation.selectedMethodId,
+        );
+      });
 
       const completeInvocations = allInvocations.filter((invocation) => {
         const hasValidParams = invocation.selectedMethod?.params?.every(
@@ -297,7 +347,7 @@ export class CollectionService {
 
       if (completeInvocations.length === 0) {
         throw new NotFoundException(
-          COLLECTION_RESPONSE.COLLECTION_FAILED_DELETED,
+          COLLECTION_RESPONSE.COLLECTION_NOT_FOUND_BY_ID,
         );
       }
 
@@ -367,7 +417,7 @@ export class CollectionService {
     collectionId: string,
     createEnvironmentsDto: CreateEnvironmentsDto[],
     userId: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     try {
       await this.findOneByCollectionAndUserId(collectionId, userId);
       return this.responseService.createResponse({
@@ -387,7 +437,7 @@ export class CollectionService {
     collectionId: string,
     createEnvironmentsDto: CreateEnvironmentsDto[],
     teamId: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     try {
       await this.findOneByCollectionAndTeamId(collectionId, teamId);
       return this.responseService.createResponse({
@@ -536,7 +586,7 @@ export class CollectionService {
 
       return this.responseService.createResponse({
         payload: await this.environmentService.deleteAll(
-          collection.enviroments,
+          collection.environments,
         ),
         message: COLLECTION_RESPONSE.COLLECTION_DELETED,
         type: 'OK',
@@ -565,7 +615,7 @@ export class CollectionService {
 
       return this.responseService.createResponse({
         payload: await this.environmentService.deleteAll(
-          collection.enviroments,
+          collection.environments,
         ),
         type: 'OK',
         message: COLLECTION_RESPONSE.COLLECTION_DELETED,

@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@/common/common.module';
 
-import { EnviromentModule } from '../enviroment/enviroment.module';
+import { EnvironmentModule } from '../environment/environment.module';
 import { FolderModule } from '../folder/folder.module';
 import { MethodModule } from '../method/method.module';
 import { TeamModule } from '../team/team.module';
@@ -22,7 +22,7 @@ import { InvocationUserController } from './interface/invocation.controller';
     forwardRef(() => CommonModule),
     forwardRef(() => MethodModule),
     forwardRef(() => FolderModule),
-    forwardRef(() => EnviromentModule),
+    forwardRef(() => EnvironmentModule),
     forwardRef(() => TeamModule),
   ],
   controllers: [InvocationUserController, InvocationTeamController],

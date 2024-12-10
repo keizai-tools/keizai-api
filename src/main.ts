@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import { SuccessResponseInterceptor } from './common/response_service/interceptor/success_response.interceptor';
+import { sentryConfig } from './configuration/sentry/sentry.configuration';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +23,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.enableCors();
+  sentryConfig(app);
 
   await app.startAllMicroservices();
 

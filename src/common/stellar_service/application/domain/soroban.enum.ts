@@ -14,6 +14,12 @@ export enum SOROBAN_SERVER {
   FRIENDBOT_FUTURENET = 'https://friendbot-futurenet.stellar.org/?addr=',
 }
 
+export enum HORIZON_NETWORK {
+  FUTURENET = 'https://horizon-futurenet.stellar.org',
+  TESTNET = 'https://horizon-testnet.stellar.org',
+  MAINNET = 'https://horizon.stellar.org',
+}
+
 export enum CONTRACT_EXECUTABLE_TYPE {
   STELLAR_ASSET = 'contractExecutableStellarAsset',
   WASM = 'contractExecutableWasm',

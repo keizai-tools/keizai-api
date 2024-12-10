@@ -20,7 +20,11 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import { EnvironmentService } from '@/modules/environment/application/service/environment.service';
+import {
+  FOLDER_REPOSITORY,
+  IFolderRepository,
+} from '@/modules/folder/application/interface/folder.repository.interface';
 import { FolderService } from '@/modules/folder/application/service/folder.service';
 import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 import {
@@ -59,13 +63,15 @@ export class InvocationService {
     private readonly folderService: FolderService,
     @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
+    @Inject(forwardRef(() => FOLDER_REPOSITORY))
+    private readonly folderRepository: IFolderRepository,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IStellarService,
     private readonly invocationException: InvocationException,
     @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
     private readonly methodService: MethodService,
-    private readonly enviromentService: EnviromentService,
+    private readonly environmentService: EnvironmentService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }
@@ -83,9 +89,12 @@ export class InvocationService {
   async getContractAddress(invocation: Invocation, contractId: string) {
     try {
       const contractIdValue = this.getContractIdValue(contractId);
-      const environment = await this.enviromentService.findOneByName(
+      const collectionId =
+        invocation.folder?.collectionId || invocation.collectionId;
+
+      const environment = await this.environmentService.findOneByName(
         contractIdValue,
-        invocation.folder.collectionId,
+        collectionId,
       );
       return environment ? environment.value : contractIdValue;
     } catch (error) {
@@ -190,9 +199,9 @@ export class InvocationService {
           );
           const envsByName =
             envsNames &&
-            (await this.enviromentService.findByNames(
+            (await this.environmentService.findByNames(
               envsNames,
-              invocation.folder.collectionId,
+              invocation.folder.collectionId || invocation.collectionId,
             ));
 
           const envsValues: { name: string; value: string }[] = Array.isArray(
@@ -284,16 +293,16 @@ export class InvocationService {
   }
 
   async createByUser(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     userId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndUserId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         userId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
         type: 'CREATED',
       });
@@ -303,16 +312,16 @@ export class InvocationService {
   }
 
   async createByTeam(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     teamId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndTeamId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         teamId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         type: 'OK',
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
       });
@@ -322,22 +331,53 @@ export class InvocationService {
   }
 
   async create(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
   ): Promise<InvocationResponseDto> {
     try {
-      const invocationValues: IInvocationValues = {
-        name: createFolderDto.name,
-        secretKey: createFolderDto.secretKey,
-        publicKey: createFolderDto.publicKey,
-        preInvocation: createFolderDto.preInvocation,
-        postInvocation: createFolderDto.postInvocation,
-        contractId: createFolderDto.contractId,
-        folderId: createFolderDto.folderId,
-        network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
-      };
+      if (createInvocationDto.folderId && createInvocationDto.collectionId) {
+        throw new BadRequestException(
+          'No se debe proporcionar collectionId cuando se proporciona folderId.',
+        );
+      }
 
+      if (!createInvocationDto.folderId && !createInvocationDto.collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
+      let collectionId = createInvocationDto.collectionId;
+
+      if (createInvocationDto.folderId) {
+        const folder = await this.folderRepository.findOne(
+          createInvocationDto.folderId,
+        );
+        if (!folder) {
+          throw new BadRequestException(INVOCATION_RESPONSE.Folder_NOT_FOUND);
+        }
+        collectionId = folder.collectionId;
+      }
+
+      if (!collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
+      const invocationValues: IInvocationValues = {
+        name: createInvocationDto.name,
+        secretKey: createInvocationDto.secretKey,
+        publicKey: createInvocationDto.publicKey,
+        preInvocation: createInvocationDto.preInvocation,
+        postInvocation: createInvocationDto.postInvocation,
+        contractId: createInvocationDto.contractId,
+        folderId: createInvocationDto.folderId || null,
+        network: createInvocationDto.network || NETWORK.SOROBAN_AUTO_DETECT,
+        collectionId: collectionId,
+      };
       const invocation =
         this.invocationMapper.fromDtoToEntity(invocationValues);
+
       const invocationSaved = await this.invocationRepository.save(invocation);
       if (!invocationSaved) {
         throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
@@ -424,12 +464,28 @@ export class InvocationService {
         throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
       }
 
-      const { folder } = invocation;
-
-      if (folder.collection.userId !== userId) {
-        throw new BadRequestException(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-        );
+      if (invocation.folder) {
+        if (!invocation.folder.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
+          );
+        }
+        if (invocation.folder.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
+      } else {
+        if (!invocation.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_COLLECTION_NOT_FOUND,
+          );
+        }
+        if (invocation.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
       }
       return invocation;
     } catch (error) {

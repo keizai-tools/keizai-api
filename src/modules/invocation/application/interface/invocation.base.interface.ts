@@ -10,6 +10,7 @@ export interface IInvocationValues {
   contractId: string;
   folderId: string;
   network: NETWORK;
+  collectionId: string;
 }
 
 export interface IUpdateInvocationValues extends Partial<IInvocationValues> {
