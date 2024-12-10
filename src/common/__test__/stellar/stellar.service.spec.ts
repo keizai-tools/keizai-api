@@ -19,6 +19,7 @@ import {
 import { Method } from '@/modules/method/domain/method.domain';
 import {
   contractExecutable,
+  getTxFailed,
   identityProviderServiceMock,
   mockedAdapterContract,
   rawSendTxError,
@@ -357,7 +358,7 @@ describe('StellarService', () => {
         .mockReturnValue('txFailed');
       jest
         .spyOn(stellarAdapter, 'getTransaction')
-        .mockResolvedValue(rawGetTxFailed);
+        .mockResolvedValue(getTxFailed);
       jest
         .spyOn(stellarAdapter, 'getTransaction')
         .mockResolvedValue(getTxFailed);
