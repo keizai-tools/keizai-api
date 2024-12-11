@@ -32,6 +32,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import type { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -535,5 +536,35 @@ export class EphemeralEnvironmentService {
     this.responseService.verbose(
       MessagesEphemeralEnvironment.TASK_DID_NOT_STOP_WITHIN_EXPECTED_TIME,
     );
+  }
+
+  async getAccountOrFund(
+    publicKey: string,
+    clientId: string,
+  ): IPromiseResponse<void> {
+    const taskStatusResponse = await this.getTaskStatus(clientId);
+    const urlEphimeral = taskStatusResponse.payload.publicIp;
+
+    return await this.fetchWithRetry(
+      `http://${urlEphimeral}:8000/friendbot?addr=${publicKey}`,
+    );
+  }
+
+  private async fetchWithRetry(url: string): IPromiseResponse<void> {
+    let response: AxiosResponse<any, any>;
+    do {
+      try {
+        response = await lastValueFrom(this.httpService.get(url));
+        if (response.status === 200) {
+          return this.responseService.createResponse({
+            message: 'Account funded successfully',
+            type: 'OK',
+          });
+        }
+      } catch (error) {
+        console.error('Fetch failed, retrying in 3 seconds...', error);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    } while (response?.status !== 200);
   }
 }
