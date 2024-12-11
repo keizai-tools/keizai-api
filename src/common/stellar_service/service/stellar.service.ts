@@ -27,7 +27,7 @@ import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
-import type { StellarAdapter } from '../adapter/stellar.adapter';
+import { StellarAdapter } from '../adapter/stellar.adapter';
 import { ContractFunctions } from '../application/domain/ContractFunctions.array';
 import { SCSpecTypeMap } from '../application/domain/SCSpecTypeMap.object';
 import {
@@ -42,7 +42,7 @@ import {
   IDecodedSection,
   IGeneratedMethod,
   IRunInvocationParams,
-  type IStellarService,
+  IStellarService,
 } from '../application/interface/contract.service.interface';
 import {
   ContractErrorResponse,
@@ -141,6 +141,7 @@ export class StellarService implements IStellarService {
           contractId,
           selectedMethod,
         );
+
         transaction = await this.stellarAdapter.prepareTransaction(
           publicKey,
           userId,
@@ -158,10 +159,8 @@ export class StellarService implements IStellarService {
           Networks[this.currentNetwork],
         ) as Transaction;
       }
-
       const response: rpc.Api.RawSendTransactionResponse =
         await this.stellarAdapter.sendTransaction(transaction, true);
-
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
 
       if (response.status === SendTransactionStatus.ERROR) {
@@ -283,8 +282,11 @@ export class StellarService implements IStellarService {
           offset += length;
           success = true;
           break;
-        } catch {
-          // Continue to next length
+        } catch (error) {
+          this.responseService.error(
+            `Failed to decode subArray of length ${length}:`,
+            error,
+          );
         }
       }
       if (!success) break;

@@ -566,53 +566,21 @@ export class InvocationService {
         updateInvocationDto,
       );
 
-      let network: NETWORK;
-
-      if (updateInvocationDto.contractId) {
-        try {
-          const contractId = await this.getContractAddress(
+      const contractId = updateInvocationDto.contractId
+        ? await this.getContractAddress(
             invocation,
             updateInvocationDto.contractId,
-          );
+          )
+        : invocation.contractId;
 
-          network = await this.contractService.verifyNetwork({
-            selectedNetwork: updateInvocationDto.network,
-            contractId,
-            userId: invocation.folder.collection.userId,
-          });
+      const network = await this.getNetwork(
+        updateInvocationDto,
+        invocation,
+        contractId,
+      );
 
-          const generatedMethods =
-            await this.contractService.generateMethodsFromContractId(
-              contractId,
-            );
-
-          const methodsToRemove =
-            await this.methodRepository.findAllByInvocationId(
-              updateInvocationDto.id,
-            );
-
-          if (methodsToRemove) {
-            await this.methodService.deleteAll(methodsToRemove);
-          }
-
-          const methodsMapped = generatedMethods.map((method) => {
-            const methodValues: IMethodValues = {
-              name: method.name,
-              inputs: method.inputs,
-              outputs: method.outputs,
-              docs: method.docs,
-              invocationId: invocation.id,
-            };
-
-            return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
-          });
-
-          await this.methodRepository.saveAll(methodsMapped);
-        } catch (error) {
-          throw new NotFoundException(
-            INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
-          );
-        }
+      if (updateInvocationDto.contractId) {
+        await this.updateMethods(updateInvocationDto.id, contractId);
       }
 
       const invocationValues: IUpdateInvocationValues =
@@ -625,12 +593,73 @@ export class InvocationService {
 
       const invocationUpdated = await this.invocationRepository.update({
         ...invocationMapped,
-        network: network || updateInvocationDto.network || invocation.network,
+        network: network ?? invocation.network,
       });
 
       return this.invocationMapper.fromEntityToDto(invocationUpdated);
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  private async getNetwork(
+    updateInvocationDto: UpdateInvocationDto,
+    invocation: Invocation,
+    contractId: string,
+  ): Promise<NETWORK> {
+    if (updateInvocationDto.network) {
+      if (contractId && updateInvocationDto.network !== invocation.network) {
+        return invocation.network;
+      }
+      return updateInvocationDto.network;
+    }
+
+    if (
+      contractId &&
+      (invocation.network === NETWORK.SOROBAN_AUTO_DETECT ||
+        !invocation.contractId)
+    ) {
+      return await this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        contractId,
+        userId: invocation.folder.collection.userId,
+      });
+    }
+
+    return invocation.network;
+  }
+
+  private async updateMethods(
+    invocationId: string,
+    contractId: string,
+  ): Promise<void> {
+    try {
+      const generatedMethods =
+        await this.contractService.generateMethodsFromContractId(contractId);
+
+      const methodsToRemove = await this.methodRepository.findAllByInvocationId(
+        invocationId,
+      );
+      if (methodsToRemove) {
+        await this.methodService.deleteAll(methodsToRemove);
+      }
+
+      const methodsMapped = generatedMethods.map((method) => {
+        const methodValues: IMethodValues = {
+          name: method.name,
+          inputs: method.inputs,
+          outputs: method.outputs,
+          docs: method.docs,
+          invocationId,
+        };
+        return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
+      });
+
+      await this.methodRepository.saveAll(methodsMapped);
+    } catch (error) {
+      throw new NotFoundException(
+        INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+      );
     }
   }
 
@@ -676,8 +705,7 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
         );
       }
-
-      this.contractService.verifyNetwork({
+      await this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
         userId: invocation.folder.collection.userId,
       });

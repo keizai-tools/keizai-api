@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
+
+import {
+  type IResponseService,
+  RESPONSE_SERVICE,
+} from '@/common/response_service/interface/response.interface';
 
 import { IUpdateUserResponse } from '../../application/interfaces/user.common.interfaces';
 import { IUserRepository } from '../../application/interfaces/user.repository.interfaces';
@@ -12,7 +17,11 @@ export class UserRepository implements IUserRepository {
   constructor(
     @InjectRepository(UserSchema)
     private readonly userRepository: Repository<User>,
-  ) {}
+    @Inject(RESPONSE_SERVICE)
+    private readonly responseService: IResponseService,
+  ) {
+    this.responseService.setContext(UserRepository.name);
+  }
 
   async create(user: User): Promise<User> {
     return await this.userRepository.save(user);
@@ -82,7 +91,7 @@ export class UserRepository implements IUserRepository {
       });
       return user;
     } catch (error) {
-      console.error('Error finding user by memoId:', error);
+      this.responseService.error('Error finding user by memoId:', error);
       throw new Error('Could not find user with provided memoId.');
     }
   }

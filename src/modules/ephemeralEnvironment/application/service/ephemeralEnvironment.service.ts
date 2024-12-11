@@ -245,10 +245,12 @@ export class EphemeralEnvironmentService {
         type: 'OK',
       });
     }
-    const taskID = `${clientId}-task-${uuidv4()}`;
+    const uuid = uuidv4();
+
+    const taskID = `${clientId}-task-${uuid}`;
 
     const runTaskParams: RunTaskCommandInput = {
-      clientToken: clientId,
+      clientToken: uuid,
       cluster: this.clusterName,
       taskDefinition: this.taskDefinition,
       launchType: LaunchType.FARGATE,
@@ -261,12 +263,12 @@ export class EphemeralEnvironmentService {
         },
       },
     };
-
     try {
       const response = await this.handleCommand(
         this.ecsClient.send(new RunTaskCommand(runTaskParams)),
         MessagesEphemeralEnvironment.FARGATE_TASK_STARTED,
       );
+
       const task = response.tasks?.[0];
 
       if (!task?.taskArn) {
@@ -286,7 +288,6 @@ export class EphemeralEnvironmentService {
         type: 'OK',
       });
     } catch (error) {
-      console.error(error);
       this.responseService.errorHandler({ error });
     }
   }
