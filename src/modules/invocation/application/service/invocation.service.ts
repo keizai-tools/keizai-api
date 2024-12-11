@@ -623,9 +623,29 @@ export class InvocationService {
       const invocationMapped =
         this.invocationMapper.fromUpdateDtoToEntity(invocationValues);
 
+      let auxNetwork = invocation.network;
+
+      if (
+        invocation.network === NETWORK.SOROBAN_AUTO_DETECT ||
+        !invocation.contractId
+      ) {
+        auxNetwork = updateInvocationDto.network || invocation.network;
+      }
+
+      const auxContractID =
+        invocationMapped.contractId || invocation.contractId;
+
+      if (auxContractID && auxNetwork === NETWORK.SOROBAN_AUTO_DETECT) {
+        network = await this.contractService.verifyNetwork({
+          selectedNetwork: auxNetwork,
+          contractId: auxContractID,
+          userId: invocation.folder.collection.userId,
+        });
+      }
+
       const invocationUpdated = await this.invocationRepository.update({
         ...invocationMapped,
-        network: network || updateInvocationDto.network || invocation.network,
+        network: network ?? auxNetwork,
       });
 
       return this.invocationMapper.fromEntityToDto(invocationUpdated);
@@ -676,8 +696,7 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
         );
       }
-
-      this.contractService.verifyNetwork({
+      await this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
         userId: invocation.folder.collection.userId,
       });
