@@ -79,7 +79,7 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
         if (err && err.toString().length > 0) this.error(err.toString());
       });
     } else if (error && error.toString().length > 0) {
-      this.error(error.toString());
+      this.error(JSON.stringify(error.message, null, 2));
     }
   }
 

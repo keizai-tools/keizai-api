@@ -30,6 +30,8 @@ import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
+import { EPHEMERAL_ENVIRONMENT_SERVICE } from '@/modules/ephemeralEnvironment/application/interface/ephemeralEnvironment.interface';
+import { EphemeralEnvironmentService } from '@/modules/ephemeralEnvironment/application/service/ephemeralEnvironment.service';
 import {
   IUserRepository,
   USER_REPOSITORY,
@@ -53,9 +55,9 @@ import { IStellarAdapter } from '../application/interface/stellar.adapter.interf
 
 @Injectable()
 export class StellarAdapter implements IStellarAdapter {
-  private stellarServer: StellarServer.Horizon.Server;
   private server: rpc.Server;
   private networkPassphrase: string;
+  private stellarServer: StellarServer.Horizon.Server;
   private currentNetwork: string;
   private networkConfig = {
     [NETWORK.SOROBAN_FUTURENET]: {
@@ -75,11 +77,17 @@ export class StellarAdapter implements IStellarAdapter {
       networkPassphrase: Networks.PUBLIC,
       horizonServer: new StellarServer.Horizon.Server(HORIZON_NETWORK.MAINNET),
     },
+    [NETWORK.SOROBAN_EPHEMERAL]: {
+      server: null,
+      networkPassphrase: Networks.STANDALONE,
+    },
   };
 
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
+    @Inject(EPHEMERAL_ENVIRONMENT_SERVICE)
+    private readonly ephemeralEnvironmentService: EphemeralEnvironmentService,
     private readonly httpService: HttpService,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
@@ -88,8 +96,43 @@ export class StellarAdapter implements IStellarAdapter {
     this.setNetwork(NETWORK.SOROBAN_FUTURENET);
   }
 
-  public changeNetwork(selectedNetwork: string): void {
-    this.wrapWithErrorHandling(() => this.setNetwork(selectedNetwork));
+  public async changeNetwork(
+    selectedNetwork: NETWORK,
+    userId: string,
+  ): Promise<void> {
+    await this.wrapWithErrorHandling(async () => {
+      if (selectedNetwork === NETWORK.SOROBAN_EPHEMERAL) {
+        await this.validateEphemeralNetwork(selectedNetwork, userId);
+      }
+      this.setNetwork(selectedNetwork);
+    });
+  }
+
+  private async validateEphemeralNetwork(network: string, userId?: string) {
+    if (!userId) {
+      throw new BadRequestException(ErrorMessages.NO_USER_PROVIDED);
+    }
+
+    const isEphemeral = (
+      await this.ephemeralEnvironmentService.getTaskStatus(userId)
+    ).payload;
+
+    if (!isEphemeral) {
+      throw new InternalServerErrorException(
+        `Network ${network} is not an ephemeral network.`,
+      );
+    }
+    const url = `http://${isEphemeral.publicIp}:8000/soroban/rpc`;
+
+    this.networkConfig[NETWORK.SOROBAN_EPHEMERAL].server = new rpc.Server(url, {
+      allowHttp: true,
+    });
+
+    return {
+      status: isEphemeral.status,
+      taskArn: isEphemeral.taskArn,
+      publicIp: isEphemeral.publicIp,
+    };
   }
 
   public getScSpecEntryFromXDR(input: Uint8Array): xdr.ScSpecEntry {
@@ -152,12 +195,38 @@ export class StellarAdapter implements IStellarAdapter {
   public async getContractEvents(contractId: string): Promise<EncodeEvent[]> {
     return await this.wrapWithErrorHandling(async () => {
       const sequence = await this.fetchFromServer('getLatestLedger');
-      const startLedger = this.calculateStartLedger(sequence.sequence);
+
+      let startLedger = this.calculateStartLedger(sequence.sequence);
+
+      try {
+        await this.fetchFromServer('getEvents', {
+          startLedger: 1,
+          filters: [{ contractIds: [contractId] }],
+          limit: 1,
+        });
+      } catch (error) {
+        const match = error.message.match(
+          /startLedger must be within the ledger range: (\d+) - (\d+)/,
+        );
+        if (match) {
+          const oldestLedger = parseInt(match[1], 10);
+          const latestLedger = parseInt(match[2], 10);
+
+          if (startLedger < oldestLedger) {
+            startLedger = oldestLedger;
+          } else if (startLedger > latestLedger) {
+            startLedger = latestLedger;
+          }
+        } else {
+          throw error;
+        }
+      }
+
       const { events } = await this.fetchFromServer('getEvents', {
         startLedger,
         filters: [{ contractIds: [contractId] }],
-        limit: 20,
       });
+
       return events.reverse();
     });
   }
@@ -190,19 +259,24 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async uploadWasm(
     file: Express.Multer.File,
+    userId: string,
     publicKey: string,
     secretKey?: string,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
       const operation = Operation.uploadContractWasm({ wasm: file.buffer });
-      const account = await this.server.getAccount(publicKey);
-      const preparedTx = await this.prepareTransaction(account, operation);
+      const account = await this.getAccountOrFund(publicKey, userId);
+      const preparedTx = await this.prepareTransaction(
+        account,
+        userId,
+        operation,
+      );
 
       if (secretKey) {
         const sourceKeypair = Keypair.fromSecret(secretKey);
         this.signTransaction(preparedTx, sourceKeypair);
         const response = await this.executeTransactionWithRetry(preparedTx);
-        return await this.deployContract(response, sourceKeypair);
+        return await this.deployContract(response, sourceKeypair, userId);
       } else {
         return preparedTx.toXDR();
       }
@@ -212,16 +286,25 @@ export class StellarAdapter implements IStellarAdapter {
   public async deployContract(
     response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair,
+    userId: string,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
-      const account = await this.server.getAccount(sourceKeypair.publicKey());
+      const account = await this.getAccountOrFund(
+        sourceKeypair.publicKey(),
+        userId,
+      );
       const operation = this.createDeployContractOperation(
         response,
         sourceKeypair,
       );
 
       const responseDeploy: rpc.Api.GetSuccessfulTransactionResponse =
-        await this.buildAndSendTransaction(account, operation, sourceKeypair);
+        await this.buildAndSendTransaction(
+          account,
+          operation,
+          sourceKeypair,
+          userId,
+        );
       return this.extractContractAddress(responseDeploy);
     });
   }
@@ -243,15 +326,32 @@ export class StellarAdapter implements IStellarAdapter {
   public async prepareUploadWASM(
     file: Express.Multer.File,
     publicKey: string,
+    userId: string,
   ): Promise<string> {
-    await this.getAccountOrFund(publicKey);
+    try {
+      await this.getAccountOrFund(publicKey, userId);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException &&
+        error.message.includes('No running tasks found')
+      ) {
+        this.responseService.warn(
+          'No running tasks found, continuing without funding account.',
+        );
+      } else {
+        throw error;
+      }
+    }
+
     return await this.wrapWithErrorHandling(async (): Promise<string> => {
-      const account: Account = await this.server.getAccount(publicKey);
+      const account: Account = await this.getAccountOrFund(publicKey, userId);
       const operation: xdr.Operation<Operation.InvokeHostFunction> =
         Operation.uploadContractWasm({
           wasm: file.buffer,
         });
-      return (await this.prepareTransaction(account, operation)).toXDR();
+      return (
+        await this.prepareTransaction(account, userId, operation)
+      ).toXDR();
     });
   }
 
@@ -264,6 +364,7 @@ export class StellarAdapter implements IStellarAdapter {
 
   public async prepareTransaction(
     account: Account | string,
+    userId: string,
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
       | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
@@ -278,7 +379,7 @@ export class StellarAdapter implements IStellarAdapter {
           methodName: string;
           scArgs: xdr.ScVal[];
         };
-        const accountObj = await this.getAccountOrFund(publicKey);
+        const accountObj = await this.getAccountOrFund(publicKey, userId);
         const contract = new Contract(contractId);
         transaction = this.createTransaction({
           account: accountObj,
@@ -304,8 +405,13 @@ export class StellarAdapter implements IStellarAdapter {
     account: Account,
     operations: xdr.Operation<Operation.InvokeHostFunction>,
     sourceKeypair: Keypair,
+    userId: string,
   ): Promise<rpc.Api.GetSuccessfulTransactionResponse> {
-    const preparedTx = await this.prepareTransaction(account, operations);
+    const preparedTx = await this.prepareTransaction(
+      account,
+      userId,
+      operations,
+    );
     this.signTransaction(preparedTx, sourceKeypair);
     return await this.executeTransactionWithRetry(preparedTx);
   }
@@ -350,7 +456,6 @@ export class StellarAdapter implements IStellarAdapter {
     }
     return publicKey;
   }
-
   public async streamTransactionsByMemoId(
     publicKey: string,
     memoId?: string,
@@ -362,7 +467,7 @@ export class StellarAdapter implements IStellarAdapter {
         .cursor('now')
         .stream({
           onmessage: async (
-            transaction: StellarServer.Horizon.ServerApi.CollectionPage<StellarServer.Horizon.ServerApi.TransactionRecord>,
+            transaction: StellarServer.Horizon.ServerApi.TransactionRecord,
           ) => {
             const _transaction =
               transaction as unknown as StellarServer.Horizon.HorizonApi.TransactionResponse;
@@ -380,15 +485,14 @@ export class StellarAdapter implements IStellarAdapter {
             }
           },
           onerror: (error) => {
-            console.error(error);
+            this.responseService.error(error);
           },
         });
     } catch (error) {
-      console.error(error);
+      this.responseService.error(error);
       throw error;
     }
   }
-
   private async getOperationDetails(
     transactionId: string,
   ): Promise<Operation[]> {
@@ -400,7 +504,7 @@ export class StellarAdapter implements IStellarAdapter {
       );
       return response.data._embedded.records;
     } catch (error) {
-      console.error(error.message);
+      this.responseService.error(error.message);
       throw new NotFoundException(
         'Could not find transaction with provided transactionId.',
       );
@@ -412,12 +516,12 @@ export class StellarAdapter implements IStellarAdapter {
     amounts: string[],
   ): Promise<void> {
     if (!memoId) {
-      console.warn('MemoID is required to update user balance.');
+      this.responseService.warn('MemoID is required to update user balance.');
       return;
     }
     const user = await this.userRepository.findByMemoId(memoId);
     if (!user) {
-      console.error('User not found with MemoID:', memoId);
+      this.responseService.error('User not found with MemoID:', memoId);
       return;
     }
     const totalAmount = amounts.reduce(
@@ -426,11 +530,12 @@ export class StellarAdapter implements IStellarAdapter {
     );
     user.balance += totalAmount;
     await this.userRepository.update(user.id, user);
-    console.log(`User balance updated. New balance: ${user.balance}`);
-    console.log(`Notified balance update to clients...`);
   }
 
-  public async getAccountOrFund(publicKey: string): Promise<Account> {
+  public async getAccountOrFund(
+    publicKey: string,
+    userId: string,
+  ): Promise<Account> {
     try {
       return await this.server.getAccount(publicKey);
     } catch (error) {
@@ -440,21 +545,51 @@ export class StellarAdapter implements IStellarAdapter {
             ErrorMessages.ACCOUNT_NOT_FOUND_ON_MAINNET,
           );
         }
-        const friendbotUrl = `${
-          this.networkPassphrase === Networks.TESTNET
-            ? SOROBAN_SERVER.FRIENDBOT_TESNET
-            : SOROBAN_SERVER.FRIENDBOT_FUTURENET
-        }${publicKey}`;
-        const response = await fetch(friendbotUrl);
-        if (!response.ok) {
-          throw new InternalServerErrorException(
-            ErrorMessages.FAILED_TO_FUND_ACCOUNT,
-          );
-        }
+        await this.fundAccount(publicKey, userId);
         return await this.server.getAccount(publicKey);
       }
       throw error;
     }
+  }
+
+  private async fundAccount(publicKey: string, userId: string): Promise<void> {
+    let isEphemeral: { publicIp: string; status?: string; taskArn?: string };
+    try {
+      isEphemeral = (
+        await this.ephemeralEnvironmentService.getTaskStatus(userId)
+      ).payload;
+    } catch (error) {
+      if (error.response?.statusCode !== 404) {
+        throw error;
+      }
+    }
+
+    const urls = [
+      `${SOROBAN_SERVER.FRIENDBOT_TESNET}${publicKey}`,
+      `${SOROBAN_SERVER.FRIENDBOT_FUTURENET}${publicKey}`,
+    ];
+
+    if (isEphemeral) {
+      urls.push(`http://${isEphemeral.publicIp}:8000/?addr=${publicKey}`);
+    }
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          return;
+        }
+      } catch (error) {
+        this.responseService.warn(
+          `Failed to fund account using URL: ${url}`,
+          error,
+        );
+      }
+    }
+
+    throw new InternalServerErrorException(
+      ErrorMessages.FAILED_TO_FUND_ACCOUNT,
+    );
   }
 
   public createDeployContractOperation(
@@ -546,9 +681,25 @@ export class StellarAdapter implements IStellarAdapter {
     return response;
   }
 
-  public async checkContractNetwork(contractId: string): Promise<string> {
+  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
+    try {
+      return await this.server[method](...args);
+    } catch (error) {
+      if (
+        error.message.includes(
+          "Cannot read properties of null (reading 'getLedgerEntries')",
+        )
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return await this.server[method](...args);
+      }
+      throw error;
+    }
+  }
+
+  public async checkContractNetwork(contractId: string): Promise<NETWORK> {
     return await this.wrapWithErrorHandling(async () => {
-      const networks = [
+      const networks: NETWORK[] = [
         NETWORK.SOROBAN_FUTURENET,
         NETWORK.SOROBAN_TESTNET,
         NETWORK.SOROBAN_MAINNET,
@@ -559,30 +710,16 @@ export class StellarAdapter implements IStellarAdapter {
 
   private async findNetworkWithContract(
     contractId: string,
-    networks: string[],
-  ): Promise<string> {
+    networks: NETWORK[],
+  ): Promise<NETWORK> {
     for (const network of networks) {
-      try {
-        this.setNetwork(network);
-        const response = await this.fetchFromServer(
-          'getLedgerEntries',
-          this.createInstanceKey(contractId),
-        );
-
-        if (response.entries.length > 0) return network;
-      } catch (error) {
-        if (error.response?.status >= 400 || error?.status >= 400) {
-          continue;
-        } else {
-          throw error;
-        }
-      }
+      this.setNetwork(network);
+      const response = await this.fetchFromServer(
+        'getLedgerEntries',
+        this.createInstanceKey(contractId),
+      );
+      if (response.entries.length > 0) return network;
     }
-
     throw new BadRequestException(SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND);
-  }
-
-  private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
-    return await this.server[method](...args);
   }
 }

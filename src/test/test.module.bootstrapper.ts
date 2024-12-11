@@ -65,7 +65,7 @@ export const mockedContractService: jest.MockedObject<IStellarService> = {
   pollTransactionStatus: jest.fn(),
 };
 
-export const rawGetTxFailed: rpc.Api.GetTransactionResponse = {
+export const getTxFailed: rpc.Api.GetTransactionResponse = {
   status: GetTransactionStatus.FAILED,
   resultXdr: {} as xdr.TransactionResult,
   latestLedger: 0,
@@ -79,6 +79,15 @@ export const rawGetTxFailed: rpc.Api.GetTransactionResponse = {
   envelopeXdr: undefined,
   resultMetaXdr: undefined,
   txHash: '',
+};
+
+export const rawGetTxFailed = {
+  status: GetTransactionStatus.FAILED,
+  resultXdr: '',
+  latestLedger: 0,
+  latestLedgerCloseTime: 0,
+  oldestLedger: 0,
+  oldestLedgerCloseTime: 0,
 };
 
 export const rawSendTxPending = {

@@ -39,7 +39,7 @@ import { InvocationService } from '../application/service/invocation.service';
 export class InvocationUserController {
   constructor(private readonly invocationService: InvocationService) {}
 
-  @Post('')
+  @Post()
   async create(
     @CurrentUser() data: IResponse<User>,
     @Body() createInvocationDto: CreateInvocationDto,
@@ -144,7 +144,7 @@ export class InvocationUserController {
   }
 
   @Post('/:id/upload/run')
-  runUploadWASM(
+  async runUploadWASM(
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
     @Body()
@@ -155,8 +155,8 @@ export class InvocationUserController {
       signedTransactionXDR: string;
       deploy: boolean;
     },
-  ): IPromiseResponse<string | ContractErrorResponse> {
-    return this.invocationService.runUploadWASM(
+  ): Promise<IPromiseResponse<string | ContractErrorResponse>> {
+    return await this.invocationService.runUploadWASM(
       signedTransactionXDR,
       data.payload.id,
       id,

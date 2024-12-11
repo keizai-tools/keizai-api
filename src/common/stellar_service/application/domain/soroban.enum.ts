@@ -3,6 +3,7 @@ export enum NETWORK {
   SOROBAN_TESTNET = 'TESTNET',
   SOROBAN_MAINNET = 'MAINNET',
   SOROBAN_AUTO_DETECT = 'AUTO_DETECT',
+  SOROBAN_EPHEMERAL = 'EPHEMERAL',
 }
 
 export enum SOROBAN_SERVER {
@@ -77,4 +78,5 @@ export enum ErrorMessages {
   UNSUPPORTED_NETWORK = 'Unsupported network',
   UNKNOWN_TYPE = 'Unknown Type',
   UNABLE_TO_GET_CONTRACT_SPEC_ENTRIES = 'Unable to get contract spec entries.',
+  NO_USER_PROVIDED = 'No user provided',
 }
