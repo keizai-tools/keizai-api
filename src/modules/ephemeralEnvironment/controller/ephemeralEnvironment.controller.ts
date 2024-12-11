@@ -68,4 +68,15 @@ export class EphemeralEnvironmentController {
       user.payload.id,
     );
   }
+
+  @Get('friendbot')
+  async handleGetAccountOrFund(
+    @CurrentUser() user: IResponse<User>,
+    @Query('addr') publicKey: string,
+  ) {
+    return await this.ephemeralEnvironmentService.getAccountOrFund(
+      publicKey,
+      user.payload.id,
+    );
+  }
 }
