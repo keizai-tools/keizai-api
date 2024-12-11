@@ -485,17 +485,18 @@ describe('Invocation - [/invocation]', () => {
       );
     });
 
-    it('should change to TESTNET network', async () => {
+    it('should change network when contractId exists', async () => {
       const responseExpected = expect.objectContaining({
         contractId: '{{contract_id}}',
         folder: {
           id: 'folder0',
           name: 'folder0',
         },
+        folderId: 'folder0',
         id: 'invocation0',
         methods: [],
         name: 'invocation updated',
-        network: 'TESTNET',
+        network: 'FUTURENET',
         postInvocation: null,
         preInvocation: null,
         publicKey: null,
@@ -508,7 +509,10 @@ describe('Invocation - [/invocation]', () => {
         method: 'patch',
         authCode: adminToken,
         endpoint: '/invocation',
-        data: { network: 'TESTNET', id: 'invocation0' },
+        data: {
+          network: 'TESTNET',
+          id: 'invocation0',
+        },
       });
 
       expect(response.body.payload).toEqual(responseExpected);
@@ -538,6 +542,49 @@ describe('Invocation - [/invocation]', () => {
         authCode: adminToken,
         endpoint: '/invocation',
         data: { network: 'FUTURENET', id: 'invocation0' },
+      });
+
+      expect(response.body.payload).toEqual(responseExpected);
+    });
+
+    it('create a new invocation and should change to TESTNET network', async () => {
+      const responseExpected = expect.objectContaining({
+        name: 'test',
+        secretKey: 'test',
+        publicKey: 'test',
+        preInvocation: null,
+        postInvocation: null,
+        contractId: null,
+        network: 'TESTNET',
+        id: expect.any(String),
+        folder: { name: 'folder0', id: 'folder0' },
+        folderId: 'folder0',
+        methods: [],
+        selectedMethod: null,
+      });
+
+      const responseMakeInvocation = await makeRequest({
+        app,
+        method: 'post',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
+          name: 'test',
+          folderId: 'folder0',
+          secretKey: 'test',
+          publicKey: 'test',
+        },
+      });
+
+      const response = await makeRequest({
+        app,
+        method: 'patch',
+        authCode: adminToken,
+        endpoint: '/invocation',
+        data: {
+          network: 'TESTNET',
+          id: responseMakeInvocation.body.payload.id,
+        },
       });
 
       expect(response.body.payload).toEqual(responseExpected);
@@ -1116,7 +1163,7 @@ describe('Invocation - [/invocation]', () => {
         );
       });
 
-      it('should change to TESTNET network', async () => {
+      it('should change network when contractId exists', async () => {
         const responseExpected = expect.objectContaining({
           contractId: '{{contract_id}}',
           folder: {
@@ -1126,7 +1173,7 @@ describe('Invocation - [/invocation]', () => {
           id: 'invocation6',
           methods: [],
           name: 'invocation updated',
-          network: 'TESTNET',
+          network: 'FUTURENET',
           postInvocation: null,
           preInvocation: 'console.log("post invocation")',
           publicKey: null,
@@ -1139,7 +1186,10 @@ describe('Invocation - [/invocation]', () => {
           method: 'patch',
           authCode: adminToken,
           endpoint: `${validRoute}`,
-          data: { network: 'TESTNET', id: 'invocation6' },
+          data: {
+            network: 'TESTNET',
+            id: 'invocation6',
+          },
         });
 
         expect(response.body.payload).toEqual(responseExpected);
