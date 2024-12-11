@@ -102,9 +102,9 @@ export class EphemeralEnvironmentService {
     }
 
     const ruleName = `${taskID}-fargate-auto-stop-rule`;
-    const lambdaArn = process.env.LAMBDA_ARN;
+    const lambdaFunctionArn = process.env.LAMBDA_ARN;
 
-    if (!lambdaArn) {
+    if (!lambdaFunctionArn) {
       throw new InternalServerErrorException(
         MessagesEphemeralEnvironment.MISSING_REQUIRED_ENV_VARS,
       );
@@ -127,7 +127,7 @@ export class EphemeralEnvironmentService {
       const ruleArn = putRuleResponse.RuleArn;
 
       const permissionParams: AddPermissionCommandInput = {
-        FunctionName: lambdaArn,
+        FunctionName: lambdaFunctionArn,
         StatementId: `${ruleName}-invoke-permission`,
         Action: 'lambda:InvokeFunction',
         Principal: 'events.amazonaws.com',
@@ -152,7 +152,7 @@ export class EphemeralEnvironmentService {
         Rule: ruleName,
         Targets: [
           {
-            Arn: lambdaArn,
+            Arn: lambdaFunctionArn,
             Id: `${taskID}-target`,
             Input: JSON.stringify({ taskID, ruleName }),
           },
@@ -190,26 +190,29 @@ export class EphemeralEnvironmentService {
         desiredStatus: DesiredStatus.RUNNING,
       });
 
-      const taskArns = await this.handleCommand(
+      const taskArnsResponse = await this.handleCommand(
         this.ecsClient.send(listTasksCommand),
         MessagesEphemeralEnvironment.LISTED_TASKS_SUCCESS,
       );
 
-      if (!taskArns.taskArns || taskArns.taskArns.length === 0) {
+      if (
+        !taskArnsResponse.taskArns ||
+        taskArnsResponse.taskArns.length === 0
+      ) {
         return null;
       }
 
       const describeTasksCommand = new DescribeTasksCommand({
         cluster: this.clusterName,
-        tasks: taskArns.taskArns,
+        tasks: taskArnsResponse.taskArns,
       });
 
-      const taskDescriptions = await this.handleCommand(
+      const taskDescriptionsResponse = await this.handleCommand(
         this.ecsClient.send(describeTasksCommand),
         MessagesEphemeralEnvironment.DESCRIBED_TASK_SUCCESS,
       );
 
-      const matchingTask = taskDescriptions.tasks?.find((task) => {
+      const matchingTask = taskDescriptionsResponse.tasks?.find((task) => {
         const startedByMatch = task.startedBy.includes(clientId);
 
         return startedByMatch;
@@ -264,12 +267,12 @@ export class EphemeralEnvironmentService {
       },
     };
     try {
-      const response = await this.handleCommand(
+      const taskResponse = await this.handleCommand(
         this.ecsClient.send(new RunTaskCommand(runTaskParams)),
         MessagesEphemeralEnvironment.FARGATE_TASK_STARTED,
       );
 
-      const task = response.tasks?.[0];
+      const task = taskResponse.tasks?.[0];
 
       if (!task?.taskArn) {
         await this.stopTask(clientId);
@@ -280,10 +283,10 @@ export class EphemeralEnvironmentService {
 
       await this.waitForTaskToRun(task?.taskArn);
       const publicIpResponse = await this.getTaskPublicIp(task?.taskArn);
-      const publicIp = publicIpResponse.payload?.publicIp;
-      await this.checkStellarContainerStatus(publicIp, clientId);
+      const publicIpAddress = publicIpResponse.payload?.publicIp;
+      await this.checkStellarContainerStatus(publicIpAddress, clientId);
       return this.responseService.createResponse({
-        payload: { taskArn: task?.taskArn, publicIp },
+        payload: { taskArn: task?.taskArn, publicIp: publicIpAddress },
         message: MessagesEphemeralEnvironment.FARGATE_TASK_STARTED_SUCCESS,
         type: 'OK',
       });
@@ -339,17 +342,17 @@ export class EphemeralEnvironmentService {
     };
 
     try {
-      const response = await this.handleCommand(
+      const taskResponse = await this.handleCommand(
         this.ecsClient.send(new DescribeTasksCommand(describeTaskParams)),
         MessagesEphemeralEnvironment.TASK_INFO_RETRIEVED,
       );
 
-      const task = response.tasks?.[0];
-      const eniId = task?.attachments?.[0]?.details?.find(
+      const task = taskResponse.tasks?.[0];
+      const networkInterfaceId = task?.attachments?.[0]?.details?.find(
         (detail) => detail.name === 'networkInterfaceId',
       )?.value;
 
-      if (!eniId) {
+      if (!networkInterfaceId) {
         throw new InternalServerErrorException(
           MessagesEphemeralEnvironment.NO_NETWORK_INTERFACE,
         );
@@ -357,19 +360,19 @@ export class EphemeralEnvironmentService {
 
       const describeNetworkInterfacesCommand =
         new DescribeNetworkInterfacesCommand({
-          NetworkInterfaceIds: [eniId],
+          NetworkInterfaceIds: [networkInterfaceId],
         });
 
       const describeNetworkInterfacesResponse = await this.ec2Client.send(
         describeNetworkInterfacesCommand,
       );
-      const publicIp =
+      const publicIpAddress =
         describeNetworkInterfacesResponse.NetworkInterfaces?.[0]?.Association
           ?.PublicIp;
 
-      if (publicIp) {
+      if (publicIpAddress) {
         return this.responseService.createResponse({
-          payload: { publicIp },
+          payload: { publicIp: publicIpAddress },
           message: MessagesEphemeralEnvironment.PUBLIC_IP_RETRIEVED_SUCCESS,
           type: 'OK',
         });
@@ -439,12 +442,14 @@ export class EphemeralEnvironmentService {
       );
     }
 
+    const taskStatusResponse = await this.getTaskPublicIp(task.taskArn);
+    const publicIpAddress = taskStatusResponse.payload.publicIp;
+
     return this.responseService.createResponse({
       payload: {
         status: task.lastStatus || DesiredStatus.STOPPED,
         taskArn: task.taskArn || '',
-        publicIp:
-          (await this.getTaskPublicIp(task.taskArn)).payload.publicIp || '',
+        publicIp: publicIpAddress || '',
       },
       message: MessagesEphemeralEnvironment.TASK_STATUS_RETRIEVED,
       type: 'OK',
@@ -462,12 +467,12 @@ export class EphemeralEnvironmentService {
         tasks: [taskArn],
       };
 
-      const response = await this.handleCommand(
+      const taskResponse = await this.handleCommand(
         this.ecsClient.send(new DescribeTasksCommand(describeTaskParams)),
         MessagesEphemeralEnvironment.DESCRIBED_TASK_FOR_WAITING,
       );
 
-      const task = response.tasks?.[0];
+      const task = taskResponse.tasks?.[0];
       if (task && task.lastStatus === DesiredStatus.RUNNING) {
         return;
       }
@@ -497,12 +502,12 @@ export class EphemeralEnvironmentService {
       };
 
       try {
-        const response = await this.handleCommand(
+        const taskResponse = await this.handleCommand(
           this.ecsClient.send(new DescribeTasksCommand(describeTaskParams)),
           MessagesEphemeralEnvironment.DESCRIBED_TASK_FOR_WAITING,
         );
 
-        const task = response.tasks?.[0];
+        const task = taskResponse.tasks?.[0];
         if (!task) {
           this.responseService.verbose(
             `${MessagesEphemeralEnvironment.TASK_HAS_STOPPED_OR_DOES_NOT_EXIST} ${taskArn}`,
