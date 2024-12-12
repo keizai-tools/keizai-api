@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
-import * as uuid from 'uuid';
+import * as crypto from 'crypto';
 
 import {
   IPromiseResponse,
@@ -30,27 +30,59 @@ export class FileUploadService implements IFileUploadService {
     });
   }
 
+  async checkFileExists(fileHash: string): Promise<boolean> {
+    const existingFile = await this.s3
+      .listObjectsV2({
+        Bucket: this.bucket,
+        Prefix: fileHash,
+      })
+      .promise();
+
+    return existingFile.Contents && existingFile.Contents.length > 0;
+  }
+
   async uploadFile({
     file,
   }: {
     file: Express.Multer.File;
   }): IPromiseResponse<IUploadFileResponse> {
     try {
-      const fileKey = uuid.v4();
+      const fileHash = crypto
+        .createHash('md5')
+        .update(file.buffer)
+        .digest('hex');
+      const existingFile = await this.s3
+        .listObjectsV2({
+          Bucket: this.bucket,
+          Prefix: fileHash,
+        })
+        .promise();
+      if (existingFile.Contents && existingFile.Contents.length > 0) {
+        return this.responseService.createResponse({
+          type: 'OK',
+          message: ServiceMessageFileUpload.FILE_ALREADY_EXISTS,
+          payload: {
+            location: `https://${this.bucket}.s3.amazonaws.com/${fileHash}`,
+            key: fileHash,
+            exists: true,
+          },
+        });
+      }
+
       const params: S3.Types.PutObjectRequest = {
         Bucket: this.bucket,
-        Key: fileKey,
+        Key: fileHash,
         Body: file.buffer,
         ContentType: 'application/wasm',
       };
-
       const { Location } = await this.s3.upload(params).promise();
       return this.responseService.createResponse({
         type: 'CREATED',
         message: ServiceMessageFileUpload.FILE_UPLOADED_SUCCESSFULLY,
-        payload: { location: Location, key: fileKey },
+        payload: { location: Location, key: fileHash },
       });
     } catch (error) {
+      console.error('Error en uploadFile:', error);
       this.handleError(error);
     }
   }
@@ -73,6 +105,31 @@ export class FileUploadService implements IFileUploadService {
     }
   }
 
+  async generatePresignedUrl(key: string): Promise<string> {
+    const params = {
+      Bucket: this.bucket,
+      Key: key,
+    };
+
+    const url = await this.s3.getSignedUrlPromise('getObject', params);
+    return url;
+  }
+
+  async listWasmFiles(): Promise<string[]> {
+    try {
+      const params = {
+        Bucket: this.bucket,
+      };
+
+      const data = await this.s3.listObjectsV2(params).promise();
+
+      const wasmFiles = (data.Contents || []).map((item) => item.Key || '');
+
+      return wasmFiles;
+    } catch (error) {
+      throw new Error('Failed to list Wasm files');
+    }
+  }
   private handleError(error: Error): void {
     this.responseService.errorHandler({
       type: 'INTERNAL_SERVER_ERROR',

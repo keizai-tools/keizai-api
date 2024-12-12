@@ -5,7 +5,9 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 
+import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
 import {
   IPromiseResponse,
   IResponseService,
@@ -72,6 +74,7 @@ export class InvocationService {
     private readonly methodMapper: MethodMapper,
     private readonly methodService: MethodService,
     private readonly environmentService: EnvironmentService,
+    private readonly fileUploadService: FileUploadService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }
@@ -693,7 +696,7 @@ export class InvocationService {
     invocationId: string,
     userId: string,
     file: Express.Multer.File,
-  ): IPromiseResponse<string> {
+  ): IPromiseResponse<string | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(
         invocationId,
@@ -705,11 +708,29 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
         );
       }
-      await this.contractService.verifyNetwork({
+      const fileHash = crypto
+        .createHash('md5')
+        .update(file.buffer)
+        .digest('hex');
+      const existingFile = await this.fileUploadService.checkFileExists(
+        fileHash,
+      );
+
+      if (existingFile) {
+        const presignedUrl = await this.fileUploadService.generatePresignedUrl(
+          fileHash,
+        );
+        return this.responseService.createResponse({
+          payload: presignedUrl,
+          message: 'Archivo Wasm ya existe, se usará el existente.',
+          type: 'OK',
+        });
+      }
+
+      this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
         userId: invocation.folder.collection.userId,
       });
-
       return this.responseService.createResponse({
         payload: await this.contractService.prepareUploadWASM({
           userId,

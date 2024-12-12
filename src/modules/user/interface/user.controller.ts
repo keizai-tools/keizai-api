@@ -1,7 +1,19 @@
-import { Body, Controller, Get, Inject, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { IPromiseResponse } from '@/common/response_service/interface/response.interface';
+import {
+  IPromiseResponse,
+  IResponseService,
+  RESPONSE_SERVICE,
+} from '@/common/response_service/interface/response.interface';
 import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 
@@ -22,6 +34,8 @@ export class UserController implements IUserController {
   constructor(
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
+    @Inject(RESPONSE_SERVICE)
+    private readonly responseService: IResponseService,
   ) {}
 
   @Put('/update')
@@ -35,5 +49,26 @@ export class UserController implements IUserController {
   @Get('/me')
   async getMe(@CurrentUser() user: User): Promise<User> {
     return user;
+  }
+
+  @Get('/fargate-time')
+  async getFargateTime(
+    @CurrentUser() user: User,
+  ): Promise<IPromiseResponse<{ fargateTime: number }>> {
+    const fargateTime = await this.userService.getFargateSessionTime(user.id);
+    return this.responseService.createResponse({
+      type: 'OK',
+      message: 'Fargate session time calculated successfully.',
+      payload: { fargateTime },
+    });
+  }
+
+  @Post('update-balance/:userId')
+  async updateBalance(
+    @Param('userId') userId: string,
+    @Body('interval') interval: number,
+  ): Promise<string> {
+    await this.userService.updateUserBalance(userId, interval);
+    return 'User balance updated successfully';
   }
 }

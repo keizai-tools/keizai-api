@@ -19,6 +19,8 @@ import { ServiceMessage } from '../message/user.message';
 
 @Injectable()
 export class UserService implements IUserService {
+  private readonly costPerVCPU: number;
+  private readonly costPerGBRam: number;
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
@@ -28,6 +30,8 @@ export class UserService implements IUserService {
     private readonly userMapper: IUserMapper,
   ) {
     this.responseService.setContext(UserService.name);
+    this.costPerVCPU = parseFloat(process.env.AWS_FARGATE_COST_PER_VCPU);
+    this.costPerGBRam = parseFloat(process.env.AWS_FARGATE_COST_PER_GB_RAM);
   }
 
   private generateMemoId(userId: string): number {
@@ -141,6 +145,48 @@ export class UserService implements IUserService {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  async calculateFargateMinutes(
+    user: User,
+    vcpuCount = 2,
+    ramInGB = 4,
+  ): Promise<number> {
+    const response = await this.userRepository.findByEmail(user.email);
+    if (!response) {
+      throw new NotFoundException(ServiceMessage.NOT_FOUND);
+    }
+    const balance = user.balance;
+    const costPerHour =
+      vcpuCount * this.costPerVCPU + ramInGB * this.costPerGBRam;
+    const totalMinutes = (balance / costPerHour) * 60;
+    return Math.floor(totalMinutes);
+  }
+
+  async getFargateSessionTime(userId: string): Promise<number> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      console.error('User not found for ID:', userId);
+      throw new NotFoundException('User not found');
+    }
+
+    const fargateMinutes = this.calculateFargateMinutes(user);
+
+    return fargateMinutes;
+  }
+
+  async updateUserBalance(userId: string, interval: number): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const vcpuCount = 2;
+    const ramInGB = 4;
+    const costPerHour =
+      vcpuCount * this.costPerVCPU + ramInGB * this.costPerGBRam;
+    const costForInterval = (costPerHour / 60) * interval;
+    user.balance -= costForInterval;
+    await this.userRepository.update(user.id, user);
   }
 
   private handleError(error: Error): void {

@@ -27,6 +27,10 @@ import { randomBytes } from 'crypto';
 import { lastValueFrom } from 'rxjs';
 
 import {
+  FILE_UPLOAD_SERVICE,
+  IFileUploadService,
+} from '@/common/S3/interface/file_upload.s3.interface';
+import {
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
@@ -86,11 +90,13 @@ export class StellarAdapter implements IStellarAdapter {
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
-    @Inject(EPHEMERAL_ENVIRONMENT_SERVICE)
-    private readonly ephemeralEnvironmentService: EphemeralEnvironmentService,
     private readonly httpService: HttpService,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+    @Inject(EPHEMERAL_ENVIRONMENT_SERVICE)
+    private readonly ephemeralEnvironmentService: EphemeralEnvironmentService,
+    @Inject(FILE_UPLOAD_SERVICE)
+    private readonly fileUploadService: IFileUploadService,
   ) {
     this.responseService.setContext(StellarAdapter.name);
     this.setNetwork(NETWORK.SOROBAN_FUTURENET);
@@ -264,7 +270,22 @@ export class StellarAdapter implements IStellarAdapter {
     secretKey?: string,
   ): Promise<string> {
     return await this.wrapWithErrorHandling(async () => {
+      const uploadResponse = await this.fileUploadService.uploadFile({ file });
+
+      let location: string;
+
+      if (uploadResponse.payload) {
+        location = uploadResponse.payload.location;
+      } else {
+        throw new Error('Error al subir el archivo Wasm a S3');
+      }
+
       const operation = Operation.uploadContractWasm({ wasm: file.buffer });
+
+      if (!this.getAccountOrFund) {
+        await this.changeNetwork(NETWORK.SOROBAN_EPHEMERAL, userId);
+      }
+
       const account = await this.getAccountOrFund(publicKey, userId);
       const preparedTx = await this.prepareTransaction(
         account,
