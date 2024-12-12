@@ -26,7 +26,7 @@ export const UserSchema = new EntitySchema<User>({
     },
     balance: {
       name: 'balance',
-      type: 'int',
+      type: 'float',
       nullable: true,
     },
   },
