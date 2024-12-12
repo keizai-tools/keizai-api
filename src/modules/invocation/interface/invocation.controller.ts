@@ -13,6 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
+import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
 import { WasmFileValidationPipe } from '@/common/base/application/pipe/wasm-file-validation.pipe';
 import {
   IPromiseResponse,
@@ -37,7 +38,10 @@ import { InvocationService } from '../application/service/invocation.service';
 @ApiTags('Invocation')
 @Controller('invocation')
 export class InvocationUserController {
-  constructor(private readonly invocationService: InvocationService) {}
+  constructor(
+    private readonly invocationService: InvocationService,
+    private readonly fileUploadService: FileUploadService,
+  ) {}
 
   @Post()
   async create(
@@ -93,6 +97,30 @@ export class InvocationUserController {
     @Param('id') id: string,
   ): IPromiseResponse<Method[]> {
     return this.invocationService.findAllMethodsByUser(id, data.payload.id);
+  }
+
+  @Get('/:id/wasm-files')
+  async listWasmFiles(): IPromiseResponse<{ id: string; url: string }[]> {
+    try {
+      const files = await this.fileUploadService.listWasmFiles();
+      const filesWithUrls = await Promise.all(
+        files.map(async (key) => {
+          const url = await this.fileUploadService.generatePresignedUrl(key);
+          return { id: key, url };
+        }),
+      );
+      return {
+        type: 'OK',
+        message: 'List of Wasm files with URLs retrieved successfully.',
+        payload: filesWithUrls,
+      };
+    } catch (error) {
+      return {
+        type: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve Wasm files with URLs.',
+        payload: [],
+      };
+    }
   }
 
   @Patch('')

@@ -12,4 +12,5 @@ export enum ServiceMessageFileUpload {
   NO_FILE_DELETED = 'No file deleted',
   ALL_FILES_DELETED = 'All files deleted',
   ERROR_DELETING_FILES = 'Error deleting files',
+  FILE_ALREADY_EXISTS = 'File already exists',
 }

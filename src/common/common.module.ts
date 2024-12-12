@@ -6,6 +6,8 @@ import { EphemeralEnvironmentModule } from '@/modules/ephemeralEnvironment/ephem
 import { MethodModule } from '@/modules/method/method.module';
 import { UserModule } from '@/modules/user/user.module';
 
+import { FILE_UPLOAD_SERVICE } from './S3/interface/file_upload.s3.interface';
+import { FileUploadService } from './S3/service/file_upload.s3.service';
 import { COGNITO_AUTH } from './cognito/application/interface/cognito.service.interface';
 import { CognitoService } from './cognito/service/cognito.service';
 import { AllExceptionsFilter } from './response_service/filter/all_exceptions.filter';
@@ -29,6 +31,10 @@ import { StellarService } from './stellar_service/service/stellar.service';
     HttpModule,
   ],
   providers: [
+    {
+      provide: FILE_UPLOAD_SERVICE,
+      useClass: FileUploadService,
+    },
     {
       provide: RESPONSE_SERVICE,
       useClass: ResponseService,

@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
 import { CommonModule } from '@/common/common.module';
 
 import { EnvironmentModule } from '../environment/environment.module';
@@ -30,6 +31,7 @@ import { InvocationUserController } from './interface/invocation.controller';
     InvocationException,
     InvocationService,
     InvocationMapper,
+    FileUploadService,
     {
       provide: INVOCATION_REPOSITORY,
       useClass: InvocationRepository,
