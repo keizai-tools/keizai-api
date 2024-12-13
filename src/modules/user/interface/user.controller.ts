@@ -11,6 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
+  IResponse,
   IResponseService,
   RESPONSE_SERVICE,
 } from '@/common/response_service/interface/response.interface';
@@ -53,9 +54,11 @@ export class UserController implements IUserController {
 
   @Get('/fargate-time')
   async getFargateTime(
-    @CurrentUser() user: User,
+    @CurrentUser() user: IResponse<User>,
   ): Promise<IPromiseResponse<{ fargateTime: number }>> {
-    const fargateTime = await this.userService.getFargateSessionTime(user.id);
+    const fargateTime = await this.userService.getFargateSessionTime(
+      user.payload.id,
+    );
     return this.responseService.createResponse({
       type: 'OK',
       message: 'Fargate session time calculated successfully.',
@@ -63,12 +66,12 @@ export class UserController implements IUserController {
     });
   }
 
-  @Post('update-balance/:userId')
+  @Post('update-balance')
   async updateBalance(
-    @Param('userId') userId: string,
+    @CurrentUser() user: IResponse<User>,
     @Body('interval') interval: number,
   ): Promise<string> {
-    await this.userService.updateUserBalance(userId, interval);
+    await this.userService.updateUserBalance(user.payload.id, interval);
     return 'User balance updated successfully';
   }
 }
