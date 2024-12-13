@@ -170,16 +170,17 @@ export class UserService implements IUserService {
       throw new NotFoundException('User not found');
     }
 
-    const fargateMinutes = this.calculateFargateMinutes(user);
-
+    const fargateMinutes = await this.calculateFargateMinutes(user);
     return fargateMinutes;
   }
 
   async updateUserBalance(userId: string, interval: number): Promise<void> {
     const user = await this.userRepository.findById(userId);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     const vcpuCount = 2;
     const ramInGB = 4;
     const costPerHour =
