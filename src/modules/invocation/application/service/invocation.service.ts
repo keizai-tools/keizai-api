@@ -5,7 +5,9 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 
+import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
 import {
   IPromiseResponse,
   IResponseService,
@@ -20,7 +22,11 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '@/common/stellar_service/application/interface/soroban';
-import { EnviromentService } from '@/modules/enviroment/application/service/enviroment.service';
+import { EnvironmentService } from '@/modules/environment/application/service/environment.service';
+import {
+  FOLDER_REPOSITORY,
+  IFolderRepository,
+} from '@/modules/folder/application/interface/folder.repository.interface';
 import { FolderService } from '@/modules/folder/application/service/folder.service';
 import { IMethodValues } from '@/modules/method/application/interface/method.base.interface';
 import {
@@ -59,13 +65,16 @@ export class InvocationService {
     private readonly folderService: FolderService,
     @Inject(forwardRef(() => METHOD_REPOSITORY))
     private readonly methodRepository: IMethodRepository,
+    @Inject(forwardRef(() => FOLDER_REPOSITORY))
+    private readonly folderRepository: IFolderRepository,
     @Inject(CONTRACT_SERVICE)
     private readonly contractService: IStellarService,
     private readonly invocationException: InvocationException,
     @Inject(forwardRef(() => MethodMapper))
     private readonly methodMapper: MethodMapper,
     private readonly methodService: MethodService,
-    private readonly enviromentService: EnviromentService,
+    private readonly environmentService: EnvironmentService,
+    private readonly fileUploadService: FileUploadService,
   ) {
     this.responseService.setContext(InvocationService.name);
   }
@@ -83,9 +92,12 @@ export class InvocationService {
   async getContractAddress(invocation: Invocation, contractId: string) {
     try {
       const contractIdValue = this.getContractIdValue(contractId);
-      const environment = await this.enviromentService.findOneByName(
+      const collectionId =
+        invocation.folder?.collectionId || invocation.collectionId;
+
+      const environment = await this.environmentService.findOneByName(
         contractIdValue,
-        invocation.folder.collectionId,
+        collectionId,
       );
       return environment ? environment.value : contractIdValue;
     } catch (error) {
@@ -100,7 +112,7 @@ export class InvocationService {
     try {
       const invocation = await this.findOneByInvocationAndUserId(id, userId);
       return this.responseService.createResponse({
-        payload: await this.prepareInvocationTransaction(invocation),
+        payload: await this.prepareInvocationTransaction(invocation, userId),
         message: INVOCATION_RESPONSE.METHODS_FOUND,
         type: 'OK',
       });
@@ -116,7 +128,7 @@ export class InvocationService {
     try {
       const invocation = await this.findOneByInvocationAndTeamId(id, teamId);
       return this.responseService.createResponse({
-        payload: await this.prepareInvocationTransaction(invocation),
+        payload: await this.prepareInvocationTransaction(invocation, teamId),
         message: INVOCATION_RESPONSE.METHODS_FOUND,
         type: 'OK',
       });
@@ -166,7 +178,10 @@ export class InvocationService {
     }
   }
 
-  async prepareInvocationTransaction(invocation: Invocation): Promise<string> {
+  async prepareInvocationTransaction(
+    invocation: Invocation,
+    userId: string,
+  ): Promise<string> {
     try {
       const hasEmptyParameters = invocation.selectedMethod?.params?.some(
         (param) => !param.value,
@@ -187,9 +202,9 @@ export class InvocationService {
           );
           const envsByName =
             envsNames &&
-            (await this.enviromentService.findByNames(
+            (await this.environmentService.findByNames(
               envsNames,
-              invocation.folder.collectionId,
+              invocation.folder.collectionId || invocation.collectionId,
             ));
 
           const envsValues: { name: string; value: string }[] = Array.isArray(
@@ -221,13 +236,17 @@ export class InvocationService {
         invocation.contractId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
       try {
         const preparedTransaction =
           await this.contractService.getPreparedTransactionXDR(
             contractId,
             invocation.publicKey,
             selectedMethodMapped,
+            userId,
           );
         return preparedTransaction;
       } catch (error) {
@@ -240,6 +259,7 @@ export class InvocationService {
 
   async runInvocationTransaction(
     invocation: Invocation,
+    userId: string,
     transactionXDR?: string,
   ): Promise<RunInvocationResponse | ContractErrorResponse> {
     const hasEmptyParameters = invocation.selectedMethod?.params?.some(
@@ -254,15 +274,21 @@ export class InvocationService {
         INVOCATION_RESPONSE.INVOCATION_FAILED_TO_RUN_WITHOUT_KEYS_OR_SELECTED_METHOD,
       );
     }
-    this.contractService.verifyNetwork(invocation.network);
+    this.contractService.verifyNetwork({
+      selectedNetwork: invocation.network,
+      userId: invocation.folder.collection.userId,
+    });
     try {
-      const invocationResult = await this.contractService.runInvocation({
-        contractId: invocation.contractId,
-        selectedMethod: invocation.selectedMethod,
-        signedTransactionXDR: transactionXDR,
-        publicKey: invocation.publicKey,
-        secretKey: invocation.secretKey,
-      });
+      const invocationResult = await this.contractService.runInvocation(
+        {
+          contractId: invocation.contractId,
+          selectedMethod: invocation.selectedMethod,
+          signedTransactionXDR: transactionXDR,
+          publicKey: invocation.publicKey,
+          secretKey: invocation.secretKey,
+        },
+        userId,
+      );
       return invocationResult;
     } catch (error) {
       this.handleError(error);
@@ -270,16 +296,16 @@ export class InvocationService {
   }
 
   async createByUser(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     userId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndUserId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         userId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
         type: 'CREATED',
       });
@@ -289,16 +315,16 @@ export class InvocationService {
   }
 
   async createByTeam(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
     teamId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
       await this.folderService.findOneByFolderAndTeamId(
-        createFolderDto.folderId,
+        createInvocationDto.folderId,
         teamId,
       );
       return this.responseService.createResponse({
-        payload: await this.create(createFolderDto),
+        payload: await this.create(createInvocationDto),
         type: 'OK',
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
       });
@@ -308,22 +334,53 @@ export class InvocationService {
   }
 
   async create(
-    createFolderDto: CreateInvocationDto,
+    createInvocationDto: CreateInvocationDto,
   ): Promise<InvocationResponseDto> {
     try {
-      const invocationValues: IInvocationValues = {
-        name: createFolderDto.name,
-        secretKey: createFolderDto.secretKey,
-        publicKey: createFolderDto.publicKey,
-        preInvocation: createFolderDto.preInvocation,
-        postInvocation: createFolderDto.postInvocation,
-        contractId: createFolderDto.contractId,
-        folderId: createFolderDto.folderId,
-        network: createFolderDto.network || NETWORK.SOROBAN_AUTO_DETECT,
-      };
+      if (createInvocationDto.folderId && createInvocationDto.collectionId) {
+        throw new BadRequestException(
+          'No se debe proporcionar collectionId cuando se proporciona folderId.',
+        );
+      }
 
+      if (!createInvocationDto.folderId && !createInvocationDto.collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
+      let collectionId = createInvocationDto.collectionId;
+
+      if (createInvocationDto.folderId) {
+        const folder = await this.folderRepository.findOne(
+          createInvocationDto.folderId,
+        );
+        if (!folder) {
+          throw new BadRequestException(INVOCATION_RESPONSE.Folder_NOT_FOUND);
+        }
+        collectionId = folder.collectionId;
+      }
+
+      if (!collectionId) {
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_NO_FOLDER_OR_COLLECTION,
+        );
+      }
+
+      const invocationValues: IInvocationValues = {
+        name: createInvocationDto.name,
+        secretKey: createInvocationDto.secretKey,
+        publicKey: createInvocationDto.publicKey,
+        preInvocation: createInvocationDto.preInvocation,
+        postInvocation: createInvocationDto.postInvocation,
+        contractId: createInvocationDto.contractId,
+        folderId: createInvocationDto.folderId || null,
+        network: createInvocationDto.network || NETWORK.SOROBAN_AUTO_DETECT,
+        collectionId: collectionId,
+      };
       const invocation =
         this.invocationMapper.fromDtoToEntity(invocationValues);
+
       const invocationSaved = await this.invocationRepository.save(invocation);
       if (!invocationSaved) {
         throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
@@ -410,12 +467,28 @@ export class InvocationService {
         throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
       }
 
-      const { folder } = invocation;
-
-      if (folder.collection.userId !== userId) {
-        throw new BadRequestException(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
-        );
+      if (invocation.folder) {
+        if (!invocation.folder.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_FOLDER_NOT_EXISTS,
+          );
+        }
+        if (invocation.folder.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
+      } else {
+        if (!invocation.collection) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.INVOCATION_COLLECTION_NOT_FOUND,
+          );
+        }
+        if (invocation.collection.userId !== userId) {
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+          );
+        }
       }
       return invocation;
     } catch (error) {
@@ -496,52 +569,21 @@ export class InvocationService {
         updateInvocationDto,
       );
 
-      let network: string;
-
-      if (updateInvocationDto.contractId) {
-        try {
-          const contractId = await this.getContractAddress(
+      const contractId = updateInvocationDto.contractId
+        ? await this.getContractAddress(
             invocation,
             updateInvocationDto.contractId,
-          );
+          )
+        : invocation.contractId;
 
-          network = await this.contractService.verifyNetwork(
-            invocation.network,
-            contractId,
-          );
+      const network = await this.getNetwork(
+        updateInvocationDto,
+        invocation,
+        contractId,
+      );
 
-          const generatedMethods =
-            await this.contractService.generateMethodsFromContractId(
-              contractId,
-            );
-
-          const methodsToRemove =
-            await this.methodRepository.findAllByInvocationId(
-              updateInvocationDto.id,
-            );
-
-          if (methodsToRemove) {
-            await this.methodService.deleteAll(methodsToRemove);
-          }
-
-          const methodsMapped = generatedMethods.map((method) => {
-            const methodValues: IMethodValues = {
-              name: method.name,
-              inputs: method.inputs,
-              outputs: method.outputs,
-              docs: method.docs,
-              invocationId: invocation.id,
-            };
-
-            return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
-          });
-
-          await this.methodRepository.saveAll(methodsMapped);
-        } catch (error) {
-          throw new NotFoundException(
-            INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
-          );
-        }
+      if (updateInvocationDto.contractId) {
+        await this.updateMethods(updateInvocationDto.id, contractId);
       }
 
       const invocationValues: IUpdateInvocationValues =
@@ -554,12 +596,73 @@ export class InvocationService {
 
       const invocationUpdated = await this.invocationRepository.update({
         ...invocationMapped,
-        network: network || updateInvocationDto.network || invocation.network,
+        network: network ?? invocation.network,
       });
 
       return this.invocationMapper.fromEntityToDto(invocationUpdated);
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  private async getNetwork(
+    updateInvocationDto: UpdateInvocationDto,
+    invocation: Invocation,
+    contractId: string,
+  ): Promise<NETWORK> {
+    if (updateInvocationDto.network) {
+      if (contractId && updateInvocationDto.network !== invocation.network) {
+        return invocation.network;
+      }
+      return updateInvocationDto.network;
+    }
+
+    if (
+      contractId &&
+      (invocation.network === NETWORK.SOROBAN_AUTO_DETECT ||
+        !invocation.contractId)
+    ) {
+      return await this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        contractId,
+        userId: invocation.folder.collection.userId,
+      });
+    }
+
+    return invocation.network;
+  }
+
+  private async updateMethods(
+    invocationId: string,
+    contractId: string,
+  ): Promise<void> {
+    try {
+      const generatedMethods =
+        await this.contractService.generateMethodsFromContractId(contractId);
+
+      const methodsToRemove = await this.methodRepository.findAllByInvocationId(
+        invocationId,
+      );
+      if (methodsToRemove) {
+        await this.methodService.deleteAll(methodsToRemove);
+      }
+
+      const methodsMapped = generatedMethods.map((method) => {
+        const methodValues: IMethodValues = {
+          name: method.name,
+          inputs: method.inputs,
+          outputs: method.outputs,
+          docs: method.docs,
+          invocationId,
+        };
+        return this.methodMapper.fromGeneratedMethodToEntity(methodValues);
+      });
+
+      await this.methodRepository.saveAll(methodsMapped);
+    } catch (error) {
+      throw new NotFoundException(
+        INVOCATION_RESPONSE.INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID,
+      );
     }
   }
 
@@ -593,7 +696,7 @@ export class InvocationService {
     invocationId: string,
     userId: string,
     file: Express.Multer.File,
-  ): IPromiseResponse<string> {
+  ): IPromiseResponse<string | ContractErrorResponse> {
     try {
       const invocation = await this.findOneByInvocationAndUserId(
         invocationId,
@@ -605,11 +708,32 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
         );
       }
+      const fileHash = crypto
+        .createHash('md5')
+        .update(file.buffer)
+        .digest('hex');
+      const existingFile = await this.fileUploadService.checkFileExists(
+        fileHash,
+      );
 
-      this.contractService.verifyNetwork(invocation.network);
+      if (existingFile) {
+        const presignedUrl = await this.fileUploadService.generatePresignedUrl(
+          fileHash,
+        );
+        return this.responseService.createResponse({
+          payload: presignedUrl,
+          message: 'Archivo Wasm ya existe, se usará el existente.',
+          type: 'OK',
+        });
+      }
 
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
       return this.responseService.createResponse({
         payload: await this.contractService.prepareUploadWASM({
+          userId,
           file,
           publicKey: invocation.publicKey,
         }),
@@ -632,11 +756,15 @@ export class InvocationService {
         userId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
 
       const invocationResult = await this.contractService.deployWasmFile({
         file,
         invocation,
+        userId: invocation.folder.collection.userId,
       });
 
       return this.responseService.createResponse({
@@ -661,11 +789,15 @@ export class InvocationService {
         userId,
       );
 
-      this.contractService.verifyNetwork(invocation.network);
+      this.contractService.verifyNetwork({
+        selectedNetwork: invocation.network,
+        userId: invocation.folder.collection.userId,
+      });
 
       if (!deploy)
         return this.responseService.createResponse({
           payload: await this.contractService.prepareUploadWASM({
+            userId,
             signedTransactionXDR: signedXDR,
             publicKey: invocation.publicKey,
           }),

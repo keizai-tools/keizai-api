@@ -67,18 +67,18 @@ export const mockedContractService: jest.MockedObject<IStellarService> = {
 
 export const getTxFailed: rpc.Api.GetTransactionResponse = {
   status: GetTransactionStatus.FAILED,
+  resultXdr: {} as xdr.TransactionResult,
+  latestLedger: 0,
+  latestLedgerCloseTime: 0,
+  oldestLedger: 0,
+  oldestLedgerCloseTime: 0,
   ledger: 0,
   createdAt: 0,
   applicationOrder: 0,
   feeBump: false,
   envelopeXdr: undefined,
-  resultXdr: undefined,
   resultMetaXdr: undefined,
   txHash: '',
-  latestLedger: 0,
-  latestLedgerCloseTime: 0,
-  oldestLedger: 0,
-  oldestLedgerCloseTime: 0,
 };
 
 export const rawGetTxFailed = {

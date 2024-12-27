@@ -16,8 +16,8 @@ import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { AdminRoleGuard } from '@/modules/authorization/infraestructure/policy/guard/admin-role.guard';
 import { AuthTeamGuard } from '@/modules/authorization/infraestructure/policy/guard/auth-team.guard';
-import { CreateEnvironmentsDto } from '@/modules/enviroment/application/dto/create-all-environments.dto';
-import { EnviromentResponseDto } from '@/modules/enviroment/application/dto/enviroment-response.dto';
+import { CreateEnvironmentsDto } from '@/modules/environment/application/dto/create-all-environments.dto';
+import { EnvironmentResponseDto } from '@/modules/environment/application/dto/environment-response.dto';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 
 import { CollectionResponseDto } from '../application/dto/collection-response.dto';
@@ -47,7 +47,7 @@ export class CollectionTeamController {
     @Body() createEnvironmentsDto: CreateEnvironmentsDto[],
     @Param('id') id: string,
     @Param('teamId') teamId: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     return this.collectionService.createAllEnvironmentsByTeam(
       id,
       createEnvironmentsDto,
@@ -82,7 +82,7 @@ export class CollectionTeamController {
   async findEnvironmentsByCollection(
     @Param('teamId') teamId: string,
     @Param('id') id: string,
-  ): IPromiseResponse<EnviromentResponseDto[]> {
+  ): IPromiseResponse<EnvironmentResponseDto[]> {
     return this.collectionService.findEnvironmentsByCollectionAndTeamId(
       id,
       teamId,
@@ -93,7 +93,7 @@ export class CollectionTeamController {
   findEvironmentByCollection(
     @Param('id') id: string,
     @Query('name') environmentName: string,
-  ): IPromiseResponse<EnviromentResponseDto> {
+  ): IPromiseResponse<EnvironmentResponseDto> {
     return this.collectionService.findEnvironmentByCollectionId(
       id,
       environmentName,
