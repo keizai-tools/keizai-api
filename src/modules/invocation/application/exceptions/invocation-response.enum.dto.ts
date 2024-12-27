@@ -7,6 +7,7 @@ export enum INVOCATION_RESPONSE {
   Invocation_NOT_SAVE = 'Unable to save invocation',
   Invocation_NOT_DELETED = 'Unable to delete invocation',
   Invocation_NOT_UPDATED = 'Unable to update invocation',
+  INVOCATION_COLLECTION_NOT_FOUND = 'Collection does not exist or does not belong to you',
   INVOCATION_FOLDER_NOT_EXISTS = 'Folder does not exist or does not belong to you',
   INVOCATION_FAIL_GENERATE_METHODS_WITH_CONTRACT_ID = 'Methods cannot be generated with the provided contract ID',
   INVOCATION_FAIL_DELETE_ALL_METHODS = 'The methods could not be removed. Please check if the IDs are valid',
@@ -23,4 +24,6 @@ export enum INVOCATION_RESPONSE {
   INVOCATION_RUN = 'Invocation run',
   INVOCATION_PUBLIC_KEY_NEEDED = 'Public key needed',
   INVOCATION_UPLOAD_WASM = 'Wasm file uploaded',
+  INVOCATION_NO_FOLDER_OR_COLLECTION = 'No folder or collection provided',
+  Folder_NOT_FOUND = 'Folder not found',
 }

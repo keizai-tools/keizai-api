@@ -1,7 +1,8 @@
 import { Inject, forwardRef } from '@nestjs/common';
 
-import { EnviromentMapper } from '@/modules/enviroment/application/mapper/enviroment.mapper';
+import { EnvironmentMapper } from '@/modules/environment/application/mapper/environment.mapper';
 import { FolderMapper } from '@/modules/folder/application/mapper/folder.mapper';
+import { InvocationMapper } from '@/modules/invocation/application/mapper/invocation.mapper';
 
 import { Collection } from '../../domain/collection.domain';
 import { CollectionResponseDto } from '../dto/collection-response.dto';
@@ -14,8 +15,10 @@ export class CollectionMapper {
   constructor(
     @Inject(forwardRef(() => FolderMapper))
     private readonly folderMapper: FolderMapper,
-    @Inject(forwardRef(() => EnviromentMapper))
-    private readonly enviromentMapper: EnviromentMapper,
+    @Inject(forwardRef(() => InvocationMapper))
+    private readonly invocationMapper: InvocationMapper,
+    @Inject(forwardRef(() => EnvironmentMapper))
+    private readonly environmentMapper: EnvironmentMapper,
   ) {}
 
   fromDtoToEntity(collectionData: ICollectionValues): Collection {
@@ -29,13 +32,22 @@ export class CollectionMapper {
   }
 
   fromEntityToDto(collection: Collection): CollectionResponseDto {
-    const { name, id, folders, enviroments } = collection;
+    const { name, id, folders, environments, invocations } = collection;
     const foldersMapped = folders?.map((folder) => {
       return this.folderMapper.fromEntityToDto(folder);
     });
-    const enviromentMapped = enviroments?.map((enviroment) => {
-      return this.enviromentMapper.fromEntityToDto(enviroment);
+    const environmentMapped = environments?.map((environment) => {
+      return this.environmentMapper.fromEntityToDto(environment);
     });
-    return new CollectionResponseDto(id, name, foldersMapped, enviromentMapped);
+    const invocationsMapped = invocations?.map((invocation) => {
+      return this.invocationMapper.fromEntityToDto(invocation);
+    });
+    return new CollectionResponseDto(
+      id,
+      name,
+      foldersMapped,
+      invocationsMapped,
+      environmentMapped,
+    );
   }
 }

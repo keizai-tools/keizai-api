@@ -46,3 +46,4 @@ items:
     preInvocation: 'const a = () => "a"; a();'
     postInvocation: 'const a = () => "a"; a();'
     selectedMethod: '@method4'
+    methods: ['@method4']

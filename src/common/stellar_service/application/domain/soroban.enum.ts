@@ -3,6 +3,7 @@ export enum NETWORK {
   SOROBAN_TESTNET = 'TESTNET',
   SOROBAN_MAINNET = 'MAINNET',
   SOROBAN_AUTO_DETECT = 'AUTO_DETECT',
+  SOROBAN_EPHEMERAL = 'EPHEMERAL',
 }
 
 export enum SOROBAN_SERVER {
@@ -11,6 +12,12 @@ export enum SOROBAN_SERVER {
   MAINNET = 'https://soroban-rpc.mainnet.stellar.gateway.fm',
   FRIENDBOT_TESNET = 'https://friendbot.stellar.org?addr=',
   FRIENDBOT_FUTURENET = 'https://friendbot-futurenet.stellar.org/?addr=',
+}
+
+export enum HORIZON_NETWORK {
+  FUTURENET = 'https://horizon-futurenet.stellar.org',
+  TESTNET = 'https://horizon-testnet.stellar.org',
+  MAINNET = 'https://horizon.stellar.org',
 }
 
 export enum CONTRACT_EXECUTABLE_TYPE {
@@ -71,4 +78,5 @@ export enum ErrorMessages {
   UNSUPPORTED_NETWORK = 'Unsupported network',
   UNKNOWN_TYPE = 'Unknown Type',
   UNABLE_TO_GET_CONTRACT_SPEC_ENTRIES = 'Unable to get contract spec entries.',
+  NO_USER_PROVIDED = 'No user provided',
 }

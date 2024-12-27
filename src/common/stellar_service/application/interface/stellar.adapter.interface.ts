@@ -8,6 +8,7 @@ import {
   xdr,
 } from '@stellar/stellar-sdk';
 
+import type { NETWORK } from '../domain/soroban.enum';
 import {
   EncodeEvent,
   GetTransactionResponse,
@@ -26,14 +27,15 @@ export interface InputPrepareTransaction {
 }
 
 export interface IStellarAdapter {
-  changeNetwork(selectedNetwork: string): void;
-  checkContractNetwork(contractId: string): Promise<string>;
+  changeNetwork(selectedNetwork: NETWORK, userId?: string): void;
+  checkContractNetwork(contractId: string): Promise<NETWORK>;
   getInstanceValue(
     contractId: string,
     currentNetwork: string,
   ): Promise<xdr.ContractExecutable>;
   prepareTransaction(
     account: Account | string,
+    userId: string,
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
       | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
@@ -54,6 +56,7 @@ export interface IStellarAdapter {
   createContractSpec(entries: xdr.ScSpecEntry[]): Promise<contract.Spec>;
   uploadWasm(
     file: Express.Multer.File,
+    userId: string,
     publicKey: string,
     secretKey?: string,
   ): Promise<string>;
@@ -64,10 +67,11 @@ export interface IStellarAdapter {
     response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair | string,
   ): xdr.Operation<Operation.InvokeHostFunction>;
-  getAccountOrFund(publicKey: string): Promise<Account>;
+  getAccountOrFund(publicKey: string, userId: string): Promise<Account>;
   prepareUploadWASM(
     file: Express.Multer.File,
     publicKey: string,
+    userId: string,
   ): Promise<string>;
   extractContractAddress(
     responseDeploy: rpc.Api.GetSuccessfulTransactionResponse,

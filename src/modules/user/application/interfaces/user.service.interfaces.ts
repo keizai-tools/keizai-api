@@ -18,4 +18,6 @@ export interface IUserService {
     user: User,
   ): IPromiseResponse<IUpdateUserResponse>;
   findAllByEmails(emails: string[]): IPromiseResponse<User[]>;
+  getFargateSessionTime(userId: string): Promise<number>;
+  updateUserBalance(userId: string, interval: number): Promise<void>;
 }
