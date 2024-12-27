@@ -66,6 +66,17 @@ export class UserController implements IUserController {
     });
   }
 
+  @Get('/fargate-cost-per-minute') getFargateCostPerMinute(): IResponse<{
+    costPerMinute: number;
+  }> {
+    const costPerMinute = this.userService.getFargateCostPerMinute();
+    return this.responseService.createResponse({
+      type: 'OK',
+      message: 'Fargate cost per minute calculated successfully.',
+      payload: { costPerMinute },
+    });
+  }
+
   @Post('update-balance')
   async updateBalance(
     @CurrentUser() user: IResponse<User>,
