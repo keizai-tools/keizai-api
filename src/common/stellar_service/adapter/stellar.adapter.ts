@@ -272,11 +272,7 @@ export class StellarAdapter implements IStellarAdapter {
     return await this.wrapWithErrorHandling(async () => {
       const uploadResponse = await this.fileUploadService.uploadFile({ file });
 
-      let location: string;
-
-      if (uploadResponse.payload) {
-        location = uploadResponse.payload.location;
-      } else {
+      if (!uploadResponse.payload) {
         throw new Error('Error al subir el archivo Wasm a S3');
       }
 
