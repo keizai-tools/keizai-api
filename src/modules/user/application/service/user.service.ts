@@ -190,6 +190,12 @@ export class UserService implements IUserService {
     await this.userRepository.update(user.id, user);
   }
 
+  getFargateCostPerMinute(vcpuCount = 2, ramInGB = 4): number {
+    const costPerMinute =
+      (vcpuCount * this.costPerVCPU + ramInGB * this.costPerGBRam) / 60;
+    return costPerMinute;
+  }
+
   private handleError(error: Error): void {
     this.responseService.errorHandler({
       type: 'INTERNAL_SERVER_ERROR',

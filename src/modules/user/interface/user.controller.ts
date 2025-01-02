@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import {
@@ -63,6 +55,17 @@ export class UserController implements IUserController {
       type: 'OK',
       message: 'Fargate session time calculated successfully.',
       payload: { fargateTime },
+    });
+  }
+
+  @Get('/fargate-cost-per-minute') getFargateCostPerMinute(): IResponse<{
+    costPerMinute: number;
+  }> {
+    const costPerMinute = this.userService.getFargateCostPerMinute();
+    return this.responseService.createResponse({
+      type: 'OK',
+      message: 'Fargate cost per minute calculated successfully.',
+      payload: { costPerMinute },
     });
   }
 

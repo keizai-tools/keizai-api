@@ -71,7 +71,7 @@ export class FileUploadService implements IFileUploadService {
 
       const params: S3.Types.PutObjectRequest = {
         Bucket: this.bucket,
-        Key: fileHash,
+        Key: file.originalname,
         Body: file.buffer,
         ContentType: 'application/wasm',
       };
@@ -79,7 +79,7 @@ export class FileUploadService implements IFileUploadService {
       return this.responseService.createResponse({
         type: 'CREATED',
         message: ServiceMessageFileUpload.FILE_UPLOADED_SUCCESSFULLY,
-        payload: { location: Location, key: fileHash },
+        payload: { location: Location, key: file.originalname },
       });
     } catch (error) {
       console.error('Error en uploadFile:', error);
