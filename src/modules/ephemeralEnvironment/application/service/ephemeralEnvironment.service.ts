@@ -102,7 +102,6 @@ export class EphemeralEnvironmentService {
       );
     }
 
-    const ruleName = `${taskID}-fargate-auto-stop-rule`;
     const lambdaFunctionArn = process.env.LAMBDA_ARN;
 
     if (!lambdaFunctionArn) {
@@ -113,61 +112,81 @@ export class EphemeralEnvironmentService {
 
     const now = new Date();
     const executionTime = new Date(now.getTime() + intervalMinutes * 60000);
-    const cronExpression = `cron(${executionTime.getUTCMinutes()} ${executionTime.getUTCHours()} * * ? *)`;
+    const cronExpression = `cron(${executionTime.getUTCMinutes()} ${executionTime.getUTCHours()} ${executionTime.getUTCDate()} ${
+      executionTime.getUTCMonth() + 1
+    } ? ${executionTime.getUTCFullYear()})`;
 
     try {
-      const putRuleParams = {
-        Name: ruleName,
-        ScheduleExpression: cronExpression,
-        State: RuleState.ENABLED,
-      };
-
-      const putRuleResponse = await this.cloudWatchClient.send(
-        new PutRuleCommand(putRuleParams),
-      );
-      const ruleArn = putRuleResponse.RuleArn;
-
-      const permissionParams: AddPermissionCommandInput = {
-        FunctionName: lambdaFunctionArn,
-        StatementId: `${ruleName}-invoke-permission`,
-        Action: 'lambda:InvokeFunction',
-        Principal: 'events.amazonaws.com',
-        SourceArn: ruleArn,
-      };
-
-      try {
-        await this.lambdaClient.send(
-          new AddPermissionCommand(permissionParams),
-        );
-      } catch (error) {
-        if (error.name === 'ResourceConflictException') {
-          this.responseService.error(
-            `Permission already exists for rule ${ruleName}`,
-          );
-        } else {
-          throw error;
-        }
-      }
-
-      const putTargetsParams = {
-        Rule: ruleName,
-        Targets: [
-          {
-            Arn: lambdaFunctionArn,
-            Id: `${taskID}-target`,
-            Input: JSON.stringify({ taskID, ruleName }),
-          },
-        ],
-      };
-
-      await this.cloudWatchClient.send(new PutTargetsCommand(putTargetsParams));
+      const ruleArn = await this.createCloudWatchRule(taskID, cronExpression);
+      await this.addLambdaPermission(taskID, lambdaFunctionArn, ruleArn);
+      await this.addCloudWatchTarget(taskID, lambdaFunctionArn);
 
       this.responseService.verbose(
-        `Auto-stop rule configured: ${ruleName} to stop Fargate tasks started by "${taskID}" in ${intervalMinutes} minutes.`,
+        `Auto-stop rule configured: ${taskID} to stop Fargate tasks started by "${taskID}" in ${intervalMinutes} minutes.`,
       );
     } catch (error) {
       this.responseService.errorHandler({ error });
     }
+  }
+
+  private async createCloudWatchRule(
+    taskID: string,
+    cronExpression: string,
+  ): Promise<string> {
+    const putRuleParams = {
+      Name: taskID,
+      ScheduleExpression: cronExpression,
+      State: RuleState.ENABLED,
+    };
+
+    const putRuleResponse = await this.cloudWatchClient.send(
+      new PutRuleCommand(putRuleParams),
+    );
+    return putRuleResponse.RuleArn;
+  }
+
+  private async addLambdaPermission(
+    taskID: string,
+    lambdaFunctionArn: string,
+    ruleArn: string,
+  ): Promise<void> {
+    const permissionParams: AddPermissionCommandInput = {
+      FunctionName: lambdaFunctionArn,
+      StatementId: taskID,
+      Action: 'lambda:InvokeFunction',
+      Principal: 'events.amazonaws.com',
+      SourceArn: ruleArn,
+    };
+
+    try {
+      await this.lambdaClient.send(new AddPermissionCommand(permissionParams));
+    } catch (error) {
+      if (error.name === 'ResourceConflictException') {
+        this.responseService.error(
+          `Permission already exists for rule ${taskID}`,
+        );
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  private async addCloudWatchTarget(
+    taskID: string,
+    lambdaFunctionArn: string,
+  ): Promise<void> {
+    const putTargetsParams = {
+      Rule: taskID,
+      Targets: [
+        {
+          Arn: lambdaFunctionArn,
+          Id: taskID,
+          Input: JSON.stringify({ taskID }),
+        },
+      ],
+    };
+
+    await this.cloudWatchClient.send(new PutTargetsCommand(putTargetsParams));
   }
 
   private async handleCommand<T>(command: Promise<T>, successMessage: string) {
@@ -249,7 +268,7 @@ export class EphemeralEnvironmentService {
         type: 'OK',
       });
     }
-    const uuid = uuidv4();
+    const uuid = uuidv4().split('-')[0];
 
     const taskID = `${clientId}-task-${uuid}`;
 
@@ -281,11 +300,11 @@ export class EphemeralEnvironmentService {
           MessagesEphemeralEnvironment.FARGATE_TASK_NOT_STARTED,
         );
       }
-
       await this.waitForTaskToRun(task?.taskArn);
       const publicIpResponse = await this.getTaskPublicIp(task?.taskArn);
       const publicIpAddress = publicIpResponse.payload?.publicIp;
       await this.checkStellarContainerStatus(publicIpAddress, clientId);
+      await this.configureFargateStopRule(taskID, intervalMinutes);
       return this.responseService.createResponse({
         payload: { taskArn: task?.taskArn, publicIp: publicIpAddress },
         message: MessagesEphemeralEnvironment.FARGATE_TASK_STARTED_SUCCESS,
@@ -386,6 +405,7 @@ export class EphemeralEnvironmentService {
       this.responseService.errorHandler({ error });
     }
   }
+
   private async checkStellarContainerStatus(
     ip: string,
     clientId: string,
@@ -430,6 +450,7 @@ export class EphemeralEnvironmentService {
     await this.stopTask(clientId);
     return false;
   }
+
   async getTaskStatus(clientId: string): IPromiseResponse<{
     status: string;
     taskArn: string;
