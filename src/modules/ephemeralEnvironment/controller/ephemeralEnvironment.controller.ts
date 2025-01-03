@@ -19,7 +19,7 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { WhiteListGuard } from '../application/guard/whiteList.guard';
+import { FargateAccessGuard } from '../application/guard/fargateAccessGuard.guard';
 import {
   EPHEMERAL_ENVIRONMENT_SERVICE,
   ITaskInfo,
@@ -27,7 +27,6 @@ import {
 import { EphemeralEnvironmentService } from '../application/service/ephemeralEnvironment.service';
 
 @Auth(AuthType.Bearer)
-@UseGuards(WhiteListGuard)
 @Controller('ephemeral-environment')
 export class EphemeralEnvironmentController {
   constructor(
@@ -40,6 +39,7 @@ export class EphemeralEnvironmentController {
   }
 
   @Post('start')
+  @UseGuards(FargateAccessGuard)
   async handleStartFargate(
     @CurrentUser() data: IResponse<User>,
     @Query('interval') interval: number,
