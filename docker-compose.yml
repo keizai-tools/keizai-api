@@ -17,3 +17,13 @@ services:
       - 9229:9229
     volumes:
       - ./data/docker/volumes/cognito:/app/.cognito
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - 4566:4566
+    environment:
+      - SERVICES=s3
+      - DEFAULT_REGION=${AWS_REGION}
+    volumes:
+      - ./data/localstack:/var/lib/localstack
