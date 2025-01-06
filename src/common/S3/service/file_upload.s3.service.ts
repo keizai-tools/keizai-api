@@ -2,6 +2,7 @@ import { Inject } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import * as crypto from 'crypto';
 
+import { ENVIRONMENT } from '@/common/base/enum/common.enum';
 import {
   IPromiseResponse,
   type IResponseService,
@@ -25,9 +26,37 @@ export class FileUploadService implements IFileUploadService {
     this.responseService.setContext(FileUploadService.name);
     this.bucket = process.env.AWS_S3_BUCKET;
     this.s3 = new S3({
-      accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+      accessKeyId:
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+          ? 'fakeAccessKeyId'
+          : process.env.AWS_ACCESS_KEY,
+      secretAccessKey:
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+          ? 'fakeSecretAccessKey'
+          : process.env.AWS_SECRET_KEY,
+      endpoint:
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+          ? process.env.AWS_S3_LOCAL_ENDPOINT
+          : undefined,
+      s3ForcePathStyle: process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT,
     });
+
+    if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
+      this.validateLocalS3();
+    }
+  }
+
+  private async validateLocalS3(): Promise<void> {
+    try {
+      await this.s3.listBuckets().promise();
+      this.responseService.log('Local S3 is running and configured correctly.');
+    } catch (error) {
+      this.responseService.error(
+        'Local S3 is not running or not configured correctly:',
+        error,
+      );
+      throw new Error('Local S3 is not running or not configured correctly.');
+    }
   }
 
   async checkFileExists(fileHash: string): Promise<boolean> {
@@ -82,7 +111,7 @@ export class FileUploadService implements IFileUploadService {
         payload: { location: Location, key: file.originalname },
       });
     } catch (error) {
-      console.error('Error en uploadFile:', error);
+      this.responseService.error('Error in uploadFile:', error);
       this.handleError(error);
     }
   }
