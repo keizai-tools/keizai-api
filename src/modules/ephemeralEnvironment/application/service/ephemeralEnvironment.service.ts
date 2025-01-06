@@ -63,7 +63,7 @@ export class EphemeralEnvironmentService {
     httpService: HttpService,
   ) {
     this.responseService.setContext(EphemeralEnvironmentService.name);
-    this.region = process.env.AWS_ECS_REGION;
+    this.region = process.env.AWS_REGION;
     this.clusterName = process.env.AWS_ECS_CLUSTER_NAME;
     this.taskDefinition = process.env.AWS_ECS_TASK_DEFINITION;
     this.subnets = process.env.AWS_ECS_SUBNETS?.split(',') || [];
@@ -86,8 +86,8 @@ export class EphemeralEnvironmentService {
     return new Client({
       region: this.region,
       credentials: {
-        accessKeyId: process.env.AWS_ECS_ACCESS_KEY,
-        secretAccessKey: process.env.AWS_ECS_SECRET_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY,
       },
     });
   }
@@ -311,6 +311,7 @@ export class EphemeralEnvironmentService {
         type: 'OK',
       });
     } catch (error) {
+      await this.stopTask(clientId);
       this.responseService.errorHandler({ error });
     }
   }
