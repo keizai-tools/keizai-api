@@ -843,7 +843,7 @@ export class InvocationService {
 
       for (const key of files) {
         const metadata = await this.fileUploadService.getFileMetadata(key);
-        if (metadata.userId === userId) {
+        if (metadata?.userId === userId) {
           userFiles.push({ id: key, metadata });
         }
       }
