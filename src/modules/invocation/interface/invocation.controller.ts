@@ -44,7 +44,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Body() createInvocationDto: CreateInvocationDto,
   ): IPromiseResponse<InvocationResponseDto> {
-    console.log('1. create');
     return this.invocationService.createByUser(
       createInvocationDto,
       data.payload.id,
@@ -56,7 +55,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<InvocationResponseDto> {
-    console.log('2. findOne');
     return this.invocationService.findOneByInvocationAndUserIdToDto(
       id,
       data.payload.id,
@@ -74,7 +72,6 @@ export class InvocationUserController {
       signedTransactionXDR?: string;
     },
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
-    console.log('3. runInvocation');
     return this.invocationService.runInvocationByUser(
       id,
       data.payload.id,
@@ -87,7 +84,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<string> {
-    console.log('4. prepareInvocation');
     return this.invocationService.prepareInvocationByUser(id, data.payload.id);
   }
 
@@ -96,7 +92,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<Method[]> {
-    console.log('5. findAllMethods');
     return this.invocationService.findAllMethodsByUser(id, data.payload.id);
   }
 
@@ -104,7 +99,6 @@ export class InvocationUserController {
   async listWasmFiles(
     @CurrentUser() data: IResponse<User>,
   ): IPromiseResponse<{ id: string }[]> {
-    console.log('6. listWasmFiles');
     return this.invocationService.listWasmFiles(data.payload.id);
   }
 
@@ -113,7 +107,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ) {
-    console.log('7. downloadWasmFile');
     return this.invocationService.downloadWasmFile(id, data.payload.id);
   }
 
@@ -129,7 +122,6 @@ export class InvocationUserController {
     @Body() updateInvocationDto: UpdateInvocationDto,
     @CurrentUser() data: IResponse<User>,
   ): IPromiseResponse<InvocationResponseDto> {
-    console.log('8. update');
     return this.invocationService.updateByUser(
       updateInvocationDto,
       data.payload.id,
@@ -141,7 +133,6 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<boolean> {
-    console.log('9. delete');
     return this.invocationService.deleteByUser(id, data.payload.id);
   }
 
@@ -153,7 +144,6 @@ export class InvocationUserController {
     @UploadedFile(WasmFileValidationPipe)
     wasm: Express.Multer.File,
   ): IPromiseResponse<string | ContractErrorResponse> {
-    console.log('10. uploadWASM');
     return await this.invocationService.uploadWASM(id, data.payload.id, wasm);
   }
 
@@ -165,7 +155,6 @@ export class InvocationUserController {
     @UploadedFile(WasmFileValidationPipe)
     wasm: Express.Multer.File,
   ): IPromiseResponse<string | ContractErrorResponse> {
-    console.log('11. prepareUploadWASM');
     return this.invocationService.prepareUploadWASM(id, data.payload.id, wasm);
   }
 
@@ -182,7 +171,6 @@ export class InvocationUserController {
       deploy: boolean;
     },
   ): Promise<IPromiseResponse<string | ContractErrorResponse>> {
-    console.log('12. runUploadWASM');
     return await this.invocationService.runUploadWASM(
       signedTransactionXDR,
       data.payload.id,
