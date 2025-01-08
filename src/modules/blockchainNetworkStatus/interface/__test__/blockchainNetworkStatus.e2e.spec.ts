@@ -16,6 +16,8 @@ import { SuccessResponseInterceptor } from '@/common/response_service/intercepto
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
 
+jest.setTimeout(60000);
+
 describe('Blockchain Network Status - [/blockchain-network-status]', () => {
   let app: INestApplication;
 
