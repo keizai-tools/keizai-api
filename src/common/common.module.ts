@@ -85,8 +85,9 @@ export class CommonModule implements OnModuleInit {
 
   onModuleInit() {
     try {
-      const publicKey = this.stellarAdapter.getPublicKeyForCurrentNetwork();
-      this.stellarAdapter.streamTransactionsByMemoId(publicKey);
+      this.stellarAdapter.streamTransactionsByMemoId(
+        process.env.PUBLIC_KEY_MAINNET,
+      );
     } catch (error) {
       this.responseService.error('Listener start failed with error:', error);
     }
