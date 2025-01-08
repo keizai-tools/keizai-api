@@ -207,7 +207,7 @@ export class EphemeralEnvironmentService
     try {
       const response = await command;
       this.responseService.verbose(successMessage);
-      // this.responseService.verbose(JSON.stringify(response));
+      this.responseService.verbose(JSON.stringify(response));
       return response;
     } catch (error) {
       this.responseService.error(error);
