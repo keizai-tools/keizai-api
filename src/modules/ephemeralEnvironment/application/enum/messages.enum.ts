@@ -31,4 +31,5 @@ export enum MessagesEphemeralEnvironment {
   AUTO_STOP_RULE_CONFIGURED = 'Auto stop rule configured',
   AUTO_STOP_RULE_CONFIG_FAILED = 'Auto stop rule configuration failed',
   INTERVAL_MUST_BE_POSITIVE_NUMBER = 'Interval must be a positive number of minutes.',
+  ERROR_ADDING_METADATA = 'Error adding metadata',
 }
