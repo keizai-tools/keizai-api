@@ -23,8 +23,6 @@ export const configurationValidate = Joi.object({
   AWS_ECS_SUBNETS: Joi.string().required(),
   AWS_ECS_SECURITY_GROUP_ID: Joi.string().required(),
   LAMBDA_ARN: Joi.string().required(),
-  PUBLIC_KEY_FUTURENET: Joi.string().required(),
-  PUBLIC_KEY_TESTNET: Joi.string().required(),
   PUBLIC_KEY_MAINNET: Joi.string().required(),
   SENTRY_DSN: Joi.string().required(),
   SENTRY_ENABLED: Joi.boolean().required(),

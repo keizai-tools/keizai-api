@@ -30,6 +30,7 @@ import {
   FILE_UPLOAD_SERVICE,
   IFileUploadService,
 } from '@/common/S3/interface/file_upload.s3.interface';
+import { ENVIRONMENT } from '@/common/base/enum/common.enum';
 import {
   IResponseService,
   RESPONSE_SERVICE,
@@ -479,23 +480,16 @@ export class StellarAdapter implements IStellarAdapter {
     return builder.build();
   }
 
-  public getPublicKeyForCurrentNetwork(): string {
-    const publicKeyMap: { [key: string]: string | undefined } = {
-      [NETWORK.SOROBAN_TESTNET]: process.env.PUBLIC_KEY_TESTNET,
-      [NETWORK.SOROBAN_FUTURENET]: process.env.PUBLIC_KEY_FUTURENET,
-      [NETWORK.SOROBAN_MAINNET]: process.env.PUBLIC_KEY_MAINNET,
-    };
-    const publicKey = publicKeyMap[this.currentNetwork];
-    if (!publicKey) {
-      throw new Error('Network not supported or public key not configured');
-    }
-    return publicKey;
-  }
   public async streamTransactionsByMemoId(
     publicKey: string,
     memoId?: string,
   ): Promise<void> {
     try {
+      await this.setNetwork(
+        process.env.NODE_ENV === ENVIRONMENT.PRODUCTION
+          ? NETWORK.SOROBAN_MAINNET
+          : NETWORK.SOROBAN_FUTURENET,
+      );
       this.stellarServer
         .transactions()
         .forAccount(publicKey)
