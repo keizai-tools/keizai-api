@@ -91,4 +91,21 @@ export class InvocationRepository implements IInvocationRepository {
     }
     return false;
   }
+
+  async deleteMany(ids: string[]): Promise<boolean> {
+    if (ids.length === 0) return true;
+    const queryRunner = this.repository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.delete(Invocation, ids);
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
