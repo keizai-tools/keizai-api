@@ -28,11 +28,7 @@ export interface InputPrepareTransaction {
 
 export interface IStellarAdapter {
   changeNetwork(selectedNetwork: NETWORK, userId?: string): void;
-  checkContractNetwork(contractId: string): Promise<NETWORK>;
-  getInstanceValue(
-    contractId: string,
-    currentNetwork: string,
-  ): Promise<xdr.ContractExecutable>;
+  checkContractNetwork(contractId: string, userId: string): Promise<NETWORK>;
   prepareTransaction(
     account: Account | string,
     userId: string,
@@ -67,7 +63,6 @@ export interface IStellarAdapter {
     response: rpc.Api.GetSuccessfulTransactionResponse,
     sourceKeypair: Keypair | string,
   ): xdr.Operation<Operation.InvokeHostFunction>;
-  getAccountOrFund(publicKey: string, userId: string): Promise<Account>;
   prepareUploadWASM(
     file: Express.Multer.File,
     publicKey: string,
@@ -76,4 +71,15 @@ export interface IStellarAdapter {
   extractContractAddress(
     responseDeploy: rpc.Api.GetSuccessfulTransactionResponse,
   ): string;
+  getAccountOrFund(publicKey: string, userId: string): Promise<Account>;
+  contractExists(
+    contractId: string,
+    currentNetwork: string,
+    userId: string,
+  ): Promise<rpc.Api.GetLedgerEntriesResponse>;
+  getInstanceValue(
+    contractId: string,
+    currentNetwork: string,
+    userId: string,
+  ): Promise<xdr.ContractExecutable>;
 }

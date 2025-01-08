@@ -57,9 +57,6 @@ export interface IStellarService {
     runInvocationParams: IRunInvocationParams,
     userId: string,
   ): Promise<RunInvocationResponse | ContractErrorResponse>;
-  generateMethodsFromContractId(
-    contractId: string,
-  ): Promise<IGeneratedMethod[]>;
   deployWasmFile({
     file,
     signedTransactionXDR,
@@ -92,14 +89,19 @@ export interface IStellarService {
   ): Promise<xdr.ScSpecEntry[]>;
   getStellarAssetContractFunctions(): IGeneratedMethod[];
   extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;
-  generateScArgsToFromContractId(
-    contractId: string,
-    selectedMethod: Partial<Method>,
-  ): Promise<xdr.ScVal[]>;
   pollTransactionStatus(
     hash: string,
   ): Promise<
     | rpc.Api.GetSuccessfulTransactionResponse
     | rpc.Api.GetFailedTransactionResponse
   >;
+  generateMethodsFromContractId(
+    contractId: string,
+    userId: string,
+  ): Promise<IGeneratedMethod[]>;
+  generateScArgsToFromContractId(
+    contractId: string,
+    selectedMethod: Partial<Method>,
+    userId: string,
+  ): Promise<xdr.ScVal[]>;
 }

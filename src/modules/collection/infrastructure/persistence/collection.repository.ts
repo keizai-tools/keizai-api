@@ -23,6 +23,7 @@ export class CollectionRepository implements ICollectionRepository {
         team: true,
         user: true,
         folders: { invocations: true },
+        invocations: true,
         environments: true,
       },
       where: {
@@ -68,6 +69,7 @@ export class CollectionRepository implements ICollectionRepository {
       order: { createdAt: 'DESC' },
       relations: {
         environments: true,
+        invocations: true,
         folders: {
           invocations: { methods: true, selectedMethod: true },
         },
@@ -151,5 +153,14 @@ export class CollectionRepository implements ICollectionRepository {
       return true;
     }
     return false;
+  }
+
+  async findAllInvocationsWithNetworkEphemeral(userId: string) {
+    return await this.repository
+      .createQueryBuilder('collection')
+      .leftJoinAndSelect('collection.invocations', 'invocation')
+      .where('collection.userId = :userId', { userId })
+      .andWhere('invocation.network = :network', { network: 'EPHEMERAL' })
+      .getMany();
   }
 }

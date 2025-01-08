@@ -12,6 +12,7 @@ import {
   ForgotPasswordCommand,
   InitiateAuthCommand,
   InitiateAuthCommandInput,
+  ListUsersCommand,
   ResendConfirmationCodeCommand,
   SignUpCommand,
   SignUpCommandInput,
@@ -74,6 +75,35 @@ export class CognitoService implements ICognitoAuthService {
       endpoint: process.env.AWS_COGNITO_ENDPOINT,
     });
     this.checkContainerHealth();
+  }
+
+  async checkContainerHealth(): Promise<IPromiseResponse<void>> {
+    if (process.env.NODE_ENV !== ENVIRONMENT.DEVELOPMENT) {
+      return this.responseService.createResponse({
+        message: 'Health check is only available in development mode',
+        type: 'FORBIDDEN',
+      });
+    }
+
+    try {
+      const response = await this.cognitoClient.send(
+        new ListUsersCommand({
+          UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
+          Limit: 1,
+        }),
+      );
+
+      if (response.Users && response.Users.length > 0) {
+        return this.responseService.createResponse({
+          message: 'Container is healthy',
+          type: 'OK',
+        });
+      } else {
+        throw new Error('Health check failed');
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async registerUser(
@@ -377,35 +407,6 @@ export class CognitoService implements ICognitoAuthService {
     }
   }
 
-  async checkContainerHealth(): Promise<IPromiseResponse<void>> {
-    if (process.env.NODE_ENV !== ENVIRONMENT.DEVELOPMENT) {
-      return this.responseService.createResponse({
-        message: 'Health check is only available in development mode',
-        type: 'FORBIDDEN',
-      });
-    }
-
-    try {
-      const response = await this.cognitoClient.send(
-        new AdminGetUserCommand({
-          UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
-          Username: 'test@test.com',
-        }),
-      );
-
-      if (response) {
-        return this.responseService.createResponse({
-          message: 'Container is healthy',
-          type: 'OK',
-        });
-      } else {
-        throw new Error('Health check failed');
-      }
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   private handleError(error: ICognitoRequestError) {
     try {
       const { code, message } = error;
@@ -450,11 +451,10 @@ export class CognitoService implements ICognitoAuthService {
   private async getConfirmationCodeFromLocalPool(
     email: string,
   ): Promise<string | undefined> {
+    const tempFilePath = `${process.env.COGNITO_LOCAL_PATH}.copy`;
     try {
-      const data: string = await fs.readFile(
-        process.env.COGNITO_LOCAL_PATH,
-        'utf-8',
-      );
+      await fs.copyFile(process.env.COGNITO_LOCAL_PATH, tempFilePath);
+      const data: string = await fs.readFile(tempFilePath, 'utf-8');
       const jsonData: {
         Users: {
           [key: string]: {
@@ -467,15 +467,16 @@ export class CognitoService implements ICognitoAuthService {
       return code;
     } catch (err) {
       this.handleError(err);
+    } finally {
+      await fs.unlink(tempFilePath);
     }
   }
 
   private async getUserSubLocal(email: string): Promise<string | null> {
+    const tempFilePath = `${process.env.COGNITO_LOCAL_PATH}.copy`;
     try {
-      const data: string = await fs.readFile(
-        process.env.COGNITO_LOCAL_PATH,
-        'utf-8',
-      );
+      await fs.copyFile(process.env.COGNITO_LOCAL_PATH, tempFilePath);
+      const data: string = await fs.readFile(tempFilePath, 'utf-8');
       const jsonData: {
         Users: {
           [key: string]: {
@@ -494,6 +495,8 @@ export class CognitoService implements ICognitoAuthService {
       return subAttribute?.Value || null;
     } catch (err) {
       this.handleError(err);
+    } finally {
+      await fs.unlink(tempFilePath);
     }
   }
 }

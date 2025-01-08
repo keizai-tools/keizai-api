@@ -11,6 +11,7 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { INVOCATION_RESPONSE } from '@/modules/invocation/application/exceptions/invocation-response.enum.dto';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
@@ -60,6 +61,7 @@ describe('Parameter - [/param]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
@@ -271,7 +273,7 @@ describe('Parameter - [/param]', () => {
         });
 
         expect(response.body.details.description).toEqual(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+          INVOCATION_RESPONSE.INVOCATION_NOT_FOUND_FOR_TEAM_AND_ID,
         );
       });
     });

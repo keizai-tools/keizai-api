@@ -13,6 +13,13 @@ export interface IResponse<T> {
 
 export type IPromiseResponse<T> = Promise<IResponse<T>>;
 
+export interface FileData {
+  name: string;
+  file: File;
+  type: string;
+  size: number | string;
+}
+
 export type TCreateResponse = <T>({
   type,
   message,

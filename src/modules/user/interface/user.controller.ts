@@ -73,8 +73,11 @@ export class UserController implements IUserController {
   async updateBalance(
     @CurrentUser() user: IResponse<User>,
     @Body('interval') interval: number,
-  ): Promise<string> {
+  ) {
     await this.userService.updateUserBalance(user.payload.id, interval);
-    return 'User balance updated successfully';
+    return this.responseService.createResponse({
+      type: 'OK',
+      message: 'User balance updated successfully.',
+    });
   }
 }

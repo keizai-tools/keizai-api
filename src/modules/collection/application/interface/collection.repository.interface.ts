@@ -12,4 +12,5 @@ export interface ICollectionRepository {
   findInvocationsByCollectionId(id: string): Promise<Collection>;
   update(collection: Collection): Promise<Collection>;
   delete(id: string): Promise<boolean>;
+  findAllInvocationsWithNetworkEphemeral(userId: string);
 }

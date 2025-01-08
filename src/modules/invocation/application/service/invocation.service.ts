@@ -5,6 +5,8 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
+import type { AWSError, S3 } from 'aws-sdk';
+import type { PromiseResult } from 'aws-sdk/lib/request';
 import * as crypto from 'crypto';
 
 import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
@@ -148,6 +150,7 @@ export class InvocationService {
       return this.responseService.createResponse({
         payload: await this.runInvocationTransaction(
           invocation,
+          userId,
           transactionXDR,
         ),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
@@ -238,7 +241,7 @@ export class InvocationService {
 
       this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
       try {
         const preparedTransaction =
@@ -276,7 +279,7 @@ export class InvocationService {
     }
     this.contractService.verifyNetwork({
       selectedNetwork: invocation.network,
-      userId: invocation.folder.collection.userId,
+      userId,
     });
     try {
       const invocationResult = await this.contractService.runInvocation(
@@ -300,10 +303,11 @@ export class InvocationService {
     userId: string,
   ): IPromiseResponse<InvocationResponseDto> {
     try {
-      await this.folderService.findOneByFolderAndUserId(
-        createInvocationDto.folderId,
-        userId,
-      );
+      if (createInvocationDto.folderId)
+        await this.folderService.findOneByFolderAndUserId(
+          createInvocationDto.folderId,
+          userId,
+        );
       return this.responseService.createResponse({
         payload: await this.create(createInvocationDto),
         message: INVOCATION_RESPONSE.INVOCATION_CREATED,
@@ -339,7 +343,7 @@ export class InvocationService {
     try {
       if (createInvocationDto.folderId && createInvocationDto.collectionId) {
         throw new BadRequestException(
-          'No se debe proporcionar collectionId cuando se proporciona folderId.',
+          'CollectionId should not be provided when folderId is provided.',
         );
       }
 
@@ -356,7 +360,9 @@ export class InvocationService {
           createInvocationDto.folderId,
         );
         if (!folder) {
-          throw new BadRequestException(INVOCATION_RESPONSE.Folder_NOT_FOUND);
+          throw new BadRequestException(
+            INVOCATION_RESPONSE.FOLDER_NOT_FOUND_ERROR,
+          );
         }
         collectionId = folder.collectionId;
       }
@@ -383,7 +389,9 @@ export class InvocationService {
 
       const invocationSaved = await this.invocationRepository.save(invocation);
       if (!invocationSaved) {
-        throw new BadRequestException(INVOCATION_RESPONSE.Invocation_NOT_SAVE);
+        throw new BadRequestException(
+          INVOCATION_RESPONSE.INVOCATION_SAVE_FAILED,
+        );
       }
 
       return this.invocationMapper.fromEntityToDto(invocationSaved);
@@ -462,9 +470,8 @@ export class InvocationService {
   ): Promise<Invocation> {
     try {
       const invocation = await this.invocationRepository.findOne(id);
-
       if (!invocation) {
-        throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
+        throw new NotFoundException(INVOCATION_RESPONSE.INVOCATION_UNAVAILABLE);
       }
 
       if (invocation.folder) {
@@ -475,7 +482,7 @@ export class InvocationService {
         }
         if (invocation.folder.collection.userId !== userId) {
           throw new BadRequestException(
-            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+            INVOCATION_RESPONSE.INVOCATION_NOT_FOUND_FOR_USER_AND_ID,
           );
         }
       } else {
@@ -486,7 +493,7 @@ export class InvocationService {
         }
         if (invocation.collection.userId !== userId) {
           throw new BadRequestException(
-            INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_USER_AND_ID,
+            INVOCATION_RESPONSE.INVOCATION_NOT_FOUND_FOR_USER_AND_ID,
           );
         }
       }
@@ -504,14 +511,14 @@ export class InvocationService {
       const invocation = await this.invocationRepository.findOne(id);
 
       if (!invocation) {
-        throw new NotFoundException(INVOCATION_RESPONSE.Invocation_NOT_FOUND);
+        throw new NotFoundException(INVOCATION_RESPONSE.INVOCATION_UNAVAILABLE);
       }
 
       const { folder } = invocation;
 
       if (folder.collection.teamId !== teamId) {
         throw new BadRequestException(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+          INVOCATION_RESPONSE.INVOCATION_NOT_FOUND_FOR_TEAM_AND_ID,
         );
       }
       return invocation;
@@ -531,7 +538,7 @@ export class InvocationService {
       );
 
       return this.responseService.createResponse({
-        payload: await this.update(updateInvocationDto, invocation),
+        payload: await this.update(updateInvocationDto, invocation, userId),
         message: INVOCATION_RESPONSE.INVOCATION_UPDATED,
         type: 'ACCEPTED',
       });
@@ -550,7 +557,7 @@ export class InvocationService {
         teamId,
       );
       return this.responseService.createResponse({
-        payload: await this.update(updateInvocationDto, invocation),
+        payload: await this.update(updateInvocationDto, invocation, teamId),
         message: INVOCATION_RESPONSE.INVOCATION_UPDATED,
         type: 'ACCEPTED',
       });
@@ -562,6 +569,7 @@ export class InvocationService {
   async update(
     updateInvocationDto: UpdateInvocationDto,
     invocation: Invocation,
+    userId: string,
   ): Promise<InvocationResponseDto> {
     try {
       this.invocationException.validateInvocation(
@@ -580,10 +588,11 @@ export class InvocationService {
         updateInvocationDto,
         invocation,
         contractId,
+        userId,
       );
 
       if (updateInvocationDto.contractId) {
-        await this.updateMethods(updateInvocationDto.id, contractId);
+        await this.updateMethods(updateInvocationDto.id, contractId, userId);
       }
 
       const invocationValues: IUpdateInvocationValues =
@@ -609,6 +618,7 @@ export class InvocationService {
     updateInvocationDto: UpdateInvocationDto,
     invocation: Invocation,
     contractId: string,
+    userId: string,
   ): Promise<NETWORK> {
     if (updateInvocationDto.network) {
       if (contractId && updateInvocationDto.network !== invocation.network) {
@@ -625,7 +635,7 @@ export class InvocationService {
       return await this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
         contractId,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
     }
 
@@ -635,10 +645,14 @@ export class InvocationService {
   private async updateMethods(
     invocationId: string,
     contractId: string,
+    userId: string,
   ): Promise<void> {
     try {
       const generatedMethods =
-        await this.contractService.generateMethodsFromContractId(contractId);
+        await this.contractService.generateMethodsFromContractId(
+          contractId,
+          userId,
+        );
 
       const methodsToRemove = await this.methodRepository.findAllByInvocationId(
         invocationId,
@@ -708,29 +722,34 @@ export class InvocationService {
           INVOCATION_RESPONSE.INVOCATION_PUBLIC_KEY_NEEDED,
         );
       }
+
       const fileHash = crypto
         .createHash('md5')
         .update(file.buffer)
         .digest('hex');
       const existingFile = await this.fileUploadService.checkFileExists(
         fileHash,
+        userId,
       );
 
       if (existingFile) {
         const presignedUrl = await this.fileUploadService.generatePresignedUrl(
           fileHash,
+          userId,
         );
+
         return this.responseService.createResponse({
           payload: presignedUrl,
-          message: 'Archivo Wasm ya existe, se usará el existente.',
+          message: 'Wasm file already exists, the existing one will be used.',
           type: 'OK',
         });
       }
 
       this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
+
       return this.responseService.createResponse({
         payload: await this.contractService.prepareUploadWASM({
           userId,
@@ -758,13 +777,13 @@ export class InvocationService {
 
       this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
 
       const invocationResult = await this.contractService.deployWasmFile({
         file,
         invocation,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
 
       return this.responseService.createResponse({
@@ -791,7 +810,7 @@ export class InvocationService {
 
       this.contractService.verifyNetwork({
         selectedNetwork: invocation.network,
-        userId: invocation.folder.collection.userId,
+        userId,
       });
 
       if (!deploy)
@@ -809,6 +828,49 @@ export class InvocationService {
         payload: await this.contractService.runUploadWASM(signedXDR),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'ACCEPTED',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async listWasmFiles(
+    userId: string,
+  ): IPromiseResponse<{ id: string; metadata: { [key: string]: string } }[]> {
+    try {
+      const files: string[] = await this.fileUploadService.listWasmFiles();
+      const userFiles = [];
+
+      for (const key of files) {
+        const metadata = await this.fileUploadService.getFileMetadata(key);
+        if (metadata.userId === userId) {
+          userFiles.push({ id: key, metadata });
+        }
+      }
+
+      return this.responseService.createResponse({
+        payload: userFiles,
+        message: 'Wasm files retrieved with metadata.',
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async downloadWasmFile(fileId: string, userId: string) {
+    try {
+      const file: PromiseResult<S3.GetObjectOutput, AWSError> =
+        await this.fileUploadService.downloadFile(fileId, userId);
+      return this.responseService.createResponse({
+        payload: {
+          file: file.Body,
+          name: fileId,
+          size: file.ContentLength,
+          type: file.ContentType,
+        },
+        message: 'Wasm file downloaded successfully.',
+        type: 'OK',
       });
     } catch (error) {
       this.handleError(error);
