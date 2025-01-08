@@ -63,7 +63,7 @@ export class EphemeralEnvironmentController {
   @Get('status')
   async handleGetTaskStatus(
     @CurrentUser() user: IResponse<User>,
-  ): IPromiseResponse<{ status: string; taskArn: string; publicIp: string }> {
+  ): IPromiseResponse<ITaskInfo> {
     return await this.ephemeralEnvironmentService.getTaskStatus(
       user.payload.id,
     );
