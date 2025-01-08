@@ -26,4 +26,4 @@ services:
       - SERVICES=s3
       - DEFAULT_REGION=${AWS_REGION}
     volumes:
-      - ./data/localstack:/var/lib/localstack
+      - ./data/docker/volumes/cognito:/var/lib/localstack
