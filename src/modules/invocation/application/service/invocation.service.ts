@@ -471,7 +471,6 @@ export class InvocationService {
     try {
       const invocation = await this.invocationRepository.findOne(id);
       if (!invocation) {
-        console.log('here');
         throw new NotFoundException(INVOCATION_RESPONSE.INVOCATION_UNAVAILABLE);
       }
 
