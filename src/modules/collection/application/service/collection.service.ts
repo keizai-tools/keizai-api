@@ -17,7 +17,9 @@ import { ENVIRONMENT_RESPONSE } from '@/modules/environment/application/exceptio
 import { EnvironmentService } from '@/modules/environment/application/service/environment.service';
 import { FolderResponseDto } from '@/modules/folder/application/dto/folder-response.dto';
 import { InvocationResponseDto } from '@/modules/invocation/application/dto/invocation-response.dto';
+import { INVOCATION_REPOSITORY } from '@/modules/invocation/application/interface/invocation.repository.interface';
 import { Invocation } from '@/modules/invocation/domain/invocation.domain';
+import { InvocationRepository } from '@/modules/invocation/infrastructure/persistence/invocation.repository';
 import { User } from '@/modules/user/domain/user.domain';
 
 import { Collection } from '../../domain/collection.domain';
@@ -45,6 +47,8 @@ export class CollectionService {
     private readonly collectionRepository: ICollectionRepository,
     @Inject(forwardRef(() => EnvironmentService))
     private readonly environmentService: EnvironmentService,
+    @Inject(forwardRef(() => INVOCATION_REPOSITORY))
+    private readonly invocationRepository: InvocationRepository,
   ) {
     this.responseService.setContext(CollectionService.name);
   }
@@ -55,6 +59,7 @@ export class CollectionService {
       if (!collections) {
         throw new NotFoundException(COLLECTION_RESPONSE.COLLECTIONS_NOT_FOUND);
       }
+
       return this.responseService.createResponse({
         payload: collections.map((collection) =>
           this.collectionMapper.fromEntityToDto(collection),
@@ -354,6 +359,29 @@ export class CollectionService {
       return this.responseService.createResponse({
         payload: completeInvocations,
         message: COLLECTION_RESPONSE.COLLECTION_FOUND,
+        type: 'OK',
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async resetEphemeralInvocations(userId: string) {
+    try {
+      const collections: { invocations: { id: string }[] }[] =
+        await this.collectionRepository.findAllInvocationsWithNetworkEphemeral(
+          userId,
+        );
+
+      const invocationIds = collections.flatMap((collection) =>
+        collection.invocations.map((invocation) => invocation.id),
+      );
+
+      await this.invocationRepository.deleteMany(invocationIds);
+
+      return this.responseService.createResponse({
+        payload: invocationIds,
+        message: COLLECTION_RESPONSE.INVOCATIONS_DELETED,
         type: 'OK',
       });
     } catch (error) {
