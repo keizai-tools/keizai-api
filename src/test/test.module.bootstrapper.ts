@@ -40,6 +40,7 @@ export const mockedAdapterContract: jest.MockedObject<IStellarAdapter> = {
   sendTransaction: jest.fn(),
   signTransaction: jest.fn(),
   uploadWasm: jest.fn(),
+  contractExists: jest.fn(),
 };
 
 export const contractExecutable: xdr.ContractExecutable = {
