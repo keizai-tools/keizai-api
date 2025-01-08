@@ -11,6 +11,7 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
@@ -57,6 +58,7 @@ describe('User - [/user]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });

@@ -24,6 +24,7 @@ import { UserRegistrationDetailsDto } from '@/common/cognito/application/dto/use
 import { CognitoMessage } from '@/common/cognito/application/enum/cognito.enum';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import { ICognitoRefreshSessionResponse } from '@/common/cognito/application/interface/cognito_refresh_session_response.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { IResponse } from '@/common/response_service/interface/response.interface';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
@@ -73,6 +74,7 @@ describe('Auth - [/auth]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });

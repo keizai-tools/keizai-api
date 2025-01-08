@@ -12,6 +12,7 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { CONTRACT_SERVICE } from '@/common/stellar_service/application/interface/contract.service.interface';
 import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
@@ -69,6 +70,7 @@ describe('Invocation - [/invocation]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
