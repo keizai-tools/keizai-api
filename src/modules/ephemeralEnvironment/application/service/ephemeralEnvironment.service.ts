@@ -1,7 +1,12 @@
 import {
   CloudWatchEventsClient,
+  DeleteRuleCommand,
+  ListTargetsByRuleCommand,
   PutRuleCommand,
   PutTargetsCommand,
+  RemovePermissionCommand,
+  RemovePermissionCommandOutput,
+  RemoveTargetsCommand,
   RuleState,
 } from '@aws-sdk/client-cloudwatch-events';
 import {
@@ -24,7 +29,10 @@ import {
 import {
   AddPermissionCommand,
   AddPermissionCommandInput,
+  DeleteEventSourceMappingCommand,
   LambdaClient,
+  RemovePermissionCommand as LambdaRemovePermissionCommand,
+  ListEventSourceMappingsCommand,
 } from '@aws-sdk/client-lambda';
 import { HttpService } from '@nestjs/axios';
 import {
@@ -32,6 +40,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import * as StellarSdk from '@stellar/stellar-sdk';
 import type { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,9 +52,14 @@ import {
 } from '@/common/response_service/interface/response.interface';
 
 import { MessagesEphemeralEnvironment } from '../enum/messages.enum';
-import { ITaskInfo } from '../interface/ephemeralEnvironment.interface';
+import {
+  type IEphemeralEnvironmentService,
+  ITaskInfo,
+} from '../interface/ephemeralEnvironment.interface';
 
-export class EphemeralEnvironmentService {
+export class EphemeralEnvironmentService
+  implements IEphemeralEnvironmentService
+{
   private readonly ecsClient: ECSClient;
   private readonly ec2Client: EC2Client;
   private readonly clusterName: string;
@@ -193,7 +207,7 @@ export class EphemeralEnvironmentService {
     try {
       const response = await command;
       this.responseService.verbose(successMessage);
-      this.responseService.verbose(JSON.stringify(response));
+      // this.responseService.verbose(JSON.stringify(response));
       return response;
     } catch (error) {
       this.responseService.error(error);
@@ -258,11 +272,28 @@ export class EphemeralEnvironmentService {
     const existingTask = await this.getClientTask(clientId);
 
     if (existingTask) {
+      const intervalMinutes = parseInt(
+        existingTask.overrides?.containerOverrides
+          ?.find((override) => override.name === 'stellar')
+          ?.environment?.find((envVar) => envVar.name === 'INTERVAL_MINUTES')
+          ?.value || '',
+        10,
+      );
+      const taskStatusResponse = await this.getTaskPublicIp(
+        existingTask.taskArn,
+      );
+      const publicIpAddress = taskStatusResponse.payload.publicIp;
+
       return this.responseService.createResponse({
         payload: {
+          executionInterval: intervalMinutes,
+          publicIp: publicIpAddress,
+          status: existingTask.lastStatus as DesiredStatus,
           taskArn: existingTask.taskArn || '',
-          publicIp: (await this.getTaskPublicIp(existingTask.taskArn)).payload
-            .publicIp,
+          taskStartedAt: existingTask.startedAt,
+          taskStoppedAt: new Date(
+            existingTask.startedAt.getTime() + intervalMinutes * 60000,
+          ),
         },
         message: MessagesEphemeralEnvironment.TASK_ALREADY_RUNNING,
         type: 'OK',
@@ -285,6 +316,22 @@ export class EphemeralEnvironmentService {
           assignPublicIp: AssignPublicIp.ENABLED,
         },
       },
+      overrides: {
+        containerOverrides: [
+          {
+            name: 'stellar',
+            environment: [
+              { name: 'INTERVAL_MINUTES', value: intervalMinutes.toString() },
+            ],
+          },
+        ],
+      },
+      tags: [
+        {
+          key: 'intervalMinutes',
+          value: intervalMinutes.toString(),
+        },
+      ],
     };
     try {
       const taskResponse = await this.handleCommand(
@@ -304,9 +351,20 @@ export class EphemeralEnvironmentService {
       const publicIpResponse = await this.getTaskPublicIp(task?.taskArn);
       const publicIpAddress = publicIpResponse.payload?.publicIp;
       await this.checkStellarContainerStatus(publicIpAddress, clientId);
+      const startedAt = task?.startedAt || new Date();
+      const stoppedAt = task?.startedAt
+        ? new Date(task?.startedAt.getTime() + intervalMinutes * 60000)
+        : new Date(Date.now() + intervalMinutes * 60000);
       await this.configureFargateStopRule(taskID, intervalMinutes);
       return this.responseService.createResponse({
-        payload: { taskArn: task?.taskArn, publicIp: publicIpAddress },
+        payload: {
+          executionInterval: intervalMinutes,
+          publicIp: publicIpAddress,
+          status: DesiredStatus.RUNNING,
+          taskArn: task?.taskArn || '',
+          taskStartedAt: startedAt,
+          taskStoppedAt: stoppedAt,
+        },
         message: MessagesEphemeralEnvironment.FARGATE_TASK_STARTED_SUCCESS,
         type: 'OK',
       });
@@ -340,6 +398,87 @@ export class EphemeralEnvironmentService {
       );
 
       const status = await this.waitForTaskToStop(clientData?.taskArn);
+
+      const taskID = clientData.startedBy;
+
+      const { Targets: targets } = await this.cloudWatchClient.send(
+        new ListTargetsByRuleCommand({ Rule: taskID }),
+      );
+
+      if (targets?.length) {
+        await this.cloudWatchClient.send(
+          new RemoveTargetsCommand({
+            Rule: taskID,
+            Ids: targets
+              .map((target) => target.Id)
+              .filter((id): id is string => Boolean(id)),
+          }),
+        );
+      }
+
+      await this.cloudWatchClient.send(new DeleteRuleCommand({ Name: taskID }));
+
+      const removePermissionSafely = async (
+        command: () => Promise<RemovePermissionCommandOutput>,
+        errorMessage: string,
+      ) => {
+        try {
+          await command();
+        } catch (error) {
+          if ((error as Error).name !== 'ResourceNotFoundException') {
+            throw error;
+          }
+          this.responseService.warn(errorMessage);
+        }
+      };
+
+      await removePermissionSafely(
+        () =>
+          this.cloudWatchClient.send(
+            new RemovePermissionCommand({ StatementId: taskID }),
+          ),
+        `EventBus does not have a policy for StatementId: ${taskID}`,
+      );
+
+      await removePermissionSafely(
+        () =>
+          this.lambdaClient.send(
+            new LambdaRemovePermissionCommand({
+              FunctionName: process.env.LAMBDA_ARN,
+              StatementId: taskID,
+            }),
+          ),
+        `Lambda does not have a policy for StatementId: ${taskID}`,
+      );
+
+      await removePermissionSafely(
+        () =>
+          this.cloudWatchClient.send(
+            new RemoveTargetsCommand({
+              Rule: taskID,
+              Ids: [taskID],
+            }),
+          ),
+        `Failed to remove trigger for Rule: ${taskID}`,
+      );
+
+      const eventSourceMappings = await this.lambdaClient.send(
+        new ListEventSourceMappingsCommand({
+          FunctionName: process.env.LAMBDA_ARN,
+        }),
+      );
+
+      if (eventSourceMappings.EventSourceMappings) {
+        const mappingToDelete = eventSourceMappings.EventSourceMappings.find(
+          (mapping) => mapping.UUID === taskID,
+        );
+
+        if (mappingToDelete) {
+          await this.lambdaClient.send(
+            new DeleteEventSourceMappingCommand({ UUID: mappingToDelete.UUID }),
+          );
+        }
+      }
 
       return this.responseService.createResponse({
         payload: {
@@ -423,6 +562,12 @@ export class EphemeralEnvironmentService {
           this.responseService.verbose(
             `Stellar container is running at ${url}`,
           );
+
+          const keypair = StellarSdk.Keypair.random();
+          const publicKey = keypair.publicKey();
+
+          await this.getAccountOrFund(publicKey, clientId);
+
           return true;
         } else {
           this.responseService.verbose(
@@ -452,11 +597,7 @@ export class EphemeralEnvironmentService {
     return false;
   }
 
-  async getTaskStatus(clientId: string): IPromiseResponse<{
-    status: string;
-    taskArn: string;
-    publicIp: string;
-  }> {
+  async getTaskStatus(clientId: string): IPromiseResponse<ITaskInfo> {
     const task = await this.getClientTask(clientId);
 
     if (!task) {
@@ -467,12 +608,32 @@ export class EphemeralEnvironmentService {
 
     const taskStatusResponse = await this.getTaskPublicIp(task.taskArn);
     const publicIpAddress = taskStatusResponse.payload.publicIp;
+    if (!publicIpAddress) {
+      throw new InternalServerErrorException(
+        MessagesEphemeralEnvironment.NO_PUBLIC_IP,
+      );
+    }
+
+    const intervalMinutes = parseInt(
+      task.overrides?.containerOverrides
+        ?.find((override) => override.name === 'stellar')
+        ?.environment?.find((envVar) => envVar.name === 'INTERVAL_MINUTES')
+        ?.value || '',
+      10,
+    );
+
+    const endTime = task.startedAt
+      ? new Date(task.startedAt.getTime() + intervalMinutes * 60000)
+      : new Date(Date.now() + intervalMinutes * 60000);
 
     return this.responseService.createResponse({
       payload: {
-        status: task.lastStatus || DesiredStatus.STOPPED,
+        status: (task.lastStatus || DesiredStatus.STOPPED) as DesiredStatus,
         taskArn: task.taskArn || '',
-        publicIp: publicIpAddress || '',
+        publicIp: publicIpAddress,
+        taskStartedAt: task.startedAt,
+        taskStoppedAt: endTime,
+        executionInterval: intervalMinutes,
       },
       message: MessagesEphemeralEnvironment.TASK_STATUS_RETRIEVED,
       type: 'OK',
@@ -565,10 +726,12 @@ export class EphemeralEnvironmentService {
     clientId: string,
   ): IPromiseResponse<void> {
     const taskStatusResponse = await this.getTaskStatus(clientId);
-    const urlEphimeral = taskStatusResponse.payload.publicIp;
+    const urlEphimeral = await this.getTaskPublicIp(
+      taskStatusResponse.payload.taskArn,
+    );
 
     return await this.fetchWithRetry(
-      `http://${urlEphimeral}:8000/friendbot?addr=${publicKey}`,
+      `http://${urlEphimeral.payload.publicIp}:8000/friendbot?addr=${publicKey}`,
     );
   }
 
@@ -584,7 +747,17 @@ export class EphemeralEnvironmentService {
           });
         }
       } catch (error) {
-        console.error('Fetch failed, retrying in 3 seconds...', error);
+        if (
+          error.response?.status === 400 &&
+          error.response?.data?.detail ===
+            'account already funded to starting balance'
+        ) {
+          return this.responseService.createResponse({
+            message: 'Account already funded to starting balance',
+            type: 'OK',
+          });
+        }
+        console.error('Fetch failed, retrying in 3 seconds...');
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     } while (response?.status !== 200);
