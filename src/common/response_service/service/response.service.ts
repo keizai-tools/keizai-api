@@ -16,10 +16,14 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION;
+  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION && process.env.NODE_ENV !== ENVIRONMENT.STAGING;
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
       this.verbose(`Message: ${message}`);
+    }
+
+    if (message && message.toString() === '[object Object]') {
+      message = JSON.stringify(message, null, 2);
     }
 
     return {
@@ -65,6 +69,22 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
       error,
     });
   };
+
+  verbose(message: any, context?: string) {
+    if (this.status) {
+      if (message && message.toString() === '[object Object]') {
+        message = JSON.stringify(message, null, 2);
+      }
+      super.verbose(message, context);
+    }
+  }
+
+  error(message: any, trace?: string, context?: string) {
+    if (message && message.toString() === '[object Object]') {
+      message = JSON.stringify(message, null, 2);
+    }
+    super.error(message, trace, context);
+  }
 
   private handleError({
     error,
