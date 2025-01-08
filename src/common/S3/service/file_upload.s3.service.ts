@@ -105,7 +105,6 @@ export class FileUploadService implements IFileUploadService {
             Key: key,
           })
           .promise();
-
         return headObject.Metadata?.userId === userId;
       }
     }
