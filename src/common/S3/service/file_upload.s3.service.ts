@@ -106,7 +106,7 @@ export class FileUploadService implements IFileUploadService {
           })
           .promise();
 
-        return headObject.Metadata.userId === userId;
+        return headObject.Metadata?.userId === userId;
       }
     }
 
@@ -191,7 +191,7 @@ export class FileUploadService implements IFileUploadService {
 
   async generatePresignedUrl(key: string, userId: string): Promise<string> {
     const metadata = await this.getFileMetadata(key);
-    if (metadata.userId !== userId) {
+    if (metadata?.userId !== userId) {
       throw new Error('User does not have permission to access this file.');
     }
 
@@ -242,7 +242,7 @@ export class FileUploadService implements IFileUploadService {
     userId: string,
   ): Promise<PromiseResult<S3.GetObjectOutput, AWSError>> {
     const metadata = await this.getFileMetadata(key);
-    if (metadata.userId !== userId) {
+    if (metadata?.userId !== userId) {
       throw new Error('User does not have permission to access this file.');
     }
 
