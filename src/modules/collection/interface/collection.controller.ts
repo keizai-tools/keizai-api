@@ -126,6 +126,11 @@ export class CollectionController {
     return this.collectionService.findInvocationsByCollectionId(id, folderId);
   }
 
+  @Delete('/invocations/network-ephemeral')
+  async resetEphemeralInvocations(@CurrentUser() data: IResponse<User>) {
+    return this.collectionService.resetEphemeralInvocations(data.payload.id);
+  }
+
   @Patch('/')
   async update(
     @CurrentUser() data: IResponse<User>,
