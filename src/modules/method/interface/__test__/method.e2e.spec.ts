@@ -271,7 +271,7 @@ describe('Parameter - [/param]', () => {
         });
 
         expect(response.body.details.description).toEqual(
-          INVOCATION_RESPONSE.Invocation_NOT_FOUND_BY_TEAM_AND_ID,
+          INVOCATION_RESPONSE.INVOCATION_NOT_FOUND_FOR_TEAM_AND_ID,
         );
       });
     });
