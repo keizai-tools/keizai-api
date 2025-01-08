@@ -13,7 +13,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { ResilienceInterceptor, RetryStrategy } from 'nestjs-resilience';
 
-import { FileUploadService } from '@/common/S3/service/file_upload.s3.service';
 import { WasmFileValidationPipe } from '@/common/base/application/pipe/wasm-file-validation.pipe';
 import {
   IPromiseResponse,
@@ -38,16 +37,14 @@ import { InvocationService } from '../application/service/invocation.service';
 @ApiTags('Invocation')
 @Controller('invocation')
 export class InvocationUserController {
-  constructor(
-    private readonly invocationService: InvocationService,
-    private readonly fileUploadService: FileUploadService,
-  ) {}
+  constructor(private readonly invocationService: InvocationService) {}
 
   @Post()
   async create(
     @CurrentUser() data: IResponse<User>,
     @Body() createInvocationDto: CreateInvocationDto,
   ): IPromiseResponse<InvocationResponseDto> {
+    console.log('1. create');
     return this.invocationService.createByUser(
       createInvocationDto,
       data.payload.id,
@@ -59,6 +56,7 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<InvocationResponseDto> {
+    console.log('2. findOne');
     return this.invocationService.findOneByInvocationAndUserIdToDto(
       id,
       data.payload.id,
@@ -76,6 +74,7 @@ export class InvocationUserController {
       signedTransactionXDR?: string;
     },
   ): IPromiseResponse<RunInvocationResponse | ContractErrorResponse> {
+    console.log('3. runInvocation');
     return this.invocationService.runInvocationByUser(
       id,
       data.payload.id,
@@ -88,6 +87,7 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<string> {
+    console.log('4. prepareInvocation');
     return this.invocationService.prepareInvocationByUser(id, data.payload.id);
   }
 
@@ -96,31 +96,25 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<Method[]> {
+    console.log('5. findAllMethods');
     return this.invocationService.findAllMethodsByUser(id, data.payload.id);
   }
 
-  @Get('/:id/wasm-files')
-  async listWasmFiles(): IPromiseResponse<{ id: string; url: string }[]> {
-    try {
-      const files = await this.fileUploadService.listWasmFiles();
-      const filesWithUrls = await Promise.all(
-        files.map(async (key) => {
-          const url = await this.fileUploadService.generatePresignedUrl(key);
-          return { id: key, url };
-        }),
-      );
-      return {
-        type: 'OK',
-        message: 'List of Wasm files with URLs retrieved successfully.',
-        payload: filesWithUrls,
-      };
-    } catch (error) {
-      return {
-        type: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to retrieve Wasm files with URLs.',
-        payload: [],
-      };
-    }
+  @Get('/wasm-files/list')
+  async listWasmFiles(
+    @CurrentUser() data: IResponse<User>,
+  ): IPromiseResponse<{ id: string }[]> {
+    console.log('6. listWasmFiles');
+    return this.invocationService.listWasmFiles(data.payload.id);
+  }
+
+  @Get('/wasm-files/:id/download')
+  async downloadWasmFile(
+    @CurrentUser() data: IResponse<User>,
+    @Param('id') id: string,
+  ) {
+    console.log('7. downloadWasmFile');
+    return this.invocationService.downloadWasmFile(id, data.payload.id);
   }
 
   @Patch('')
@@ -135,6 +129,7 @@ export class InvocationUserController {
     @Body() updateInvocationDto: UpdateInvocationDto,
     @CurrentUser() data: IResponse<User>,
   ): IPromiseResponse<InvocationResponseDto> {
+    console.log('8. update');
     return this.invocationService.updateByUser(
       updateInvocationDto,
       data.payload.id,
@@ -146,6 +141,7 @@ export class InvocationUserController {
     @CurrentUser() data: IResponse<User>,
     @Param('id') id: string,
   ): IPromiseResponse<boolean> {
+    console.log('9. delete');
     return this.invocationService.deleteByUser(id, data.payload.id);
   }
 
@@ -157,6 +153,7 @@ export class InvocationUserController {
     @UploadedFile(WasmFileValidationPipe)
     wasm: Express.Multer.File,
   ): IPromiseResponse<string | ContractErrorResponse> {
+    console.log('10. uploadWASM');
     return await this.invocationService.uploadWASM(id, data.payload.id, wasm);
   }
 
@@ -168,6 +165,7 @@ export class InvocationUserController {
     @UploadedFile(WasmFileValidationPipe)
     wasm: Express.Multer.File,
   ): IPromiseResponse<string | ContractErrorResponse> {
+    console.log('11. prepareUploadWASM');
     return this.invocationService.prepareUploadWASM(id, data.payload.id, wasm);
   }
 
@@ -184,6 +182,7 @@ export class InvocationUserController {
       deploy: boolean;
     },
   ): Promise<IPromiseResponse<string | ContractErrorResponse>> {
+    console.log('12. runUploadWASM');
     return await this.invocationService.runUploadWASM(
       signedTransactionXDR,
       data.payload.id,
