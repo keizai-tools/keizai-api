@@ -1,6 +1,5 @@
 import { HttpModule } from '@nestjs/axios';
 import { Inject, Module, OnModuleInit, forwardRef } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
 
 import { EphemeralEnvironmentModule } from '@/modules/ephemeralEnvironment/ephemeralEnvironment.module';
 import { MethodModule } from '@/modules/method/method.module';
@@ -10,9 +9,8 @@ import { FILE_UPLOAD_SERVICE } from './S3/interface/file_upload.s3.interface';
 import { FileUploadService } from './S3/service/file_upload.s3.service';
 import { COGNITO_AUTH } from './cognito/application/interface/cognito.service.interface';
 import { CognitoService } from './cognito/service/cognito.service';
-import { AllExceptionsFilter } from './response_service/filter/all_exceptions.filter';
 import {
-  type IResponseService,
+  IResponseService,
   RESPONSE_SERVICE,
 } from './response_service/interface/response.interface';
 import { ResponseService } from './response_service/service/response.service';
@@ -43,10 +41,7 @@ import { StellarService } from './stellar_service/service/stellar.service';
       provide: COGNITO_AUTH,
       useClass: CognitoService,
     },
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+
     {
       provide: CONTRACT_SERVICE,
       useClass: StellarService,
