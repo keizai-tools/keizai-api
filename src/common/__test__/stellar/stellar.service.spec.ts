@@ -102,11 +102,15 @@ describe('StellarService', () => {
         },
       ]);
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
       expect(result).toEqual([
@@ -137,11 +141,15 @@ describe('StellarService', () => {
         outputs: [{ type: 'mock' }],
       });
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getContractSpecEntries).toHaveBeenCalledWith(
         contractExecutable,
@@ -177,11 +185,15 @@ describe('StellarService', () => {
         outputs: [{ type: 'mock' }],
       });
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getContractSpecEntries).toHaveBeenCalledWith(
         contractExecutable,
@@ -211,11 +223,15 @@ describe('StellarService', () => {
         },
       ]);
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
       expect(result).toEqual([
@@ -246,11 +262,15 @@ describe('StellarService', () => {
         outputs: [{ type: 'mock' }],
       });
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getContractSpecEntries).toHaveBeenCalledWith(
         contractExecutable,
@@ -286,11 +306,15 @@ describe('StellarService', () => {
         outputs: [{ type: 'mock' }],
       });
 
-      const result = await service.generateMethodsFromContractId('contractId');
+      const result = await service.generateMethodsFromContractId(
+        'contractId',
+        'userId',
+      );
 
       expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
         'contractId',
         service['currentNetwork'],
+        'userId',
       );
       expect(service.getContractSpecEntries).toHaveBeenCalledWith(
         contractExecutable,
