@@ -80,14 +80,18 @@ export class StellarService implements IStellarService {
     contractId?: string;
     userId: string;
   }): Promise<NETWORK> {
-    if (selectedNetwork !== this.currentNetwork) {
-      this.stellarAdapter.changeNetwork(selectedNetwork, userId);
+    if (
+      selectedNetwork !== this.currentNetwork ||
+      selectedNetwork === NETWORK.SOROBAN_EPHEMERAL
+    ) {
+      await this.stellarAdapter.changeNetwork(selectedNetwork, userId);
       this.currentNetwork = selectedNetwork;
     }
 
     if (selectedNetwork === NETWORK.SOROBAN_AUTO_DETECT && contractId) {
       const response = await this.stellarAdapter.checkContractNetwork(
         contractId,
+        userId,
       );
       this.currentNetwork = response;
     }
@@ -97,10 +101,12 @@ export class StellarService implements IStellarService {
 
   public async generateMethodsFromContractId(
     contractId: string,
+    userId: string,
   ): Promise<IGeneratedMethod[]> {
     const instanceValue = await this.stellarAdapter.getInstanceValue(
       contractId,
       this.currentNetwork,
+      userId,
     );
     if (
       instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
@@ -135,13 +141,12 @@ export class StellarService implements IStellarService {
 
     try {
       let transaction: Transaction<Memo<MemoType>, Operation[]>;
-
       if (!signedTransactionXDR && secretKey) {
         const scArgs = await this.generateScArgsToFromContractId(
           contractId,
           selectedMethod,
+          userId,
         );
-
         transaction = await this.stellarAdapter.prepareTransaction(
           publicKey,
           userId,
@@ -162,7 +167,6 @@ export class StellarService implements IStellarService {
       const response: rpc.Api.RawSendTransactionResponse =
         await this.stellarAdapter.sendTransaction(transaction, true);
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
-
       if (response.status === SendTransactionStatus.ERROR) {
         return {
           status: response.status,
@@ -172,7 +176,6 @@ export class StellarService implements IStellarService {
           method: methodMapped,
         };
       }
-
       const newResponse = await this.pollTransactionStatus(response.hash);
       if (newResponse.status === GetTransactionStatus.SUCCESS) {
         const events = await this.stellarAdapter.getContractEvents(contractId);
@@ -211,6 +214,7 @@ export class StellarService implements IStellarService {
     const scArgs: xdr.ScVal[] = await this.generateScArgsToFromContractId(
       contractId,
       selectedMethod,
+      userId,
     );
     const transaction = await this.stellarAdapter.prepareTransaction(
       publicKey,
@@ -243,10 +247,12 @@ export class StellarService implements IStellarService {
   public async generateScArgsToFromContractId(
     contractId: string,
     selectedMethod: Partial<Method>,
+    userId: string,
   ): Promise<xdr.ScVal[]> {
     const instanceValue = await this.stellarAdapter.getInstanceValue(
       contractId,
       this.currentNetwork,
+      userId,
     );
 
     if (
