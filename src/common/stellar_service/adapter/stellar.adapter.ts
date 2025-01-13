@@ -146,6 +146,9 @@ export class StellarAdapter implements IStellarAdapter {
       this.stellarServer = config.horizonServer;
       this.currentNetwork = network;
     }
+    if (!this.server) {
+      throw new InternalServerErrorException('Server is not set');
+    }
     return {
       taskArn: isEphemeral.taskArn,
       publicIp: isEphemeral.publicIp,
@@ -203,12 +206,15 @@ export class StellarAdapter implements IStellarAdapter {
       const codeKey = this.createWasmCodeKey(instance);
       return await this.fetchFromServer('getLedgerEntries', codeKey).then(
         (response) => {
-          if (response.entries.length === 0) {
+          if (
+            response.entries.length === 0 ||
+            !response.entries[0]?.val?.contractCode
+          ) {
             throw new BadRequestException(
               SOROBAN_CONTRACT_ERROR.NO_ENTRIES_FOUND,
             );
           }
-          return response.entries[0]?.val?.contractCode().code();
+          return response.entries[0].val.contractCode().code();
         },
       );
     });
@@ -684,6 +690,11 @@ export class StellarAdapter implements IStellarAdapter {
   private extractExecutableFromLedgerResponse(
     response: rpc.Api.GetLedgerEntriesResponse,
   ): xdr.ContractExecutable {
+    if (!response.entries[0]?.val?.contractData) {
+      throw new InternalServerErrorException(
+        'No contract data found in response',
+      );
+    }
     return response.entries[0].val.contractData().val().instance().executable();
   }
 
@@ -709,6 +720,9 @@ export class StellarAdapter implements IStellarAdapter {
   }
 
   private async fetchFromServer(method: string, ...args: any[]): Promise<any> {
+    if (!this.server) {
+      throw new InternalServerErrorException('Server is not set');
+    }
     const maxRetries = 5;
     let attempt = 0;
     while (attempt < maxRetries) {
