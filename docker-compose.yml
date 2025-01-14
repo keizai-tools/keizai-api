@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db:
     image: mysql:8.0
@@ -9,7 +7,7 @@ services:
     ports:
       - '${DB_PORT}:3306'
     volumes:
-      - ./data/mysql/:/var/lib/mysql
+      - ./data/docker/volumes/mysql:/var/lib/mysql
 
   cognito:
     image: jagregory/cognito-local:latest
@@ -26,4 +24,4 @@ services:
       - SERVICES=s3
       - DEFAULT_REGION=${AWS_REGION}
     volumes:
-      - ./data/docker/volumes/cognito:/var/lib/localstack
+      - ./data/docker/volumes/localstack:/var/lib/localstack

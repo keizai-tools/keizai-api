@@ -39,20 +39,7 @@ data/tests.*.*db
 .env
 
 # Docker
-data/mysql/*
+data/docker/*
 
 # SonarQube
 .scannerwork/*
-data/localstack/cache/machine.json
-data/localstack/cache/server.test.pem
-data/localstack/cache/server.test.pem.crt
-data/localstack/cache/service-catalog-3_5_1_dev-1_34_127.pickle
-data/localstack/cache/server.test.pem.key
-data/docker/volumes/cognito/config.json
-data/docker/volumes/cognito/db/clients.json
-data/docker/volumes/cognito/cache/machine.json
-data/docker/volumes/cognito/cache/server.test.pem
-data/docker/volumes/cognito/cache/server.test.pem.crt
-data/docker/volumes/cognito/cache/server.test.pem.key
-data/docker/volumes/cognito/cache/service-catalog-3_5_1_dev-1_34_127.pickle
-data/docker/volumes/cognito/config.json
