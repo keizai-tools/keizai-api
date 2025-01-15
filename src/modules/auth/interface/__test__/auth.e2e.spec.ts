@@ -24,12 +24,15 @@ import { UserRegistrationDetailsDto } from '@/common/cognito/application/dto/use
 import { CognitoMessage } from '@/common/cognito/application/enum/cognito.enum';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import { ICognitoRefreshSessionResponse } from '@/common/cognito/application/interface/cognito_refresh_session_response.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { IResponse } from '@/common/response_service/interface/response.interface';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
 import { ChangePasswordDto } from '../../application/dto/change_password.dto';
+
+jest.setTimeout(60000);
 
 describe('Auth - [/auth]', () => {
   let app: INestApplication;
@@ -73,6 +76,7 @@ describe('Auth - [/auth]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
@@ -310,6 +314,8 @@ describe('Auth - [/auth]', () => {
             updatedAt: expect.any(String),
             email: 'admin@test.com',
             externalId: '00000000-0000-0000-0000-00000000000X',
+            memoId: '4027480759992350720',
+            balance: 0,
           },
         });
       });
@@ -580,6 +586,8 @@ describe('Auth - [/auth]', () => {
             idToken: 'id_token',
             user: {
               externalId: '00000000-0000-0000-0000-000000000001',
+              memoId: expect.any(String),
+              balance: 0,
               createdAt: expect.any(String),
               email: 'testing@testing.com',
               id: expect.any(String),

@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+import { NETWORK } from '@/common/stellar_service/application/domain/soroban.enum';
 
 export class CreateInvocationDto {
   @IsNotEmpty()
@@ -25,13 +27,18 @@ export class CreateInvocationDto {
   @IsString()
   contractId: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   folderId: string;
 
   @IsOptional()
   @IsString()
-  network: string;
+  @IsEnum(NETWORK)
+  network: NETWORK;
+
+  @IsOptional()
+  @IsString()
+  collectionId: string;
 
   @IsOptional()
   @IsString()

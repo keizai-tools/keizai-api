@@ -39,7 +39,8 @@ data/tests.*.*db
 .env
 
 # Docker
-data/mysql/*
+data/docker/*
 
 # SonarQube
 .scannerwork/*
+data/tests.0.*.db-journal
