@@ -81,15 +81,23 @@ export class InvocationService {
     this.responseService.setContext(InvocationService.name);
   }
 
-  getContractIdValue = (inputString: string): string => {
+  getContractIdValue(inputString: string) {
     try {
-      const regex = /{{(.*?)}}/g;
-      const contractId = inputString.replace(regex, (_match, text) => text);
+      const regex = /{{([^}]*)}}/g;
+      let contractId = inputString;
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(inputString)) !== null) {
+        if (match.index === regex.lastIndex) {
+          regex.lastIndex++;
+        }
+        contractId = contractId.replace(match[0], match[1].trim());
+      }
       return contractId;
     } catch (error) {
       this.handleError(error);
+      return '';
     }
-  };
+  }
 
   async getContractAddress(invocation: Invocation, contractId: string) {
     try {
