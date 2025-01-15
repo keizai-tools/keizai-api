@@ -1,5 +1,9 @@
 name: CI Workflow
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches: ['main']
@@ -29,7 +33,7 @@ jobs:
           NODE_ENV: development
 
       - name: NPM or Yarn install with caching
-        uses: bahmutov/npm-install@v1.6.0
+        uses: bahmutov/npm-install@ec9e87262db2a1be2ca3ceb2d506c413a220542c
 
       - name: Build
         run: |
