@@ -245,12 +245,13 @@ export class InvocationService {
       });
       try {
         const preparedTransaction =
-          await this.contractService.getPreparedTransactionXDR(
+          await this.contractService.getPreparedTransactionXDR({
             contractId,
-            invocation.publicKey,
-            selectedMethodMapped,
+            publicKey: invocation.publicKey,
             userId,
-          );
+            selectedMethod: selectedMethodMapped,
+            currentNetwork: invocation.network,
+          });
         return preparedTransaction;
       } catch (error) {
         return error;
@@ -282,8 +283,8 @@ export class InvocationService {
       userId,
     });
     try {
-      const invocationResult = await this.contractService.runInvocation(
-        {
+      const invocationResult = await this.contractService.runInvocation({
+        runInvocationParams: {
           contractId: invocation.contractId,
           selectedMethod: invocation.selectedMethod,
           signedTransactionXDR: transactionXDR,
@@ -291,7 +292,8 @@ export class InvocationService {
           secretKey: invocation.secretKey,
         },
         userId,
-      );
+        currentNetwork: invocation.network,
+      });
       return invocationResult;
     } catch (error) {
       this.handleError(error);
@@ -592,7 +594,12 @@ export class InvocationService {
       );
 
       if (updateInvocationDto.contractId) {
-        await this.updateMethods(updateInvocationDto.id, contractId, userId);
+        await this.updateMethods(
+          updateInvocationDto.id,
+          contractId,
+          userId,
+          network,
+        );
       }
 
       const invocationValues: IUpdateInvocationValues =
@@ -646,13 +653,15 @@ export class InvocationService {
     invocationId: string,
     contractId: string,
     userId: string,
+    network: NETWORK,
   ): Promise<void> {
     try {
       const generatedMethods =
-        await this.contractService.generateMethodsFromContractId(
+        await this.contractService.generateMethodsFromContractId({
           contractId,
           userId,
-        );
+          currentNetwork: network,
+        });
 
       const methodsToRemove = await this.methodRepository.findAllByInvocationId(
         invocationId,
@@ -754,6 +763,7 @@ export class InvocationService {
         payload: await this.contractService.prepareUploadWASM({
           userId,
           file,
+          currentNetwork: invocation.network,
           publicKey: invocation.publicKey,
         }),
         message: INVOCATION_RESPONSE.INVOCATION_UPDATED,
@@ -784,6 +794,7 @@ export class InvocationService {
         file,
         invocation,
         userId,
+        currentNetwork: invocation.network,
       });
 
       return this.responseService.createResponse({
@@ -819,13 +830,16 @@ export class InvocationService {
             userId,
             signedTransactionXDR: signedXDR,
             publicKey: invocation.publicKey,
+            currentNetwork: invocation.network,
           }),
           message: INVOCATION_RESPONSE.INVOCATION_RUN,
           type: 'ACCEPTED',
         });
 
       return this.responseService.createResponse({
-        payload: await this.contractService.runUploadWASM(signedXDR),
+        payload: await this.contractService.runUploadWASM({
+          signedTransactionXDR: signedXDR,
+        }),
         message: INVOCATION_RESPONSE.INVOCATION_RUN,
         type: 'ACCEPTED',
       });
