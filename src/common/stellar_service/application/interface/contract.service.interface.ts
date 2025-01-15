@@ -47,61 +47,125 @@ export interface IStellarService {
     contractId?: string;
     userId: string;
   }): Promise<NETWORK>;
-  getPreparedTransactionXDR(
-    contractId: string,
-    publicKey: string,
-    selectedMethod: Partial<Method>,
-    userId: string,
-  ): Promise<string>;
-  runInvocation(
-    runInvocationParams: IRunInvocationParams,
-    userId: string,
-  ): Promise<RunInvocationResponse | ContractErrorResponse>;
+  getNetworkPassphrase(): string;
+  generateMethodsFromContractId({
+    contractId,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<IGeneratedMethod[]>;
+
+  runInvocation({
+    runInvocationParams,
+    userId,
+    currentNetwork,
+  }: {
+    runInvocationParams: IRunInvocationParams;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<RunInvocationResponse | ContractErrorResponse>;
+
+  getPreparedTransactionXDR({
+    contractId,
+    publicKey,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    publicKey: string;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<string>;
+
+  pollTransactionStatus({
+    hash,
+    userId,
+    currentNetwork,
+  }: {
+    hash: string;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<
+    | rpc.Api.GetSuccessfulTransactionResponse
+    | rpc.Api.GetFailedTransactionResponse
+  >;
+
+  generateScArgsToFromContractId({
+    contractId,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScVal[]>;
+
+  getStellarAssetContractFunctions(): IGeneratedMethod[];
+
+  extractFunctionInfo({
+    decodedSection,
+  }: {
+    decodedSection: IDecodedSection;
+  }): IGeneratedMethod;
+
+  getContractSpecEntries({
+    instanceValue,
+    userId,
+    currentNetwork,
+  }: {
+    instanceValue: xdr.ContractExecutable;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScSpecEntry[]>;
+
+  getScValFromSmartContract({
+    instanceValue,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    instanceValue: xdr.ContractExecutable;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScVal[]>;
+
   deployWasmFile({
     file,
-    signedTransactionXDR,
     invocation,
     userId,
+    currentNetwork,
   }: {
+    currentNetwork: NETWORK;
     file?: Express.Multer.File;
-    signedTransactionXDR?: string;
     invocation?: Invocation;
     userId: string;
   }): Promise<string>;
+
   prepareUploadWASM({
     userId,
     file,
     publicKey,
     signedTransactionXDR,
+    currentNetwork,
   }: {
     userId: string;
     file?: Express.Multer.File;
     publicKey?: string;
     signedTransactionXDR?: string;
+    currentNetwork: NETWORK;
   }): Promise<string>;
-  runUploadWASM(signedTransactionXDR: string): Promise<string>;
-  getScValFromSmartContract(
-    instanceValue: xdr.ContractExecutable,
-    selectedMethod: Partial<Method>,
-  ): Promise<xdr.ScVal[]>;
-  getContractSpecEntries(
-    instanceValue: xdr.ContractExecutable,
-  ): Promise<xdr.ScSpecEntry[]>;
-  getStellarAssetContractFunctions(): IGeneratedMethod[];
-  extractFunctionInfo(decodedSection: IDecodedSection): IGeneratedMethod;
-  pollTransactionStatus(
-    hash: string,
-  ): Promise<
-    | rpc.Api.GetSuccessfulTransactionResponse
-    | rpc.Api.GetFailedTransactionResponse
-  >;
-  generateMethodsFromContractId(
-    contractId: string,
-    userId: string,
-  ): Promise<IGeneratedMethod[]>;
-  generateScArgsToFromContractId(
-    contractId: string,
-    selectedMethod: Partial<Method>,
-    userId: string,
-  ): Promise<xdr.ScVal[]>;
+
+  runUploadWASM({
+    signedTransactionXDR,
+  }: {
+    signedTransactionXDR: string;
+  }): Promise<string>;
 }

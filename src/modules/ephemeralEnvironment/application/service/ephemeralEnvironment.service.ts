@@ -726,12 +726,12 @@ export class EphemeralEnvironmentService
     clientId: string,
   ): IPromiseResponse<void> {
     const taskStatusResponse = await this.getTaskStatus(clientId);
-    const urlEphimeral = await this.getTaskPublicIp(
+    const urlEphemeral = await this.getTaskPublicIp(
       taskStatusResponse.payload.taskArn,
     );
 
     return await this.fetchWithRetry(
-      `http://${urlEphimeral.payload.publicIp}:8000/friendbot?addr=${publicKey}`,
+      `http://${urlEphemeral.payload.publicIp}:8000/friendbot?addr=${publicKey}`,
     );
   }
 

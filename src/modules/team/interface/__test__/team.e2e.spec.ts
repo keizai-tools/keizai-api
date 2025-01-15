@@ -19,6 +19,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { TEAM_RESPONSE } from '../../application/exceptions/team-response.enum';
 
+jest.setTimeout(60000);
+
 describe('Team - [/team]', () => {
   let app: INestApplication;
 

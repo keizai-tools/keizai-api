@@ -6,7 +6,7 @@ import { CommonModule } from '@/common/common.module';
 import { UserModule } from '../user/user.module';
 import { EPHEMERAL_ENVIRONMENT_SERVICE } from './application/interface/ephemeralEnvironment.interface';
 import { EphemeralEnvironmentService } from './application/service/ephemeralEnvironment.service';
-import { EphemeralEnvironmentController } from './controller/ephemeralEnvironment.controller';
+import { EphemeralEnvironmentController } from './interface/ephemeralEnvironment.controller';
 
 @Module({
   imports: [

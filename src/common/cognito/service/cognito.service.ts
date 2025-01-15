@@ -1,5 +1,6 @@
 import {
   AdminGetUserCommand,
+  AdminGetUserCommandInput,
   AuthFlowType,
   AuthenticationResultType,
   ChangePasswordCommand,
@@ -93,7 +94,7 @@ export class CognitoService implements ICognitoAuthService {
         }),
       );
 
-      if (response.Users && response.Users.length > 0) {
+      if (response['$metadata'].httpStatusCode === 200) {
         return this.responseService.createResponse({
           message: 'Container is healthy',
           type: 'OK',
@@ -150,7 +151,7 @@ export class CognitoService implements ICognitoAuthService {
   }
 
   async getUserSub(email: string): IPromiseResponse<string | null> {
-    const params = {
+    const params: AdminGetUserCommandInput = {
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
       Username: email,
     };
@@ -439,7 +440,7 @@ export class CognitoService implements ICognitoAuthService {
   }
 
   private async checkUserConfirmationStatus(email: string): Promise<string> {
-    const params = {
+    const params: AdminGetUserCommandInput = {
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
       Username: email,
     };

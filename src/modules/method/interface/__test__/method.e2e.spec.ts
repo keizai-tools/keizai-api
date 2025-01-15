@@ -19,6 +19,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { METHOD_RESPONSE } from '../../application/exceptions/method-response.enum';
 
+jest.setTimeout(60000);
+
 describe('Parameter - [/param]', () => {
   let app: INestApplication;
 

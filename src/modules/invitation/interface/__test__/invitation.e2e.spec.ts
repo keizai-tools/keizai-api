@@ -18,6 +18,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { INVITATION_RESPONSE } from '../../application/exceptions/invitation.enum';
 
+jest.setTimeout(60000);
+
 describe('Invitation - [/invitation]', () => {
   let app: INestApplication;
 

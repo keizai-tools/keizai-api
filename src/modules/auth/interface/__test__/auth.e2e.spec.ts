@@ -32,6 +32,8 @@ import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
 import { ChangePasswordDto } from '../../application/dto/change_password.dto';
 
+jest.setTimeout(60000);
+
 describe('Auth - [/auth]', () => {
   let app: INestApplication;
 

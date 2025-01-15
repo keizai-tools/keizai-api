@@ -27,59 +27,207 @@ export interface InputPrepareTransaction {
 }
 
 export interface IStellarAdapter {
-  changeNetwork(selectedNetwork: NETWORK, userId?: string): void;
-  checkContractNetwork(contractId: string, userId: string): Promise<NETWORK>;
-  prepareTransaction(
-    account: Account | string,
-    userId: string,
+  currentNetwork: NETWORK;
+  verifyNetwork({
+    selectedNetwork,
+    contractId,
+    userId,
+  }: {
+    selectedNetwork: NETWORK;
+    contractId?: string;
+    userId: string;
+  }): Promise<NETWORK>;
+  extractContractAddress({
+    responseDeploy,
+  }: {
+    responseDeploy: rpc.Api.GetSuccessfulTransactionResponse;
+  }): string;
+  executeTransactionWithRetry({
+    transaction,
+  }: {
+    transaction: Transaction;
+  }): Promise<rpc.Api.GetSuccessfulTransactionResponse>;
+  changeNetwork({
+    selectedNetwork,
+    userId,
+  }: {
+    selectedNetwork: NETWORK;
+    userId: string;
+  }): Promise<void>;
+
+  getScSpecEntryFromXDR({ input }: { input: Uint8Array }): xdr.ScSpecEntry;
+
+  createContractSpec({
+    entries,
+  }: {
+    entries: xdr.ScSpecEntry[];
+  }): Promise<contract.Spec>;
+
+  contractExists({
+    contractId,
+    currentNetwork,
+    userId,
+  }: {
+    contractId: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<rpc.Api.GetLedgerEntriesResponse>;
+
+  getInstanceValue({
+    contractId,
+    currentNetwork,
+    userId,
+  }: {
+    contractId: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<xdr.ContractExecutable>;
+
+  getWasmCode({
+    instance,
+    currentNetwork,
+    userId,
+  }: {
+    instance: xdr.ContractExecutable;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<Buffer>;
+
+  getContractEvents({
+    contractId,
+    currentNetwork,
+    userId,
+  }: {
+    contractId: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<EncodeEvent[]>;
+
+  getKeypair({ secretKey }: { secretKey: string }): Keypair;
+
+  sendTransaction({
+    transaction,
+    currentNetwork,
+    userId,
+    useRaw,
+  }: {
+    transaction: Transaction;
+    currentNetwork: NETWORK;
+    userId: string;
+    useRaw?: boolean;
+  }): Promise<RawSendTransactionResponse | rpc.Api.SendTransactionResponse>;
+
+  getTransaction({
+    hash,
+    currentNetwork,
+    userId,
+    useRaw,
+  }: {
+    hash: string;
+    currentNetwork: NETWORK;
+    userId: string;
+    useRaw?: boolean;
+  }): Promise<RawGetTransactionResponse | GetTransactionResponse>;
+
+  uploadWasm({
+    file,
+    currentNetwork,
+    userId,
+    publicKey,
+    secretKey,
+  }: {
+    file: Express.Multer.File;
+    currentNetwork: NETWORK;
+    userId: string;
+    publicKey: string;
+    secretKey?: string;
+  }): Promise<string>;
+
+  deployContract({
+    response,
+    currentNetwork,
+    sourceKeypair,
+    userId,
+  }: {
+    response: rpc.Api.GetSuccessfulTransactionResponse;
+    currentNetwork: NETWORK;
+    sourceKeypair: Keypair;
+    userId: string;
+  }): Promise<string>;
+
+  submitSignedTransaction({
+    signedXdr,
+    currentNetwork,
+    userId,
+  }: {
+    signedXdr: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<rpc.Api.SendTransactionResponse>;
+
+  prepareUploadWASM({
+    file,
+    currentNetwork,
+    publicKey,
+    userId,
+  }: {
+    file: Express.Multer.File;
+    currentNetwork: NETWORK;
+    publicKey: string;
+    userId: string;
+  }): Promise<string>;
+
+  signTransaction({
+    transaction,
+    sourceKeypair,
+  }: {
+    transaction: Transaction;
+    sourceKeypair: Keypair;
+  }): void;
+
+  prepareTransaction({
+    account,
+    currentNetwork,
+    userId,
+    operationsOrContractId,
+  }: {
+    account: Account | string;
+    currentNetwork: NETWORK;
+    userId: string;
     operationsOrContractId?:
       | xdr.Operation<Operation.InvokeHostFunction>
-      | { contractId: string; methodName: string; scArgs: xdr.ScVal[] },
-  ): Promise<Transaction>;
-  getKeypair(secretKey: string): Keypair;
-  signTransaction(transaction: Transaction, sourceKeypair: Keypair): void;
-  sendTransaction(
-    transaction: Transaction,
-    useRaw: boolean,
-  ): Promise<RawSendTransactionResponse | rpc.Api.SendTransactionResponse>;
-  getContractEvents(contractId: string): Promise<EncodeEvent[]>;
-  getTransaction(
-    hash: string,
-    useRaw: boolean,
-  ): Promise<RawGetTransactionResponse | GetTransactionResponse>;
-  getScSpecEntryFromXDR(input: Uint8Array): xdr.ScSpecEntry;
-  getWasmCode(instance: xdr.ContractExecutable): Promise<Buffer>;
-  createContractSpec(entries: xdr.ScSpecEntry[]): Promise<contract.Spec>;
-  uploadWasm(
-    file: Express.Multer.File,
-    userId: string,
-    publicKey: string,
-    secretKey?: string,
-  ): Promise<string>;
-  executeTransactionWithRetry(
-    transaction: Transaction,
-  ): Promise<rpc.Api.GetSuccessfulTransactionResponse>;
-  createDeployContractOperation(
-    response: rpc.Api.GetSuccessfulTransactionResponse,
-    sourceKeypair: Keypair | string,
-  ): xdr.Operation<Operation.InvokeHostFunction>;
-  prepareUploadWASM(
-    file: Express.Multer.File,
-    publicKey: string,
-    userId: string,
-  ): Promise<string>;
-  extractContractAddress(
-    responseDeploy: rpc.Api.GetSuccessfulTransactionResponse,
-  ): string;
-  getAccountOrFund(publicKey: string, userId: string): Promise<Account>;
-  contractExists(
-    contractId: string,
-    currentNetwork: string,
-    userId: string,
-  ): Promise<rpc.Api.GetLedgerEntriesResponse>;
-  getInstanceValue(
-    contractId: string,
-    currentNetwork: string,
-    userId: string,
-  ): Promise<xdr.ContractExecutable>;
+      | { contractId: string; methodName: string; scArgs: xdr.ScVal[] };
+  }): Promise<Transaction>;
+
+  streamTransactionsByMemoId({
+    publicKey,
+    currentNetwork,
+    userId,
+    memoId,
+  }: {
+    publicKey: string;
+    currentNetwork?: NETWORK;
+    userId?: string;
+    memoId?: string;
+  }): Promise<void>;
+
+  getAccountOrFund({
+    publicKey,
+    currentNetwork,
+    userId,
+  }: {
+    publicKey: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<Account>;
+
+  checkContractNetwork({
+    contractId,
+    currentNetwork,
+    userId,
+  }: {
+    contractId: string;
+    currentNetwork: NETWORK;
+    userId: string;
+  }): Promise<NETWORK>;
 }

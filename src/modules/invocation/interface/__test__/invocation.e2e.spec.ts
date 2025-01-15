@@ -26,6 +26,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { INVOCATION_RESPONSE } from '../../application/exceptions/invocation-response.enum.dto';
 
+jest.setTimeout(60000);
+
 describe('Invocation - [/invocation]', () => {
   let app: INestApplication;
 

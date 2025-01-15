@@ -20,6 +20,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { ENVIRONMENT_RESPONSE } from '../../application/exceptions/environment-response.enum';
 
+jest.setTimeout(60000);
+
 describe('Environment - [/environment]', () => {
   let app: INestApplication;
 

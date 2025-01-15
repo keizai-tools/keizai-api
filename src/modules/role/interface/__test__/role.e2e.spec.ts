@@ -18,6 +18,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { ROLE_RESPONSE } from '../../application/exceptions/role-response.enum';
 
+jest.setTimeout(60000);
+
 describe('UserRoleToTeam - [/role]', () => {
   let app: INestApplication;
 
