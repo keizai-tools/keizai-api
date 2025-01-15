@@ -85,8 +85,11 @@ export class InvocationService {
     try {
       const regex = /{{([^}]*)}}/g;
       let contractId = inputString;
-      let match: string[];
+      let match: RegExpExecArray | null;
       while ((match = regex.exec(inputString)) !== null) {
+        if (match.index === regex.lastIndex) {
+          regex.lastIndex++;
+        }
         contractId = contractId.replace(match[0], match[1].trim());
       }
       return contractId;
