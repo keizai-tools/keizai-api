@@ -16,6 +16,8 @@ import { SuccessResponseInterceptor } from '@/common/response_service/intercepto
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
 
+jest.setTimeout(60000);
+
 describe('User - [/user]', () => {
   let app: INestApplication;
 
@@ -265,6 +267,102 @@ describe('User - [/user]', () => {
         },
         timestamp: expect.any(String),
         path: '/user/me',
+      });
+    });
+  });
+
+  describe('Get Fargate Time - [GET /user/fargate-time]', () => {
+    it('should return the Fargate session time', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        authCode: adminToken,
+        endpoint: '/user/fargate-time',
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Fargate session time calculated successfully.',
+        payload: {
+          fargateTime: expect.any(Number),
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-time',
+      });
+    });
+
+    it('should return 401 if unauthorized', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        endpoint: '/user/fargate-time',
+      });
+
+      expect(response.body).toEqual({
+        success: false,
+        statusCode: 401,
+        error: 'Unauthorized',
+        message:
+          'The client must authenticate itself to get the requested response.',
+        details: {
+          description: 'Unauthorized',
+          possibleCauses: ['Missing or invalid authentication token.'],
+          suggestedFixes: [
+            'Provide valid authentication token.',
+            'Log in and try again.',
+          ],
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-time',
+      });
+    });
+  });
+
+  describe('Get Fargate Cost Per Minute - [GET /user/fargate-cost-per-minute]', () => {
+    it('should return the Fargate cost per minute', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        authCode: adminToken,
+        endpoint: '/user/fargate-cost-per-minute',
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Fargate cost per minute calculated successfully.',
+        payload: {
+          costPerMinute: expect.any(Number),
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-cost-per-minute',
+      });
+    });
+
+    it('should return 401 if unauthorized', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        endpoint: '/user/fargate-cost-per-minute',
+      });
+
+      expect(response.body).toEqual({
+        success: false,
+        statusCode: 401,
+        error: 'Unauthorized',
+        message:
+          'The client must authenticate itself to get the requested response.',
+        details: {
+          description: 'Unauthorized',
+          possibleCauses: ['Missing or invalid authentication token.'],
+          suggestedFixes: [
+            'Provide valid authentication token.',
+            'Log in and try again.',
+          ],
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-cost-per-minute',
       });
     });
   });

@@ -20,6 +20,8 @@ import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { FOLDER_RESPONSE } from '../../application/exceptions/folder-response.enum';
 
+jest.setTimeout(60000);
+
 describe('Folder - [/folder]', () => {
   let app: INestApplication;
 

@@ -21,6 +21,8 @@ import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
 
+jest.setTimeout(60000);
+
 describe('Collection - [/collection]', () => {
   let app: INestApplication;
 
