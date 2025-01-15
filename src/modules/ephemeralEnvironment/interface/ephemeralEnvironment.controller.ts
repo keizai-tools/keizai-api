@@ -19,7 +19,7 @@ import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 import { CurrentUser } from '@/modules/user/application/decorator/current_user.decorator';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { FargateAccessGuard } from '../application/guard/fargateAccessGuard.guard';
+import { FargateStartGuard } from '../application/guard/fargateAccessGuard.guard';
 import {
   EPHEMERAL_ENVIRONMENT_SERVICE,
   ITaskInfo,
@@ -39,7 +39,7 @@ export class EphemeralEnvironmentController {
   }
 
   @Post('start')
-  @UseGuards(FargateAccessGuard)
+  @UseGuards(FargateStartGuard)
   async handleStartFargate(
     @CurrentUser() data: IResponse<User>,
     @Query('interval') interval: number,
