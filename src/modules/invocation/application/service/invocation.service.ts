@@ -84,9 +84,11 @@ export class InvocationService {
   getContractIdValue(inputString: string) {
     try {
       const regex = /{{([^}]*)}}/g;
-      const contractId = inputString.replace(regex, (_match, text) =>
-        text.trim(),
-      );
+      let contractId = inputString;
+      let match: string[];
+      while ((match = regex.exec(inputString)) !== null) {
+        contractId = contractId.replace(match[0], match[1].trim());
+      }
       return contractId;
     } catch (error) {
       this.handleError(error);
