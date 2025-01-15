@@ -14,7 +14,7 @@ import {
 import { User } from '@/modules/user/domain/user.domain';
 
 @Injectable()
-export class FargateAccessGuard implements CanActivate {
+export class FargateStartGuard implements CanActivate {
   constructor(
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
@@ -41,7 +41,11 @@ export class FargateAccessGuard implements CanActivate {
 
     if (userBalance >= requiredBalance) {
       try {
-        await this.userService.updateUserBalance(user.payload.id, interval);
+        await this.userService.updateUserBalance(
+          user.payload.id,
+          interval,
+          false,
+        );
         return true;
       } catch (error) {
         return false;
