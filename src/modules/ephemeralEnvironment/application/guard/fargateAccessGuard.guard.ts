@@ -39,6 +39,15 @@ export class FargateAccessGuard implements CanActivate {
 
     const requiredBalance = interval * costPerMinuteResponse;
 
-    return userBalance >= requiredBalance;
+    if (userBalance >= requiredBalance) {
+      try {
+        await this.userService.updateUserBalance(user.payload.id, interval);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    return false;
   }
 }
