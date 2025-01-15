@@ -43,7 +43,7 @@
     "@aws-sdk/client-cloudwatch-events": "^3.682.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.631.0",
     "@aws-sdk/client-ec2": "^3.657.0",
-    "@aws-sdk/client-ecs": "^3.682.0",
+    "@aws-sdk/client-ecs": "^3.726.1",
     "@aws-sdk/client-lambda": "^3.682.0",
     "@casl/ability": "^6.7.1",
     "@nestjs/axios": "^3.0.3",
