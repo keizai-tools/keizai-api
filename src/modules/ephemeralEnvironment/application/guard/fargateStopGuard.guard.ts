@@ -40,18 +40,15 @@ export class FargateStopGuard implements CanActivate {
     const taskInfo = taskStatusResponse.payload;
 
     const currentTime = new Date();
-    const elapsedTime =
-      (currentTime.getTime() - new Date(taskInfo.taskStartedAt).getTime()) /
-      60000;
-    const remainingTime = taskInfo.executionInterval - elapsedTime;
-
-    const costPerMinuteResponse = this.userService.getFargateCostPerMinute();
-    const remainingBalance = remainingTime * costPerMinuteResponse;
+    const taskEndTime = new Date(taskInfo.taskStoppedAt);
+    const remainingTime = Math.floor(
+      (taskEndTime.getTime() - currentTime.getTime()) / 60000,
+    );
 
     try {
       await this.userService.updateUserBalance(
         user.payload.id,
-        remainingBalance,
+        remainingTime,
         true,
       );
       return true;
