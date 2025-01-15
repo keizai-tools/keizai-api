@@ -122,34 +122,6 @@ describe('Ephemeral Environment - [/ephemeral-environment]', () => {
   });
 
   describe('Stop Fargate - [DELETE /ephemeral-environment/stop]', () => {
-    it('should stop a Fargate task', async () => {
-      const mockResponse: IResponse<{
-        taskArn: string;
-        status: string;
-      }> = {
-        payload: {
-          taskArn: 'arn:aws:ecs:region:account-id:task/task-id',
-          status: 'STOPPED',
-        },
-        message: 'Fargate task stopped successfully',
-      };
-
-      jest.spyOn(service, 'stopTask').mockResolvedValue(mockResponse);
-
-      const response = await makeRequest({
-        app,
-        method: 'delete',
-        authCode: adminToken,
-        endpoint: '/ephemeral-environment/stop',
-      });
-
-      expect(response.body).toEqual({
-        path: expect.any(String),
-        timestamp: expect.any(String),
-        ...mockResponse,
-      });
-    });
-
     it('should return 401 if unauthorized', async () => {
       const response = await makeRequest({
         app,

@@ -13,14 +13,18 @@ import {
 } from '@/modules/user/application/interfaces/user.service.interfaces';
 import { User } from '@/modules/user/domain/user.domain';
 
-import { EphemeralEnvironmentService } from '../service/ephemeralEnvironment.service';
+import {
+  EPHEMERAL_ENVIRONMENT_SERVICE,
+  IEphemeralEnvironmentService,
+} from '../interface/ephemeralEnvironment.interface';
 
 @Injectable()
 export class FargateStopGuard implements CanActivate {
   constructor(
     @Inject(USER_SERVICE)
     private readonly userService: IUserService,
-    private readonly ephemeralEnvironmentService: EphemeralEnvironmentService,
+    @Inject(EPHEMERAL_ENVIRONMENT_SERVICE)
+    private readonly ephemeralEnvironmentService: IEphemeralEnvironmentService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
