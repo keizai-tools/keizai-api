@@ -20,6 +20,7 @@ import { CurrentUser } from '@/modules/user/application/decorator/current_user.d
 import { User } from '@/modules/user/domain/user.domain';
 
 import { FargateStartGuard } from '../application/guard/fargateAccessGuard.guard';
+import { FargateStopGuard } from '../application/guard/fargateStopGuard.guard';
 import {
   EPHEMERAL_ENVIRONMENT_SERVICE,
   ITaskInfo,
@@ -51,6 +52,7 @@ export class EphemeralEnvironmentController {
   }
 
   @Delete('stop')
+  @UseGuards(FargateStopGuard)
   async handleStopFargate(
     @CurrentUser() user: IResponse<User>,
   ): IPromiseResponse<{
