@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Put } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import {
@@ -11,8 +11,6 @@ import { Auth } from '@/modules/auth/application/decorator/auth.decorator';
 import { AuthType } from '@/modules/auth/domain/auth_type.enum';
 
 import { CurrentUser } from '../application/decorator/current_user.decorator';
-import { UpdateUserDto } from '../application/dto/update_user.dto';
-import { IUpdateUserResponse } from '../application/interfaces/user.common.interfaces';
 import { IUserController } from '../application/interfaces/user.controller.interface';
 import {
   IUserService,
@@ -30,14 +28,6 @@ export class UserController implements IUserController {
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
   ) {}
-
-  @Put('/update')
-  async updateUser(
-    @Body() updateUserDto: UpdateUserDto,
-    @CurrentUser() user: User,
-  ): IPromiseResponse<IUpdateUserResponse> {
-    return this.userService.updateUser(updateUserDto, user);
-  }
 
   @Get('/me')
   async getMe(@CurrentUser() user: User): Promise<User> {
