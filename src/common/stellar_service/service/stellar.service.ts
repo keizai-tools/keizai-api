@@ -27,6 +27,7 @@ import { Invocation } from '@/modules/invocation/domain/invocation.domain';
 import { MethodMapper } from '@/modules/method/application/mapper/method.mapper';
 import { Method } from '@/modules/method/domain/method.domain';
 
+import { StellarAdapter } from '../adapter/stellar.adapter';
 import { ContractFunctions } from '../application/domain/ContractFunctions.array';
 import { SCSpecTypeMap } from '../application/domain/SCSpecTypeMap.object';
 import {
@@ -47,10 +48,7 @@ import {
   ContractErrorResponse,
   RunInvocationResponse,
 } from '../application/interface/soroban';
-import {
-  CONTRACT_ADAPTER,
-  IStellarAdapter,
-} from '../application/interface/stellar.adapter.interface';
+import { CONTRACT_ADAPTER } from '../application/interface/stellar.adapter.interface';
 import {
   CONTRACT_MAPPER,
   IStellarMapper,
@@ -59,13 +57,11 @@ import {
 @Injectable()
 export class StellarService implements IStellarService {
   private readonly SCSpecTypeMap: { [key: number]: string } = SCSpecTypeMap;
-  private currentNetwork: string = NETWORK.SOROBAN_FUTURENET;
-
   constructor(
     @Inject(RESPONSE_SERVICE)
     private readonly responseService: IResponseService,
     @Inject(CONTRACT_ADAPTER)
-    private readonly stellarAdapter: IStellarAdapter,
+    private readonly stellarAdapter: StellarAdapter,
     @Inject(CONTRACT_MAPPER)
     private readonly stellarMapper: IStellarMapper,
     @Inject(forwardRef(() => MethodMapper))
@@ -74,40 +70,57 @@ export class StellarService implements IStellarService {
     this.responseService.setContext(StellarService.name);
   }
 
-  public async verifyNetwork(
-    selectedNetwork: string,
-    contractId?: string,
-  ): Promise<string> {
-    if (selectedNetwork !== this.currentNetwork) {
-      this.stellarAdapter.changeNetwork(selectedNetwork);
-      this.currentNetwork = selectedNetwork;
-    }
-
-    if (selectedNetwork === NETWORK.SOROBAN_AUTO_DETECT && contractId) {
-      const response = await this.stellarAdapter.checkContractNetwork(
-        contractId,
-      );
-      this.currentNetwork = response;
-    }
-    return this.currentNetwork;
+  public async verifyNetwork({
+    selectedNetwork,
+    contractId,
+    userId,
+  }: {
+    selectedNetwork: NETWORK;
+    contractId?: string;
+    userId: string;
+  }): Promise<NETWORK> {
+    return this.stellarAdapter.verifyNetwork({
+      selectedNetwork,
+      contractId,
+      userId,
+    });
   }
 
-  public async generateMethodsFromContractId(
-    contractId: string,
-  ): Promise<IGeneratedMethod[]> {
-    const instanceValue = await this.stellarAdapter.getInstanceValue(
+  public async generateMethodsFromContractId({
+    contractId,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<IGeneratedMethod[]> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
+    const instanceValue = await this.stellarAdapter.getInstanceValue({
       contractId,
-      this.currentNetwork,
-    );
+      currentNetwork: this.stellarAdapter.currentNetwork,
+      userId,
+    });
     if (
       instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
     ) {
       return this.getStellarAssetContractFunctions();
     }
 
-    const decodedSections = await this.getContractSpecEntries(instanceValue);
+    const decodedSections = await this.getContractSpecEntries({
+      instanceValue,
+      userId,
+      currentNetwork,
+    });
     return decodedSections
-      .map((section) => this.extractFunctionInfo(section as IDecodedSection))
+      .map((section) =>
+        this.extractFunctionInfo({
+          decodedSection: section as IDecodedSection,
+        }),
+      )
       .filter((f) => f && f.name.length > 0);
   }
 
@@ -118,9 +131,19 @@ export class StellarService implements IStellarService {
       }),
     ),
   )
-  public async runInvocation(
-    runInvocationParams: IRunInvocationParams,
-  ): Promise<RunInvocationResponse | ContractErrorResponse> {
+  public async runInvocation({
+    runInvocationParams,
+    userId,
+    currentNetwork,
+  }: {
+    runInvocationParams: IRunInvocationParams;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<RunInvocationResponse | ContractErrorResponse> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
     const {
       contractId,
       publicKey,
@@ -131,31 +154,39 @@ export class StellarService implements IStellarService {
 
     try {
       let transaction: Transaction<Memo<MemoType>, Operation[]>;
-
       if (!signedTransactionXDR && secretKey) {
-        const scArgs = await this.generateScArgsToFromContractId(
+        const scArgs = await this.generateScArgsToFromContractId({
           contractId,
           selectedMethod,
-        );
-        transaction = await this.stellarAdapter.prepareTransaction(publicKey, {
-          contractId,
-          methodName: selectedMethod.name,
-          scArgs,
+          userId,
+          currentNetwork,
         });
-        const sourceKeypair = this.stellarAdapter.getKeypair(secretKey);
-        this.stellarAdapter.signTransaction(transaction, sourceKeypair);
+        transaction = await this.stellarAdapter.prepareTransaction({
+          account: publicKey,
+          userId,
+          operationsOrContractId: {
+            contractId,
+            methodName: selectedMethod.name,
+            scArgs,
+          },
+          currentNetwork,
+        });
+        const sourceKeypair = this.stellarAdapter.getKeypair({ secretKey });
+        this.stellarAdapter.signTransaction({ transaction, sourceKeypair });
       } else if (signedTransactionXDR) {
         transaction = TransactionBuilder.fromXDR(
           signedTransactionXDR,
-          Networks[this.currentNetwork],
+          Networks[this.stellarAdapter.currentNetwork],
         ) as Transaction;
       }
-
       const response: rpc.Api.RawSendTransactionResponse =
-        await this.stellarAdapter.sendTransaction(transaction, true);
-
+        await this.stellarAdapter.sendTransaction({
+          transaction,
+          userId,
+          currentNetwork,
+          useRaw: true,
+        });
       const methodMapped = this.methodMapper.fromDtoToEntity(selectedMethod);
-
       if (response.status === SendTransactionStatus.ERROR) {
         return {
           status: response.status,
@@ -165,10 +196,17 @@ export class StellarService implements IStellarService {
           method: methodMapped,
         };
       }
-
-      const newResponse = await this.pollTransactionStatus(response.hash);
+      const newResponse = await this.pollTransactionStatus({
+        hash: response.hash,
+        currentNetwork,
+        userId,
+      });
       if (newResponse.status === GetTransactionStatus.SUCCESS) {
-        const events = await this.stellarAdapter.getContractEvents(contractId);
+        const events = await this.stellarAdapter.getContractEvents({
+          contractId,
+          currentNetwork,
+          userId,
+        });
         return {
           method: methodMapped,
           response: this.stellarMapper.fromScValToDisplayValue(
@@ -179,10 +217,12 @@ export class StellarService implements IStellarService {
         };
       }
 
-      const rawResponse = (await this.stellarAdapter.getTransaction(
-        response.hash,
-        true,
-      )) as rpc.Api.RawGetTransactionResponse;
+      const rawResponse = (await this.stellarAdapter.getTransaction({
+        hash: response.hash,
+        useRaw: true,
+        currentNetwork,
+        userId,
+      })) as rpc.Api.RawGetTransactionResponse;
       return {
         status: rawResponse.status,
         response: this.stellarMapper.fromTxResultToDisplayResponse(
@@ -191,54 +231,100 @@ export class StellarService implements IStellarService {
         method: methodMapped,
       };
     } catch (error) {
-      return this.handleInvocationError(error);
+      return this.handleInvocationError({ error });
     }
   }
 
-  public async getPreparedTransactionXDR(
-    contractId: string,
-    publicKey: string,
-    selectedMethod: Partial<Method>,
-  ): Promise<string> {
-    const scArgs: xdr.ScVal[] = await this.generateScArgsToFromContractId(
+  public async getPreparedTransactionXDR({
+    contractId,
+    publicKey,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    publicKey: string;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<string> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
+    const scArgs: xdr.ScVal[] = await this.generateScArgsToFromContractId({
       contractId,
       selectedMethod,
-    );
-    const transaction = await this.stellarAdapter.prepareTransaction(
-      publicKey,
-      { contractId, methodName: selectedMethod.name, scArgs },
-    );
+      userId,
+      currentNetwork,
+    });
+    const transaction = await this.stellarAdapter.prepareTransaction({
+      account: publicKey,
+      currentNetwork,
+      operationsOrContractId: {
+        contractId,
+        methodName: selectedMethod.name,
+        scArgs,
+      },
+      userId,
+    });
     return transaction.toXDR();
   }
 
-  public async pollTransactionStatus(
-    hash: string,
-  ): Promise<
+  public async pollTransactionStatus({
+    hash,
+    userId,
+    currentNetwork,
+  }: {
+    hash: string;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<
     | rpc.Api.GetSuccessfulTransactionResponse
     | rpc.Api.GetFailedTransactionResponse
   > {
-    let response = (await this.stellarAdapter.getTransaction(
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
+    let response = (await this.stellarAdapter.getTransaction({
       hash,
-      false,
-    )) as rpc.Api.GetTransactionResponse;
+      useRaw: false,
+      currentNetwork,
+      userId,
+    })) as rpc.Api.GetTransactionResponse;
     while (response.status === GetTransactionStatus.NOT_FOUND) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      response = (await this.stellarAdapter.getTransaction(
+      response = (await this.stellarAdapter.getTransaction({
         hash,
-        false,
-      )) as rpc.Api.GetTransactionResponse;
+        useRaw: false,
+        currentNetwork,
+        userId,
+      })) as rpc.Api.GetTransactionResponse;
     }
     return response;
   }
 
-  public async generateScArgsToFromContractId(
-    contractId: string,
-    selectedMethod: Partial<Method>,
-  ): Promise<xdr.ScVal[]> {
-    const instanceValue = await this.stellarAdapter.getInstanceValue(
+  public async generateScArgsToFromContractId({
+    contractId,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    contractId: string;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScVal[]> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
+    const instanceValue = await this.stellarAdapter.getInstanceValue({
       contractId,
-      this.currentNetwork,
-    );
+      currentNetwork: this.stellarAdapter.currentNetwork,
+      userId,
+    });
 
     if (
       instanceValue.switch().name === CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET
@@ -248,16 +334,23 @@ export class StellarService implements IStellarService {
       );
     }
 
-    return this.getScValFromSmartContract(instanceValue, selectedMethod);
+    return this.getScValFromSmartContract({
+      currentNetwork,
+      userId,
+      instanceValue,
+      selectedMethod,
+    });
   }
 
   public getStellarAssetContractFunctions(): IGeneratedMethod[] {
     return ContractFunctions;
   }
 
-  private async decodeContractSpecBuffer(
-    buffer: ArrayBuffer,
-  ): Promise<xdr.ScSpecEntry[]> {
+  private async decodeContractSpecBuffer({
+    buffer,
+  }: {
+    buffer: ArrayBuffer;
+  }): Promise<xdr.ScSpecEntry[]> {
     const arrayBuffer = new Uint8Array(buffer);
     const decodedData: xdr.ScSpecEntry[] = [];
     let offset = 0;
@@ -267,14 +360,18 @@ export class StellarService implements IStellarService {
       for (let length = 1; length <= arrayBuffer.length - offset; length++) {
         const subArray = arrayBuffer.subarray(offset, offset + length);
         try {
-          const partialDecodedData =
-            this.stellarAdapter.getScSpecEntryFromXDR(subArray);
+          const partialDecodedData = this.stellarAdapter.getScSpecEntryFromXDR({
+            input: subArray,
+          });
           decodedData.push(partialDecodedData);
           offset += length;
           success = true;
           break;
-        } catch {
-          // Continue to next length
+        } catch (error) {
+          this.responseService.error(
+            `Failed to decode subArray of length ${length}:`,
+            error,
+          );
         }
       }
       if (!success) break;
@@ -282,9 +379,11 @@ export class StellarService implements IStellarService {
     return decodedData;
   }
 
-  public extractFunctionInfo(
-    decodedSection: IDecodedSection,
-  ): IGeneratedMethod {
+  public extractFunctionInfo({
+    decodedSection,
+  }: {
+    decodedSection: IDecodedSection;
+  }): IGeneratedMethod {
     if (decodedSection._switch.name !== 'scSpecEntryFunctionV0') return null;
 
     const { name, doc, inputs, outputs } = decodedSection._value._attributes;
@@ -304,28 +403,57 @@ export class StellarService implements IStellarService {
     };
   }
 
-  public async getContractSpecEntries(
-    instanceValue: xdr.ContractExecutable,
-  ): Promise<xdr.ScSpecEntry[]> {
-    const contractCode = await this.stellarAdapter.getWasmCode(instanceValue);
+  public async getContractSpecEntries({
+    instanceValue,
+    userId,
+    currentNetwork,
+  }: {
+    instanceValue: xdr.ContractExecutable;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScSpecEntry[]> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
+    const contractCode = await this.stellarAdapter.getWasmCode({
+      currentNetwork,
+      userId,
+      instance: instanceValue,
+    });
     const wasmModule = new WebAssembly.Module(contractCode);
     const buffer = WebAssembly.Module.customSections(
       wasmModule,
       'contractspecv0',
     )[0];
-    return this.decodeContractSpecBuffer(buffer);
+    return this.decodeContractSpecBuffer({ buffer });
   }
 
-  public async getScValFromSmartContract(
-    instanceValue: xdr.ContractExecutable,
-    selectedMethod: Partial<Method>,
-  ): Promise<xdr.ScVal[]> {
+  public async getScValFromSmartContract({
+    instanceValue,
+    selectedMethod,
+    userId,
+    currentNetwork,
+  }: {
+    instanceValue: xdr.ContractExecutable;
+    selectedMethod: Partial<Method>;
+    userId: string;
+    currentNetwork: NETWORK;
+  }): Promise<xdr.ScVal[]> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
     const maxRetries = 7;
     let specEntries: xdr.ScSpecEntry[];
 
     for (let retries = 0; retries < maxRetries; retries++) {
       try {
-        specEntries = await this.getContractSpecEntries(instanceValue);
+        specEntries = await this.getContractSpecEntries({
+          instanceValue,
+          currentNetwork,
+          userId,
+        });
         break;
       } catch (error) {
         if (retries === maxRetries - 1)
@@ -336,9 +464,9 @@ export class StellarService implements IStellarService {
       }
     }
 
-    const contractSpec = await this.stellarAdapter.createContractSpec(
-      specEntries,
-    );
+    const contractSpec = await this.stellarAdapter.createContractSpec({
+      entries: specEntries,
+    });
 
     const params = selectedMethod.params.reduce((acc, param) => {
       const paramValue = selectedMethod.inputs.find(
@@ -355,7 +483,11 @@ export class StellarService implements IStellarService {
     return contractSpec.funcArgsToScVals(selectedMethod.name, params);
   }
 
-  private handleInvocationError(error: Error): ContractErrorResponse {
+  private handleInvocationError({
+    error,
+  }: {
+    error: Error;
+  }): ContractErrorResponse {
     const errorMessage = typeof error === 'string' ? error : error.message;
     if (
       errorMessage.includes(SOROBAN_CONTRACT_ERROR.HOST_FAILED) ||
@@ -365,7 +497,7 @@ export class StellarService implements IStellarService {
         errorMessage,
       );
     }
-    this.handleError(error);
+    this.handleError({ error });
     return {
       title: 'Internal Server Error',
       status: SendTransactionStatus.ERROR,
@@ -376,31 +508,49 @@ export class StellarService implements IStellarService {
   async deployWasmFile({
     file,
     invocation,
+    userId,
+    currentNetwork,
   }: {
+    currentNetwork: NETWORK;
     file?: Express.Multer.File;
     invocation?: Invocation;
+    userId: string;
   }): Promise<string> {
     try {
-      return await this.stellarAdapter.uploadWasm(
+      await this.stellarAdapter.changeNetwork({
+        userId,
+        selectedNetwork: currentNetwork,
+      });
+      return await this.stellarAdapter.uploadWasm({
         file,
-        invocation.publicKey,
-        invocation.secretKey,
-      );
+        userId,
+        currentNetwork,
+        publicKey: invocation.publicKey,
+        secretKey: invocation.secretKey,
+      });
     } catch (error) {
-      if (error instanceof HttpException) this.handleError(error);
-      else this.handleError(error.message);
+      if (error instanceof HttpException) this.handleError({ error });
+      else this.handleError({ error: error.message });
     }
   }
 
   async prepareUploadWASM({
+    userId,
     file,
     publicKey,
     signedTransactionXDR,
+    currentNetwork,
   }: {
+    userId: string;
     file?: Express.Multer.File;
     publicKey?: string;
     signedTransactionXDR?: string;
+    currentNetwork: NETWORK;
   }): Promise<string> {
+    await this.stellarAdapter.changeNetwork({
+      userId,
+      selectedNetwork: currentNetwork,
+    });
     try {
       if (signedTransactionXDR && publicKey) {
         const transaction: Transaction<
@@ -412,32 +562,50 @@ export class StellarService implements IStellarService {
         ) as Transaction;
 
         const newResponse =
-          await this.stellarAdapter.executeTransactionWithRetry(transaction);
-        const operation = this.stellarAdapter.createDeployContractOperation(
-          newResponse,
-          publicKey,
-        );
+          await this.stellarAdapter.executeTransactionWithRetry({
+            transaction,
+          });
+        const operation = this.stellarAdapter.createDeployContractOperation({
+          response: newResponse,
+          sourceKeypair: publicKey,
+        });
 
-        const account = await this.stellarAdapter.getAccountOrFund(publicKey);
+        const account = await this.stellarAdapter.getAccountOrFund({
+          publicKey,
+          userId,
+          currentNetwork,
+        });
         return (
-          await this.stellarAdapter.prepareTransaction(account, operation)
+          await this.stellarAdapter.prepareTransaction({
+            account,
+            userId,
+            currentNetwork,
+            operationsOrContractId: operation,
+          })
         ).toXDR();
       }
-
-      return await this.stellarAdapter.prepareUploadWASM(file, publicKey);
+      const response = await this.stellarAdapter.prepareUploadWASM({
+        file,
+        publicKey: publicKey,
+        currentNetwork,
+        userId,
+      });
+      return response;
     } catch (error) {
-      if (error instanceof HttpException) this.handleError(error);
-      else this.handleError(error.message);
+      if (error instanceof HttpException) this.handleError({ error });
+      else this.handleError({ error: error.message });
     }
   }
 
-  private getNetworkPassphrase(): string {
+  public getNetworkPassphrase(): string {
     const networkPassphraseMap: Partial<{ [key in NETWORK]: string }> = {
       [NETWORK.SOROBAN_MAINNET]: Networks.PUBLIC,
       [NETWORK.SOROBAN_TESTNET]: Networks.TESTNET,
       [NETWORK.SOROBAN_FUTURENET]: Networks.FUTURENET,
+      [NETWORK.SOROBAN_EPHEMERAL]: Networks.STANDALONE,
     };
-    const networkPassphrase = networkPassphraseMap[this.currentNetwork];
+    const networkPassphrase =
+      networkPassphraseMap[this.stellarAdapter.currentNetwork];
 
     if (!networkPassphrase) {
       throw new InternalServerErrorException(ErrorMessages.UNSUPPORTED_NETWORK);
@@ -445,7 +613,11 @@ export class StellarService implements IStellarService {
 
     return networkPassphrase;
   }
-  async runUploadWASM(signedTransactionXDR: string): Promise<string> {
+  async runUploadWASM({
+    signedTransactionXDR,
+  }: {
+    signedTransactionXDR: string;
+  }): Promise<string> {
     try {
       const transaction: Transaction<
         Memo<MemoType>,
@@ -455,14 +627,16 @@ export class StellarService implements IStellarService {
         this.getNetworkPassphrase(),
       ) as Transaction;
       const deployResponse =
-        await this.stellarAdapter.executeTransactionWithRetry(transaction);
-      return this.stellarAdapter.extractContractAddress(deployResponse);
+        await this.stellarAdapter.executeTransactionWithRetry({ transaction });
+      return this.stellarAdapter.extractContractAddress({
+        responseDeploy: deployResponse,
+      });
     } catch (error) {
-      this.handleError(error);
+      this.handleError({ error });
     }
   }
 
-  private handleError(error: Error): void {
+  private handleError({ error }: { error: Error }): void {
     this.responseService.errorHandler({
       type: 'INTERNAL_SERVER_ERROR',
       error,

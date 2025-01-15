@@ -1,11 +1,23 @@
 import { Test } from '@nestjs/testing';
-import type { rpc } from '@stellar/stellar-sdk';
+import {
+  Memo,
+  MemoType,
+  Operation,
+  Transaction,
+  TransactionBuilder,
+  rpc,
+  xdr,
+} from '@stellar/stellar-sdk';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
 import {
+  GetTransactionStatus,
+  NETWORK,
+  SendTransactionStatus,
+} from '@/common/stellar_service/application/domain/soroban.enum';
+import {
   CONTRACT_SERVICE,
-  IDecodedSection,
   IStellarService,
 } from '@/common/stellar_service/application/interface/contract.service.interface';
 import {
@@ -18,20 +30,12 @@ import {
 } from '@/common/stellar_service/application/interface/stellar.mapper.interface';
 import { Method } from '@/modules/method/domain/method.domain';
 import {
-  contractExecutable,
   getTxFailed,
   identityProviderServiceMock,
   mockedAdapterContract,
   rawSendTxError,
   rawSendTxPending,
 } from '@/test/test.module.bootstrapper';
-
-import {
-  CONTRACT_EXECUTABLE_TYPE,
-  GetTransactionStatus,
-  NETWORK,
-  SendTransactionStatus,
-} from '../../stellar_service/application/domain/soroban.enum';
 
 describe('StellarService', () => {
   let service: IStellarService;
@@ -59,241 +63,46 @@ describe('StellarService', () => {
   });
 
   describe('verifyNetwork', () => {
-    it('Should not change the network if selectedNetwork is the same as the current network', () => {
-      const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
-
-      const selectedNetwork = NETWORK.SOROBAN_FUTURENET;
-      service.verifyNetwork(selectedNetwork);
-
-      expect(changeNetworkSpy).not.toHaveBeenCalled();
-    });
-
-    it('Should change the network if selectedNetwork is different from the current network', () => {
-      const changeNetworkSpy = jest.spyOn(stellarAdapter, 'changeNetwork');
-
+    it('should verify the network successfully', async () => {
       const selectedNetwork = NETWORK.SOROBAN_TESTNET;
-      service.verifyNetwork(selectedNetwork);
+      const contractId = 'testContractId';
+      const userId = 'testUserId';
 
-      expect(changeNetworkSpy).toHaveBeenCalledWith(selectedNetwork);
-      expect(changeNetworkSpy).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('generateMethodsFromContractId', () => {
-    it('Should return stellar asset contract functions if instance is of type STELLAR_ASSET', async () => {
       jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
-        value: 1,
+        .spyOn(stellarAdapter, 'verifyNetwork')
+        .mockResolvedValue(selectedNetwork);
+
+      const result = await service.verifyNetwork({
+        selectedNetwork,
+        contractId,
+        userId,
       });
-      jest.spyOn(service, 'getStellarAssetContractFunctions').mockReturnValue([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
 
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
-      expect(result).toEqual([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
+      expect(result).toBe(selectedNetwork);
+      expect(stellarAdapter.verifyNetwork).toHaveBeenCalledWith({
+        selectedNetwork,
+        contractId,
+        userId,
+      });
     });
 
-    it('Should return smart contract functions if instance is of type WASM', async () => {
+    it('should throw an error if network verification fails', async () => {
+      const selectedNetwork = NETWORK.SOROBAN_TESTNET;
+      const contractId = 'testContractId';
+      const userId = 'testUserId';
+
       jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.WASM,
-        value: 0,
+        .spyOn(stellarAdapter, 'verifyNetwork')
+        .mockRejectedValue(new Error('Network verification failed'));
+
+      await expect(
+        service.verifyNetwork({ selectedNetwork, contractId, userId }),
+      ).rejects.toThrow('Network verification failed');
+      expect(stellarAdapter.verifyNetwork).toHaveBeenCalledWith({
+        selectedNetwork,
+        contractId,
+        userId,
       });
-      jest
-        .spyOn(service, 'getContractSpecEntries')
-        .mockResolvedValue([{} as IDecodedSection]);
-      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
-        name: 'mock',
-        docs: null,
-        inputs: [{ name: 'mock', type: 'mock' }],
-        outputs: [{ type: 'mock' }],
-      });
-
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getContractSpecEntries).toHaveBeenCalledWith(
-        contractExecutable,
-      );
-      expect(service.extractFunctionInfo).toHaveBeenCalledWith(
-        {} as IDecodedSection,
-      );
-      expect(result).toEqual([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
-    });
-
-    it('Should filter out functions with empty names', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.WASM,
-        value: 0,
-      });
-      jest
-        .spyOn(service, 'getContractSpecEntries')
-        .mockResolvedValue([{} as IDecodedSection]);
-      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
-        name: '',
-        docs: null,
-        inputs: [{ name: 'mock', type: 'mock' }],
-        outputs: [{ type: 'mock' }],
-      });
-
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getContractSpecEntries).toHaveBeenCalledWith(
-        contractExecutable,
-      );
-      expect(service.extractFunctionInfo).toHaveBeenCalledWith(
-        {} as IDecodedSection,
-      );
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('generateMethodsFromContractId', () => {
-    it('Should return stellar asset contract functions if instance is of type STELLAR_ASSET', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.STELLAR_ASSET,
-        value: 1,
-      });
-      jest.spyOn(service, 'getStellarAssetContractFunctions').mockReturnValue([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
-
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getStellarAssetContractFunctions).toHaveBeenCalled();
-      expect(result).toEqual([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
-    });
-
-    it('Should return smart contract functions if instance is of type WASM', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.WASM,
-        value: 0,
-      });
-      jest
-        .spyOn(service, 'getContractSpecEntries')
-        .mockResolvedValue([{} as IDecodedSection]);
-      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
-        name: 'mock',
-        docs: null,
-        inputs: [{ name: 'mock', type: 'mock' }],
-        outputs: [{ type: 'mock' }],
-      });
-
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getContractSpecEntries).toHaveBeenCalledWith(
-        contractExecutable,
-      );
-      expect(service.extractFunctionInfo).toHaveBeenCalledWith(
-        {} as IDecodedSection,
-      );
-      expect(result).toEqual([
-        {
-          name: 'mock',
-          docs: null,
-          inputs: [{ name: 'mock', type: 'mock' }],
-          outputs: [{ type: 'mock' }],
-        },
-      ]);
-    });
-
-    it('Should filter out functions with empty names', async () => {
-      jest
-        .spyOn(stellarAdapter, 'getInstanceValue')
-        .mockResolvedValue(contractExecutable);
-      jest.spyOn(contractExecutable, 'switch').mockReturnValue({
-        name: CONTRACT_EXECUTABLE_TYPE.WASM,
-        value: 0,
-      });
-      jest
-        .spyOn(service, 'getContractSpecEntries')
-        .mockResolvedValue([{} as IDecodedSection]);
-      jest.spyOn(service, 'extractFunctionInfo').mockReturnValue({
-        name: '',
-        docs: null,
-        inputs: [{ name: 'mock', type: 'mock' }],
-        outputs: [{ type: 'mock' }],
-      });
-
-      const result = await service.generateMethodsFromContractId('contractId');
-
-      expect(stellarAdapter.getInstanceValue).toHaveBeenCalledWith(
-        'contractId',
-        service['currentNetwork'],
-      );
-      expect(service.getContractSpecEntries).toHaveBeenCalledWith(
-        contractExecutable,
-      );
-      expect(service.extractFunctionInfo).toHaveBeenCalledWith(
-        {} as IDecodedSection,
-      );
-      expect(result).toEqual([]);
     });
   });
 
@@ -322,10 +131,14 @@ describe('StellarService', () => {
       setupCommonMocks();
 
       const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: mockedMethod,
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
+        runInvocationParams: {
+          contractId: 'contractId',
+          selectedMethod: mockedMethod,
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
+        currentNetwork: NETWORK.SOROBAN_TESTNET,
+        userId: 'userId',
       });
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
@@ -356,17 +169,21 @@ describe('StellarService', () => {
         .mockResolvedValue(getTxFailed);
 
       const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: new Method(
-          'increment',
-          [],
-          [{ type: 'SC_SPEC_TYPE_U32' }],
-          [],
-          '',
-          '41e62067',
-        ),
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
+        runInvocationParams: {
+          contractId: 'contractId',
+          selectedMethod: new Method(
+            'increment',
+            [],
+            [{ type: 'SC_SPEC_TYPE_U32' }],
+            [],
+            '',
+            '41e62067',
+          ),
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
+        currentNetwork: NETWORK.SOROBAN_TESTNET,
+        userId: 'userId',
       });
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
@@ -390,17 +207,21 @@ describe('StellarService', () => {
         );
 
       const result = await service.runInvocation({
-        contractId: 'contractId',
-        selectedMethod: new Method(
-          'increment',
-          [],
-          [{ type: 'SC_SPEC_TYPE_U32' }],
-          [],
-          '',
-          '41e62067',
-        ),
-        publicKey: 'publicKey',
-        secretKey: 'secretKey',
+        currentNetwork: NETWORK.SOROBAN_TESTNET,
+        userId: 'userId',
+        runInvocationParams: {
+          contractId: 'contractId',
+          selectedMethod: new Method(
+            'increment',
+            [],
+            [{ type: 'SC_SPEC_TYPE_U32' }],
+            [],
+            '',
+            '41e62067',
+          ),
+          publicKey: 'publicKey',
+          secretKey: 'secretKey',
+        },
       });
 
       expect(stellarAdapter.sendTransaction).toHaveBeenCalled();
@@ -410,6 +231,60 @@ describe('StellarService', () => {
           title: 'host invocation failed',
         }),
       );
+    });
+
+    describe('runUploadWASM', () => {
+      const signedTransactionXDR = 'signedTransactionXDR';
+      const mockTransaction = {} as Transaction<Memo<MemoType>, Operation[]>;
+      const mockDeployResponse: rpc.Api.GetSuccessfulTransactionResponse = {
+        status: GetTransactionStatus.SUCCESS,
+        ledger: 0,
+        createdAt: 0,
+        applicationOrder: 0,
+        feeBump: false,
+        envelopeXdr: {} as xdr.TransactionEnvelope,
+        resultXdr: {} as xdr.TransactionResult,
+        resultMetaXdr: {} as xdr.TransactionMeta,
+        txHash: '',
+        latestLedger: 0,
+        latestLedgerCloseTime: 0,
+        oldestLedger: 0,
+        oldestLedgerCloseTime: 0,
+      };
+      const mockContractAddress = 'mockContractAddress';
+
+      beforeEach(() => {
+        jest
+          .spyOn(TransactionBuilder, 'fromXDR')
+          .mockReturnValue(mockTransaction);
+        jest
+          .spyOn(service, 'getNetworkPassphrase')
+          .mockReturnValue('networkPassphrase');
+        jest
+          .spyOn(stellarAdapter, 'executeTransactionWithRetry')
+          .mockResolvedValue(mockDeployResponse);
+        jest
+          .spyOn(stellarAdapter, 'extractContractAddress')
+          .mockReturnValue(mockContractAddress);
+      });
+
+      it('should return the contract address on successful upload', async () => {
+        const result = await service.runUploadWASM({ signedTransactionXDR });
+
+        expect(TransactionBuilder.fromXDR).toHaveBeenCalledWith(
+          signedTransactionXDR,
+          'networkPassphrase',
+        );
+        expect(stellarAdapter.executeTransactionWithRetry).toHaveBeenCalledWith(
+          {
+            transaction: mockTransaction,
+          },
+        );
+        expect(stellarAdapter.extractContractAddress).toHaveBeenCalledWith({
+          responseDeploy: mockDeployResponse,
+        });
+        expect(result).toBe(mockContractAddress);
+      });
     });
   });
 });

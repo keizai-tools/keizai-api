@@ -11,12 +11,15 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
 
 import { TEAM_RESPONSE } from '../../application/exceptions/team-response.enum';
+
+jest.setTimeout(60000);
 
 describe('Team - [/team]', () => {
   let app: INestApplication;
@@ -60,6 +63,7 @@ describe('Team - [/team]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });

@@ -1,5 +1,6 @@
 import {
   AdminGetUserCommand,
+  AdminGetUserCommandInput,
   AuthFlowType,
   AuthenticationResultType,
   ChangePasswordCommand,
@@ -12,6 +13,7 @@ import {
   ForgotPasswordCommand,
   InitiateAuthCommand,
   InitiateAuthCommandInput,
+  ListUsersCommand,
   ResendConfirmationCodeCommand,
   SignUpCommand,
   SignUpCommandInput,
@@ -27,6 +29,7 @@ import {
 } from '@nestjs/common';
 import { promises as fs } from 'fs';
 
+import { ENVIRONMENT } from '@/common/base/enum/common.enum';
 import {
   IPromiseResponse,
   IResponseService,
@@ -56,13 +59,52 @@ export class CognitoService implements ICognitoAuthService {
   ) {
     this.responseService.setContext(CognitoService.name);
     this.cognitoClient = new CognitoIdentityProviderClient({
-      region: process.env.AWS_COGNITO_REGION,
+      region:
+        process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+          ? 'local'
+          : process.env.AWS_REGION,
       credentials: {
-        accessKeyId: process.env.AWS_COGNITO_ACCESS_KEY,
-        secretAccessKey: process.env.AWS_COGNITO_SECRET_KEY,
+        accessKeyId:
+          process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+            ? 'local'
+            : process.env.AWS_ACCESS_KEY,
+        secretAccessKey:
+          process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT
+            ? 'local'
+            : process.env.AWS_SECRET_KEY,
       },
       endpoint: process.env.AWS_COGNITO_ENDPOINT,
     });
+    this.checkContainerHealth();
+  }
+
+  async checkContainerHealth(): Promise<IPromiseResponse<void>> {
+    if (process.env.NODE_ENV !== ENVIRONMENT.DEVELOPMENT) {
+      return this.responseService.createResponse({
+        message: 'Health check is only available in development mode',
+        type: 'FORBIDDEN',
+      });
+    }
+
+    try {
+      const response = await this.cognitoClient.send(
+        new ListUsersCommand({
+          UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
+          Limit: 1,
+        }),
+      );
+
+      if (response['$metadata'].httpStatusCode === 200) {
+        return this.responseService.createResponse({
+          message: 'Container is healthy',
+          type: 'OK',
+        });
+      } else {
+        throw new Error('Health check failed');
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async registerUser(
@@ -78,7 +120,7 @@ export class CognitoService implements ICognitoAuthService {
     }
 
     const signUpParams: SignUpCommandInput = {
-      ClientId: process.env.AWS_COGNITO_CLIENT_ID,
+      ClientId: process.env.AWS_REGION,
       Username: email,
       Password: password,
       ValidationData: [{ Name: 'email', Value: email }],
@@ -90,7 +132,7 @@ export class CognitoService implements ICognitoAuthService {
 
       const { payload } = await this.getUserSub(email);
 
-      if (process.env.AWS_COGNITO_REGION === 'local')
+      if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT)
         await this.confirmUserRegistration({
           email,
           confirmationCode: await this.getConfirmationCodeFromLocalPool(email),
@@ -109,12 +151,12 @@ export class CognitoService implements ICognitoAuthService {
   }
 
   async getUserSub(email: string): IPromiseResponse<string | null> {
-    const params = {
+    const params: AdminGetUserCommandInput = {
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
       Username: email,
     };
 
-    if (process.env.AWS_COGNITO_REGION === 'local') {
+    if (process.env.NODE_ENV === ENVIRONMENT.DEVELOPMENT) {
       const sub = await this.getUserSubLocal(email);
       if (sub) {
         return this.responseService.createResponse({
@@ -371,7 +413,7 @@ export class CognitoService implements ICognitoAuthService {
       const { code, message } = error;
 
       if (message.includes(CognitoError.COGNITO_LOCAL_UNSUPPORTED)) {
-        this.responseService.debug(message);
+        this.responseService.warn(message);
       } else if (code === CognitoError.LIMIT_EXCEEDED_EXCEPTION) {
         throw new InternalServerErrorException(
           CognitoMessage.LIMIT_EXCEEDED_ERROR,
@@ -398,7 +440,7 @@ export class CognitoService implements ICognitoAuthService {
   }
 
   private async checkUserConfirmationStatus(email: string): Promise<string> {
-    const params = {
+    const params: AdminGetUserCommandInput = {
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
       Username: email,
     };
@@ -410,11 +452,10 @@ export class CognitoService implements ICognitoAuthService {
   private async getConfirmationCodeFromLocalPool(
     email: string,
   ): Promise<string | undefined> {
+    const tempFilePath = `${process.env.COGNITO_LOCAL_PATH}.copy`;
     try {
-      const data: string = await fs.readFile(
-        process.env.COGNITO_LOCAL_PATH,
-        'utf-8',
-      );
+      await fs.copyFile(process.env.COGNITO_LOCAL_PATH, tempFilePath);
+      const data: string = await fs.readFile(tempFilePath, 'utf-8');
       const jsonData: {
         Users: {
           [key: string]: {
@@ -427,15 +468,16 @@ export class CognitoService implements ICognitoAuthService {
       return code;
     } catch (err) {
       this.handleError(err);
+    } finally {
+      await fs.unlink(tempFilePath);
     }
   }
 
   private async getUserSubLocal(email: string): Promise<string | null> {
+    const tempFilePath = `${process.env.COGNITO_LOCAL_PATH}.copy`;
     try {
-      const data: string = await fs.readFile(
-        process.env.COGNITO_LOCAL_PATH,
-        'utf-8',
-      );
+      await fs.copyFile(process.env.COGNITO_LOCAL_PATH, tempFilePath);
+      const data: string = await fs.readFile(tempFilePath, 'utf-8');
       const jsonData: {
         Users: {
           [key: string]: {
@@ -454,6 +496,8 @@ export class CognitoService implements ICognitoAuthService {
       return subAttribute?.Value || null;
     } catch (err) {
       this.handleError(err);
+    } finally {
+      await fs.unlink(tempFilePath);
     }
   }
 }

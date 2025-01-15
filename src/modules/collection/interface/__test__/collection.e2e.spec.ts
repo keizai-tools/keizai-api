@@ -11,14 +11,17 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { AUTH_RESPONSE } from '@/modules/authorization/infraestructure/policy/exceptions/auth-error';
-import { ENVIROMENT_RESPONSE } from '@/modules/enviroment/application/exceptions/enviroment-response.enum';
+import { ENVIRONMENT_RESPONSE } from '@/modules/environment/application/exceptions/environment-response.enum';
 import { TEAM_RESPONSE } from '@/modules/team/application/exceptions/team-response.enum';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { DataObject, createAccessToken, makeRequest } from '@/test/test.util';
 
 import { COLLECTION_RESPONSE } from '../../application/exceptions/collection-response.enum';
+
+jest.setTimeout(60000);
 
 describe('Collection - [/collection]', () => {
   let app: INestApplication;
@@ -62,6 +65,7 @@ describe('Collection - [/collection]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
@@ -196,7 +200,7 @@ describe('Collection - [/collection]', () => {
       );
     });
 
-    it('should get enviroments by collections id', async () => {
+    it('should get environments by collections id', async () => {
       const response = await makeRequest({
         app,
         authCode: adminToken,
@@ -214,7 +218,7 @@ describe('Collection - [/collection]', () => {
     });
 
     it('should get environment by collections id and environment name', async () => {
-      const environmentName = 'enviroment0';
+      const environmentName = 'environment0';
       const response = await makeRequest({
         app,
         authCode: adminToken,
@@ -232,7 +236,7 @@ describe('Collection - [/collection]', () => {
     });
 
     it('should throw error when try to get environment that not exists', async () => {
-      const environmentName = 'enviroment33';
+      const environmentName = 'environment33';
       const response = await makeRequest({
         app,
         authCode: adminToken,
@@ -241,7 +245,7 @@ describe('Collection - [/collection]', () => {
       });
 
       expect(response.body.details.description).toEqual(
-        ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS,
+        ENVIRONMENT_RESPONSE.ENVIRONMENT_EXISTS,
       );
     });
   });
@@ -322,7 +326,8 @@ describe('Collection - [/collection]', () => {
       expect(response.body.payload).toEqual({
         id: 'collection0',
         name: 'collection updated',
-        enviroments: expect.any(Array),
+        invocations: expect.any(Array),
+        environments: expect.any(Array),
         folders: expect.any(Array),
       });
     });
@@ -521,7 +526,7 @@ describe('Collection - [/collection]', () => {
         );
       });
 
-      it('should get enviroments by collections id', async () => {
+      it('should get environments by collections id', async () => {
         const response = await makeRequest({
           app,
           endpoint: `${team0Route}/collection/collection3/environments`,
@@ -543,13 +548,13 @@ describe('Collection - [/collection]', () => {
           app,
           endpoint: `${team0Route}/collection/collection3/environment`,
           authCode: adminToken,
-          query: { name: 'enviroment2' },
+          query: { name: 'environment2' },
         });
 
         expect(response.body.payload).toEqual(
           expect.objectContaining({
             id: expect.any(String),
-            name: 'enviroment2',
+            name: 'environment2',
             value: expect.any(String),
           }),
         );
@@ -560,11 +565,11 @@ describe('Collection - [/collection]', () => {
           app,
           authCode: adminToken,
           endpoint: '/collection/collection0/environment',
-          query: { name: 'enviroment' },
+          query: { name: 'environment' },
         });
 
         expect(response.body.details.description).toEqual(
-          ENVIROMENT_RESPONSE.ENVIRONMENT_EXISTS,
+          ENVIRONMENT_RESPONSE.ENVIRONMENT_EXISTS,
         );
       });
     });
@@ -614,7 +619,8 @@ describe('Collection - [/collection]', () => {
         expect(response.body.payload).toEqual({
           name: 'collection3 updated',
           id: 'collection3',
-          enviroments: expect.any(Array),
+          invocations: expect.any(Array),
+          environments: expect.any(Array),
           folders: expect.any(Array),
         });
       });

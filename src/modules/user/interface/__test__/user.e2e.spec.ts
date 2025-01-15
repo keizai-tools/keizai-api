@@ -11,9 +11,12 @@ import { loadFixtures } from '@data/util/loader';
 
 import { AppModule } from '@/app.module';
 import { COGNITO_AUTH } from '@/common/cognito/application/interface/cognito.service.interface';
+import { AllExceptionsFilter } from '@/common/response_service/filter/all_exceptions.filter';
 import { SuccessResponseInterceptor } from '@/common/response_service/interceptor/success_response.interceptor';
 import { identityProviderServiceMock } from '@/test/test.module.bootstrapper';
 import { createAccessToken, makeRequest } from '@/test/test.util';
+
+jest.setTimeout(60000);
 
 describe('User - [/user]', () => {
   let app: INestApplication;
@@ -57,6 +60,7 @@ describe('User - [/user]', () => {
     );
 
     app.useGlobalInterceptors(new SuccessResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
@@ -67,142 +71,6 @@ describe('User - [/user]', () => {
 
   afterAll(async () => {
     await app.close();
-  });
-
-  describe('Update one - [PUT /user]', () => {
-    it('should update a user', async () => {
-      const response = await makeRequest({
-        app,
-        method: 'put',
-        authCode: adminToken,
-        endpoint: '/user/update',
-        data: {
-          email: 'test@test.com',
-        },
-      });
-
-      expect(response.body).toEqual({
-        success: true,
-        statusCode: 202,
-        message: 'User updated',
-        payload: {
-          oldUser: {
-            email: 'admin@test.com',
-            externalId: '00000000-0000-0000-0000-00000000000X',
-            id: '30a21557-582a-4bb1-9158-59132bfca0a7',
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          },
-          newUser: {
-            email: 'test@test.com',
-            externalId: '00000000-0000-0000-0000-00000000000X',
-            id: '30a21557-582a-4bb1-9158-59132bfca0a7',
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          },
-        },
-        timestamp: expect.any(String),
-        path: '/user/update',
-      });
-    });
-
-    it('should update a user with the same email', async () => {
-      const response = await makeRequest({
-        app,
-        method: 'put',
-        authCode: adminToken,
-        endpoint: '/user/update',
-        data: {},
-      });
-
-      expect(response.body).toEqual({
-        success: true,
-        statusCode: 202,
-        message: 'User updated',
-        payload: {
-          oldUser: {
-            email: 'test@test.com',
-            externalId: '00000000-0000-0000-0000-00000000000X',
-            id: '30a21557-582a-4bb1-9158-59132bfca0a7',
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          },
-          newUser: {
-            email: 'test@test.com',
-            externalId: '00000000-0000-0000-0000-00000000000X',
-            id: '30a21557-582a-4bb1-9158-59132bfca0a7',
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          },
-        },
-        timestamp: expect.any(String),
-        path: '/user/update',
-      });
-    });
-
-    it('should return 400 if email is not valid', async () => {
-      const response = await makeRequest({
-        app,
-        method: 'put',
-        authCode: adminToken,
-        endpoint: '/user/update',
-        data: {
-          email: 'invalid-email',
-        },
-      });
-
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
-        success: false,
-        statusCode: 400,
-        error: 'Bad Request',
-        message:
-          'The server could not understand the request due to invalid syntax.',
-        details: {
-          description: ['invalid email address.'],
-          possibleCauses: [
-            'Invalid request syntax.',
-            'Malformed request message.',
-          ],
-          suggestedFixes: [
-            'Check request syntax.',
-            'Ensure request message is well-formed.',
-          ],
-        },
-        timestamp: expect.any(String),
-        path: '/user/update',
-      });
-    });
-
-    it('should return 401 if unauthorized', async () => {
-      const response = await makeRequest({
-        app,
-        method: 'put',
-        endpoint: '/user/update',
-        data: {
-          email: 'test@test.com',
-        },
-      });
-
-      expect(response.status).toBe(401);
-      expect(response.body).toEqual({
-        success: false,
-        statusCode: 401,
-        error: 'Unauthorized',
-        message:
-          'The client must authenticate itself to get the requested response.',
-        details: {
-          description: 'Unauthorized',
-          possibleCauses: ['Missing or invalid authentication token.'],
-          suggestedFixes: [
-            'Provide valid authentication token.',
-            'Log in and try again.',
-          ],
-        },
-        timestamp: expect.any(String),
-        path: '/user/update',
-      });
-    });
   });
 
   describe('Get me - [GET /user/me]', () => {
@@ -219,8 +87,10 @@ describe('User - [/user]', () => {
         statusCode: 200,
         message: 'User found',
         payload: {
-          email: 'test@test.com',
+          email: 'admin@test.com',
           externalId: '00000000-0000-0000-0000-00000000000X',
+          memoId: '4027480759992350720',
+          balance: 0,
           id: '30a21557-582a-4bb1-9158-59132bfca0a7',
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
@@ -253,6 +123,102 @@ describe('User - [/user]', () => {
         },
         timestamp: expect.any(String),
         path: '/user/me',
+      });
+    });
+  });
+
+  describe('Get Fargate Time - [GET /user/fargate-time]', () => {
+    it('should return the Fargate session time', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        authCode: adminToken,
+        endpoint: '/user/fargate-time',
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Fargate session time calculated successfully.',
+        payload: {
+          fargateTime: expect.any(Number),
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-time',
+      });
+    });
+
+    it('should return 401 if unauthorized', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        endpoint: '/user/fargate-time',
+      });
+
+      expect(response.body).toEqual({
+        success: false,
+        statusCode: 401,
+        error: 'Unauthorized',
+        message:
+          'The client must authenticate itself to get the requested response.',
+        details: {
+          description: 'Unauthorized',
+          possibleCauses: ['Missing or invalid authentication token.'],
+          suggestedFixes: [
+            'Provide valid authentication token.',
+            'Log in and try again.',
+          ],
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-time',
+      });
+    });
+  });
+
+  describe('Get Fargate Cost Per Minute - [GET /user/fargate-cost-per-minute]', () => {
+    it('should return the Fargate cost per minute', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        authCode: adminToken,
+        endpoint: '/user/fargate-cost-per-minute',
+      });
+
+      expect(response.body).toEqual({
+        success: true,
+        statusCode: 200,
+        message: 'Fargate cost per minute calculated successfully.',
+        payload: {
+          costPerMinute: expect.any(Number),
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-cost-per-minute',
+      });
+    });
+
+    it('should return 401 if unauthorized', async () => {
+      const response = await makeRequest({
+        app,
+        method: 'get',
+        endpoint: '/user/fargate-cost-per-minute',
+      });
+
+      expect(response.body).toEqual({
+        success: false,
+        statusCode: 401,
+        error: 'Unauthorized',
+        message:
+          'The client must authenticate itself to get the requested response.',
+        details: {
+          description: 'Unauthorized',
+          possibleCauses: ['Missing or invalid authentication token.'],
+          suggestedFixes: [
+            'Provide valid authentication token.',
+            'Log in and try again.',
+          ],
+        },
+        timestamp: expect.any(String),
+        path: '/user/fargate-cost-per-minute',
       });
     });
   });

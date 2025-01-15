@@ -16,11 +16,18 @@ import {
 @Injectable({ scope: Scope.TRANSIENT })
 export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
-  status = process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION;
+  status =
+    process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION &&
+    process.env.NODE_ENV !== ENVIRONMENT.STAGING &&
+    process.env.NODE_ENV !== ENVIRONMENT.AUTOMATED_TEST;
 
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
-      this.verbose(`Message: ${message}`);
+      this.verbose(`Message: ${message}`, this.context);
+    }
+
+    if (message && message.toString() === '[object Object]') {
+      message = JSON.stringify(message, null, 2);
     }
 
     return {
@@ -46,26 +53,42 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
         throw error;
       }
 
-      this.handleError({
-        error,
-      });
+      this.handleError({ error });
 
-      const code = error.getStatus();
       throw this.createHttpException({
-        code,
+        code: error.getStatus(),
         error,
       });
     }
 
-    this.handleError({
-      error,
-    });
+    this.handleError({ error });
 
     throw this.createHttpException({
       code: HttpStatus[type],
       error,
     });
   };
+
+  verbose(message: any, context?: string) {
+    if (this.status) {
+      this.logMessage('verbose', message, context);
+    }
+  }
+
+  error(message: any, stackOrContext?: string) {
+    this.logMessage('error', message, stackOrContext);
+  }
+
+  private logMessage(
+    level: 'verbose' | 'error',
+    message: any,
+    context?: string,
+  ) {
+    if (message && message.toString() === '[object Object]') {
+      message = JSON.stringify(message, null, 2);
+    }
+    super[level](message, context || this.context);
+  }
 
   private handleError({
     error,
@@ -74,13 +97,14 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
     error: Error | Error[];
     description?: string;
   }): void {
-    if (description) this.error(`Message: ${description}`);
+    if (description) this.error(`Message: ${description}`, this.context);
     if (Array.isArray(error)) {
       error.forEach((err) => {
-        if (err && err.toString().length > 0) this.error(err.toString());
+        if (err && err.toString().length > 0)
+          this.error(err.toString(), this.context);
       });
     } else if (error && error.toString().length > 0) {
-      this.error(error.toString());
+      this.error(JSON.stringify(error.message, null, 2), this.context);
     }
   }
 
@@ -91,16 +115,13 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
     code: number;
     error: Error | Error[];
   }): HttpException {
-    let message: string | string[] | undefined = undefined;
     const newError = Array.isArray(error)
       ? new Error(error.map((e) => e?.message).join(', '))
       : error;
 
-    if (Array.isArray(error)) {
-      message = error.map((e) => e?.message);
-    } else {
-      message = error?.message || '';
-    }
+    const message = Array.isArray(error)
+      ? error.map((e) => e?.message)
+      : error?.message || '';
 
     return new HttpException(message, code, {
       cause: newError,

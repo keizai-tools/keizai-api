@@ -1,0 +1,31 @@
+entity: Environment
+items:
+  environment0:
+    id: 'environment0'
+    name: 'environment0'
+    value: 'environment0'
+    collection: '@collection0'
+
+  environment1:
+    id: 'environment1'
+    name: 'environment1'
+    value: 'environment1'
+    collection: '@collection1'
+
+  environment2:
+    id: 'environment2'
+    name: 'environment2'
+    value: 'environment2'
+    collection: '@collection3'
+
+  environment3:
+    id: 'environment3'
+    name: 'environment3'
+    value: 'environment3'
+    collection: '@collection2'
+
+  environment4:
+    id: 'environment4'
+    name: 'environment4'
+    value: 'environment4'
+    collection: '@collection3'

@@ -14,4 +14,6 @@ export enum COLLECTION_RESPONSE {
   COLLECTION_FOUND = 'Collection found',
   ENVIRONMENTS_CREATED = 'Environments created',
   COLLECTION_UPDATED = 'Collection updated',
+  INVOCATIONS_FOUND = 'Invocations found',
+  INVOCATIONS_DELETED = 'Invocations deleted',
 }
