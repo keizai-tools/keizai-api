@@ -18,7 +18,8 @@ export class ResponseService extends ConsoleLogger implements IResponseService {
   mark = 'Handled by ResponseService.errorHandler';
   status =
     process.env.NODE_ENV !== ENVIRONMENT.PRODUCTION &&
-    process.env.NODE_ENV !== ENVIRONMENT.STAGING;
+    process.env.NODE_ENV !== ENVIRONMENT.STAGING &&
+    process.env.NODE_ENV !== ENVIRONMENT.AUTOMATED_TEST;
 
   createResponse: TCreateResponse = ({ type = 'OK', message, payload }) => {
     if (message && this.status) {
