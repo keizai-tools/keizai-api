@@ -44,7 +44,7 @@ export class UserService implements IUserService {
   async createUser(user: UpdateUserDto): IPromiseResponse<User> {
     try {
       const userEntity = this.userMapper.fromDtoToEntity(user);
-      userEntity.balance = userEntity.balance || 0;
+      userEntity.balance = 0;
       const createdUser = await this.userRepository.create(userEntity);
       if (createdUser?.id) {
         createdUser.memoId = this.generateMemoId(createdUser.id);
@@ -174,7 +174,11 @@ export class UserService implements IUserService {
     return fargateMinutes;
   }
 
-  async updateUserBalance(userId: string, interval: number): Promise<void> {
+  async updateUserBalance(
+    userId: string,
+    amount: number,
+    increase: boolean,
+  ): Promise<void> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
@@ -185,8 +189,14 @@ export class UserService implements IUserService {
     const ramInGB = 4;
     const costPerHour =
       vcpuCount * this.costPerVCPU + ramInGB * this.costPerGBRam;
-    const costForInterval = (costPerHour / 60) * interval;
-    user.balance -= costForInterval;
+    const costForInterval = (costPerHour / 60) * amount;
+
+    if (increase) {
+      user.balance += costForInterval;
+    } else {
+      user.balance -= costForInterval;
+    }
+
     await this.userRepository.update(user.id, user);
   }
 
