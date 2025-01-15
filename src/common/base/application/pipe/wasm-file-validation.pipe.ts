@@ -18,7 +18,7 @@ export class WasmFileValidationPipe implements PipeTransform {
     }
 
     const allowedTypeRegex = new RegExp(
-      ALLOWED_FILE_TYPE.WASM.replace(/\//g, '\\/'),
+      ALLOWED_FILE_TYPE.WASM.replace(/[\/\\]/g, '\\$&'),
     );
 
     const parseFilePipe = new ParseFilePipeBuilder()
