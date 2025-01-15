@@ -272,32 +272,7 @@ export class EphemeralEnvironmentService
     const existingTask = await this.getClientTask(clientId);
 
     if (existingTask) {
-      const intervalMinutes = parseInt(
-        existingTask.overrides?.containerOverrides
-          ?.find((override) => override.name === 'stellar')
-          ?.environment?.find((envVar) => envVar.name === 'INTERVAL_MINUTES')
-          ?.value || '',
-        10,
-      );
-      const taskStatusResponse = await this.getTaskPublicIp(
-        existingTask.taskArn,
-      );
-      const publicIpAddress = taskStatusResponse.payload.publicIp;
-
-      return this.responseService.createResponse({
-        payload: {
-          executionInterval: intervalMinutes,
-          publicIp: publicIpAddress,
-          status: existingTask.lastStatus as DesiredStatus,
-          taskArn: existingTask.taskArn || '',
-          taskStartedAt: existingTask.startedAt,
-          taskStoppedAt: new Date(
-            existingTask.startedAt.getTime() + intervalMinutes * 60000,
-          ),
-        },
-        message: MessagesEphemeralEnvironment.TASK_ALREADY_RUNNING,
-        type: 'OK',
-      });
+      return await this.getTaskStatus(clientId);
     }
     const uuid = uuidv4().split('-')[0];
 
