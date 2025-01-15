@@ -1,9 +1,0 @@
-{
-  "analysis": {
-    "exclusions": [
-      {
-        "path": "/data/docker/volumes/cognito/db/local_7cSMGZ6h.json"
-      }
-    ]
-  }
-}
