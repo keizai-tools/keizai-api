@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import {
@@ -66,18 +66,6 @@ export class UserController implements IUserController {
       type: 'OK',
       message: 'Fargate cost per minute calculated successfully.',
       payload: { costPerMinute },
-    });
-  }
-
-  @Post('update-balance')
-  async updateBalance(
-    @CurrentUser() user: IResponse<User>,
-    @Body('interval') interval: number,
-  ) {
-    await this.userService.updateUserBalance(user.payload.id, interval);
-    return this.responseService.createResponse({
-      type: 'OK',
-      message: 'User balance updated successfully.',
     });
   }
 }
