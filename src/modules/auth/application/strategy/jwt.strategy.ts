@@ -57,7 +57,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       : {
           jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
           ignoreExpiration: false,
-          audience: process.env.AWS_COGNITO_COGNITO_CLIENT_ID,
           issuer: process.env.AWS_COGNITO_AUTHORITY,
           algorithms: ['RS256'],
           secretOrKeyProvider: passportJwtSecret({
