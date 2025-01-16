@@ -1,10 +1,10 @@
 {
   "name": "keizai-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Keizai API is a service similar to Postman but designed specifically for managing and interacting with Soroban smart contracts.",
+  "author": "keizai",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "prebuild": "npm install && rimraf dist",
     "build": "nest build",

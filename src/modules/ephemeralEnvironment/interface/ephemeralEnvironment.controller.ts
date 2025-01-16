@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import {
   IPromiseResponse,
@@ -27,6 +28,7 @@ import {
 } from '../application/interface/ephemeralEnvironment.interface';
 import { EphemeralEnvironmentService } from '../application/service/ephemeralEnvironment.service';
 
+@ApiTags('Ephemeral Environment')
 @Auth(AuthType.Bearer)
 @Controller('ephemeral-environment')
 export class EphemeralEnvironmentController {

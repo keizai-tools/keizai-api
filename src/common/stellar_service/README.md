@@ -76,6 +76,14 @@ This file contains the `StellarService` class, which provides high-level methods
 - `deployWasmFile`
 - `prepareUploadWASM`
 - `runUploadWASM`
+- `getPreparedTransactionXDR`
+- `pollTransactionStatus`
+- `generateScArgsToFromContractId`
+- `getStellarAssetContractFunctions`
+- `decodeContractSpecBuffer`
+- `extractFunctionInfo`
+- `getContractSpecEntries`
+- `getScValFromSmartContract`
 
 ### /src/common/stellar_service/adapter/stellar.adapter.ts
 
@@ -88,41 +96,28 @@ This file contains the `StellarAdapter` class, which handles low-level interacti
 - `uploadWasm`
 - `deployContract`
 - `executeTransactionWithRetry`
-
-### /src/common/stellar_service/application/mapper/contract.mapper.ts
-
-This file contains the `StellarMapper` class, which converts data between Stellar-specific formats and application-specific formats. Key methods include:
-
-- `encodeEventToDisplayEvent`
-- `getScValFromStellarAssetContract`
-- `fromScValToDisplayValue`
-- `fromTxResultToDisplayResponse`
-- `fromContractErrorToDisplayResponse`
-
-### /src/common/stellar_service/application/interface/stellar.mapper.interface.ts
-
-This file defines the `IStellarMapper` interface, which outlines the methods that the `StellarMapper` class must implement.
-
-### /src/common/stellar_service/application/interface/stellar.adapter.interface.ts
-
-This file defines the `IStellarAdapter` interface, which outlines the methods that the `StellarAdapter` class must implement.
-
-### /src/common/stellar_service/application/interface/soroban.d.ts
-
-This file contains type definitions and interfaces related to the Soroban contract and transaction handling.
-
-### /src/common/stellar_service/application/interface/contract.service.interface.ts
-
-This file defines the `IStellarService` interface, which outlines the methods that the `StellarService` class must implement.
-
-### /src/common/stellar_service/application/domain/ContractFunctions.array.ts
-
-This file contains an array of predefined contract functions that can be used by the `StellarService`.
-
-### /src/common/stellar_service/application/domain/contract_functions.ts
-
-This file contains an array of predefined contract functions, similar to `ContractFunctions.array.ts`.
-
----
-
-This README provides a comprehensive overview of the Stellar Service module, detailing its components, functionality, and internal flow. For further information, refer to the individual files and their respective methods.
+- `verifyNetwork`
+- `getScSpecEntryFromXDR`
+- `createContractSpec`
+- `contractExists`
+- `getWasmCode`
+- `getContractEvents`
+- `getKeypair`
+- `getTransaction`
+- `submitSignedTransaction`
+- `prepareUploadWASM`
+- `signTransaction`
+- `streamTransactionsByMemoId`
+- `buildAndSendTransaction`
+- `createTransaction`
+- `getOperationDetails`
+- `validateEphemeralNetwork`
+- `setNetwork`
+- `updateUserBalance`
+- `getAccountOrFund`
+- `fundAccount`
+- `createDeployContractOperation`
+- `extractContractAddress`
+- `fetchFromServer`
+- `checkContractNetwork`
+- `findNetworkWithContract`
